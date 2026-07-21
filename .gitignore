@@ -30,3 +30,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# PHPUnit result cache (never ship or commit)
+.phpunit.result.cache

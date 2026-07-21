@@ -1,0 +1,59 @@
+<?php
+/**
+ * Plugin Name:       {{PLUGIN_NAME}}
+ * Description:       {{DESCRIPTION}}
+ * Version:           {{VERSION}}
+ * Requires at least: {{REQUIRES_WP}}
+ * Requires PHP:      {{REQUIRES_PHP}}
+ * Author:            Stephen Navazio Agency
+ * License:           GPLv2 or later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain:       {{SLUG}}
+ *
+ * @package {{CLASS}}
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+define( '{{UPREFIX}}_VERSION', '{{VERSION}}' );
+define( '{{UPREFIX}}_FILE', __FILE__ );
+define( '{{UPREFIX}}_PATH', plugin_dir_path( __FILE__ ) );
+
+/**
+ * Load the plugin text domain.
+ *
+ * @return void
+ */
+function {{PREFIX}}_load_textdomain() {
+	load_plugin_textdomain( '{{SLUG}}', false, dirname( plugin_basename( {{UPREFIX}}_FILE ) ) . '/languages' );
+}
+add_action( 'init', '{{PREFIX}}_load_textdomain' );
+
+/*
+ * TODO(coder): require your include files here and register your features
+ * (CPTs, admin pages, shortcodes/blocks, REST routes) following the hard rules in CLAUDE.md.
+ * Every executable file needs the ABSPATH guard. Sanitize input, escape output, and pair every
+ * state-changing action with BOTH a nonce check AND current_user_can().
+ */
+
+/**
+ * Activation hook. Register rewrite-affecting features before flushing rules.
+ *
+ * @return void
+ */
+function {{PREFIX}}_activate() {
+	flush_rewrite_rules();
+}
+register_activation_hook( __FILE__, '{{PREFIX}}_activate' );
+
+/**
+ * Deactivation hook.
+ *
+ * @return void
+ */
+function {{PREFIX}}_deactivate() {
+	flush_rewrite_rules();
+}
+register_deactivation_hook( __FILE__, '{{PREFIX}}_deactivate' );

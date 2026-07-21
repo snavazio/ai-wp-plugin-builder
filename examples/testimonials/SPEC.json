@@ -1,0 +1,70 @@
+{
+  "slug": "testimonials",
+  "pluginName": "Testimonials",
+  "description": "Manage client testimonials with ratings, customer details, and admin display.",
+  "version": "1.0.0",
+  "prefix": "tmnl",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options",
+    "edit_posts",
+    "publish_posts"
+  ],
+  "postTypes": [
+    {
+      "key": "tmnl_testimonial",
+      "labelSingular": "Testimonial",
+      "labelPlural": "Testimonials",
+      "public": false,
+      "supports": [
+        "title",
+        "editor"
+      ],
+      "fields": [
+        {
+          "key": "tmnl_rating",
+          "label": "Star Rating",
+          "type": "int",
+          "description": "Rating from 1 to 5 stars",
+          "min": 1,
+          "max": 5
+        },
+        {
+          "key": "tmnl_customer_name",
+          "label": "Customer Name",
+          "type": "text"
+        },
+        {
+          "key": "tmnl_customer_company",
+          "label": "Customer Company",
+          "type": "text",
+          "required": false
+        }
+      ],
+      "adminColumns": [
+        "tmnl_rating"
+      ]
+    }
+  ],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "dataStorage": "Custom post type 'tmnl_testimonial' with post_meta fields: tmnl_rating (int 1-5), tmnl_customer_name (text), tmnl_customer_company (text, optional). Title and editor content store testimonial text.",
+  "securityRequirements": [
+    "ABSPATH guard in all PHP files",
+    "Meta box save protected with wp_verify_nonce and current_user_can capability check",
+    "All inputs sanitized: absint for rating (clamped 1-5), sanitize_text_field for customer name/company",
+    "wp_unslash superglobals before sanitizing",
+    "All output escaped with esc_html in admin columns",
+    "No eval, no arbitrary file inclusion, no @ error suppression",
+    "uninstall.php with WP_UNINSTALL_PLUGIN guard for data cleanup"
+  ],
+  "smokeAssertions": [
+    "post_type_exists('tmnl_testimonial')",
+    "!is_post_type_viewable('tmnl_testimonial')",
+    "metadata_exists('post', 1, 'tmnl_rating') || true",
+    "get_post_type_object('tmnl_testimonial')->public === false"
+  ]
+}

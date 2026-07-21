@@ -1,0 +1,16 @@
+# Files excluded from the distributable .zip (used by `wp dist-archive`).
+/.git
+/.github
+/.distignore
+/tests
+/phpunit.xml.dist
+/phpunit.xml
+/node_modules
+/vendor
+/composer.json
+/composer.lock
+/phpcs.xml
+/phpcs.xml.dist
+/.gitignore
+/.phpunit.result.cache
+/SPEC.json

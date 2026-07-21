@@ -66,9 +66,11 @@ async function run(ctx: GateContext): Promise<GateResult> {
     await env.wp(['plugin', 'activate', 'plugin-check']);
   }
 
-  // Dev directories are excluded from the shipped .zip (.distignore) and legitimately can't carry
-  // ABSPATH guards (test bootstraps run pre-WordPress), so mirror that exclusion for Plugin Check.
+  // Dev files/dirs are excluded from the shipped .zip (.distignore) and legitimately can't carry
+  // ABSPATH guards (test bootstraps run pre-WordPress), so mirror that exclusion for Plugin Check
+  // to check the plugin as it will actually ship.
   const excludeDirs = '--exclude-directories=tests,vendor,node_modules';
+  const excludeFiles = '--exclude-files=phpunit.xml.dist,phpunit.xml,.distignore,SPEC.json,.phpunit.result.cache';
 
   // Security check — the hard gate.
   const sec = await env.wp([
@@ -79,6 +81,7 @@ async function run(ctx: GateContext): Promise<GateResult> {
     '--format=json',
     '--severity=5',
     excludeDirs,
+    excludeFiles,
   ]);
   const secRows = parseRows(sec.stdout);
   const secErrors = secRows.filter((x) => (x.type ?? '').toUpperCase() === 'ERROR');
@@ -100,6 +103,7 @@ async function run(ctx: GateContext): Promise<GateResult> {
     '--categories=plugin_repo,performance,i18n',
     '--format=json',
     excludeDirs,
+    excludeFiles,
   ]);
   for (const row of parseRows(other.stdout)) {
     r.warnings.push(

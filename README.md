@@ -86,10 +86,24 @@ src/            TypeScript engine: run.ts (CLI), pipeline.ts, gates/, report.ts,
 harness/        PHP tooling: phpcs.xml.dist, phpstan.neon, composer.json, .wp-env.json, bin/phpunit.phar
 samples/        good-plugin (clean quality bar) + bad-plugin (planted vulns)
 specs/          your input specs (one markdown file per plugin)
+examples/       committed example builds: generated source + BUILD-REPORT.md + .zip per plugin
 build/          working dir for the plugin under construction (git-ignored)
 dist/           finished .zip files + reports (git-ignored)
 .claude/        CLAUDE.md rules, agent + command definitions
 ```
+
+## Example builds (checked in)
+
+`examples/` holds three plugins generated end-to-end by `npm run build` from the specs in `specs/`,
+each with its full source, its `BUILD-REPORT.md` (gate table, auditor sign-off, iteration count, token
+cost), and its distributable `.zip`:
+
+- `examples/testimonials/` — Testimonials CPT with a star-rating field and admin Rating column.
+- `examples/business-hours/` — a settings page + `[business_hours]` shortcode.
+- `examples/events-rest/` — an Events CPT with a public read-only REST endpoint.
+
+All three pass every gate (0 security errors, activates with no fatals, smoke test green) and re-verify
+cleanly with `npm run verify -- examples/<slug>`.
 
 ## Adding a new gate
 

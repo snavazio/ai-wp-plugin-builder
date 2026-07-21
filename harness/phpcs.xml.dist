@@ -8,11 +8,11 @@
     <arg value="sp"/>
     <arg name="parallel" value="8"/>
 
-    <!-- Don't descend into vendored / build artifacts. -->
+    <!-- Don't descend into vendored deps or the plugin's own test files. NOTE: do NOT exclude
+         */build/* or */dist/* here — the plugin-under-test lives in build/<slug>, and excluding it
+         would make phpcs silently skip every file and report a false pass. -->
     <exclude-pattern>*/vendor/*</exclude-pattern>
     <exclude-pattern>*/node_modules/*</exclude-pattern>
-    <exclude-pattern>*/build/*</exclude-pattern>
-    <exclude-pattern>*/dist/*</exclude-pattern>
     <exclude-pattern>*/tests/*</exclude-pattern>
 
     <!-- Core WordPress standard: coding style + security + best practices. -->

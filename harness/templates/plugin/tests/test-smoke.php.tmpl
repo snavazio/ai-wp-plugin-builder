@@ -1,0 +1,30 @@
+<?php
+/**
+ * Smoke test: assert the plugin booted and registered its features.
+ *
+ * @package {{CLASS}}
+ */
+
+/**
+ * {{PLUGIN_NAME}} smoke test.
+ */
+class {{CLASS}}_Smoke_Test extends WP_UnitTestCase {
+
+	/**
+	 * The plugin loaded and defined its version constant.
+	 *
+	 * @return void
+	 */
+	public function test_plugin_loaded() {
+		$this->assertTrue( defined( '{{UPREFIX}}_VERSION' ), '{{UPREFIX}}_VERSION should be defined.' );
+		$this->assertSame( '{{VERSION}}', {{UPREFIX}}_VERSION );
+	}
+
+	/*
+	 * TODO(coder): add feature-specific assertions here, e.g.:
+	 *   $this->assertTrue( post_type_exists( '{{PREFIX}}_item' ) );
+	 *   $this->assertTrue( shortcode_exists( 'your_shortcode' ) );
+	 *   $this->assertNotFalse( has_action( 'rest_api_init' ) );
+	 * Base your assertions on the SPEC's smokeAssertions.
+	 */
+}

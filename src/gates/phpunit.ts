@@ -42,7 +42,9 @@ async function run(ctx: GateContext): Promise<GateResult> {
   const cwd = `wp-content/plugins/${ctx.slug}`;
   const res = await env.run(
     'tests-cli',
-    ['php', PHAR_IN_CONTAINER, '-c', 'phpunit.xml.dist', '--colors=never'],
+    // --do-not-cache-result: don't drop a .phpunit.result.cache in the plugin dir (keeps the working
+    // tree and Plugin Check clean; it is excluded from the .zip regardless via .distignore).
+    ['php', PHAR_IN_CONTAINER, '-c', 'phpunit.xml.dist', '--colors=never', '--do-not-cache-result'],
     ['--env-cwd=' + cwd],
   );
 
