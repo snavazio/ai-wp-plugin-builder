@@ -1,0 +1,14 @@
+parameters:
+    level: 5
+    phpVersion: 80100
+    # The plugin directory under test is passed on the CLI (analyse <dir>).
+    # Bootstrap WordPress function/constant stubs via the szepeviktor extension.
+    bootstrapFiles: []
+    treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: false
+    excludePaths:
+        - '*/tests/*'
+        - '*/vendor/*'
+    # Generated plugins may reference optional WP APIs; keep noise down without hiding real bugs.
+    ignoreErrors:
+        - '#Constant (ABSPATH|WPINC|WP_UNINSTALL_PLUGIN) not found#'

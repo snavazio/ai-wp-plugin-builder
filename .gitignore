@@ -1,0 +1,32 @@
+# Node
+node_modules/
+dist-ts/
+npm-debug.log*
+
+# PHP / Composer
+harness/vendor/
+vendor/
+composer.lock
+
+# Working + output dirs (keep the folders, ignore generated contents)
+build/*
+!build/.gitkeep
+dist/*
+!dist/.gitkeep
+
+# wp-env / Docker local state
+.wp-env-home/
+# Generated per-run wp-env config at repo root (the template lives in harness/.wp-env.json)
+/.wp-env.json
+/.wp-env.override.json
+
+# Env / secrets
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

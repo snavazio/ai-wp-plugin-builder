@@ -1,0 +1,14 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/wp-env.json",
+    "comment": "Template/base for the throwaway WordPress used by the activate gate. The activate gate writes a generated .wp-env.json at the repo root that maps the specific plugin-under-test into wp-content/plugins and enables debug logging. WP_DEBUG + WP_DEBUG_LOG are on so PHP fatals during activation land in wp-content/debug.log for scanning.",
+    "core": null,
+    "phpVersion": "8.1",
+    "plugins": [],
+    "config": {
+        "WP_DEBUG": true,
+        "WP_DEBUG_LOG": true,
+        "WP_DEBUG_DISPLAY": false,
+        "SCRIPT_DEBUG": true
+    },
+    "mappings": {}
+}

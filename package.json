@@ -1,0 +1,31 @@
+{
+  "name": "ai-wp-plugin-builder",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Internal agency tool: natural-language spec -> security-audited, install-ready WordPress plugin .zip, verified in a throwaway WordPress.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "verify": "tsx src/run.ts verify",
+    "build": "tsx src/run.ts build",
+    "typecheck": "tsc --noEmit",
+    "wp-env": "wp-env",
+    "wp-env:start": "wp-env start",
+    "wp-env:stop": "wp-env stop",
+    "wp-env:destroy": "wp-env destroy"
+  },
+  "bin": {
+    "aiwpb": "src/run.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@wordpress/env": "^10.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

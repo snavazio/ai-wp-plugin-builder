@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<ruleset name="AIWPB-WordPress">
+    <description>WordPress coding + security standard for plugins built by the AI WP Plugin Builder.</description>
+
+    <!-- Analyze PHP only. The plugin dir under test is passed on the CLI. -->
+    <arg name="extensions" value="php"/>
+    <arg name="colors"/>
+    <arg value="sp"/>
+    <arg name="parallel" value="8"/>
+
+    <!-- Don't descend into vendored / build artifacts. -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+    <exclude-pattern>*/build/*</exclude-pattern>
+    <exclude-pattern>*/dist/*</exclude-pattern>
+    <exclude-pattern>*/tests/*</exclude-pattern>
+
+    <!-- Core WordPress standard: coding style + security + best practices. -->
+    <rule ref="WordPress">
+        <!-- These are style-opinion sniffs that are noisy for generated code; keep security ones. -->
+        <exclude name="WordPress.Files.FileName"/>
+    </rule>
+
+    <!-- Security-focused rules are part of WordPress-Extra/WordPress; make sure the key ones are on. -->
+    <rule ref="WordPress.Security.EscapeOutput"/>
+    <rule ref="WordPress.Security.ValidatedSanitizedInput"/>
+    <rule ref="WordPress.Security.NonceVerification"/>
+    <rule ref="WordPress.DB.PreparedSQL"/>
+    <rule ref="WordPress.DB.PreparedSQLPlaceholders"/>
+
+    <!-- Minimum supported versions used by some sniffs. -->
+    <config name="minimum_wp_version" value="6.0"/>
+    <config name="testVersion" value="7.4-"/>
+</ruleset>
