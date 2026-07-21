@@ -1,0 +1,84 @@
+{
+  "slug": "portfolio",
+  "pluginName": "Portfolio",
+  "description": "A plugin for showcasing agency projects with custom post type, taxonomy, shortcode, and AJAX load-more functionality.",
+  "version": "1.0.0",
+  "prefix": "prtf",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "edit_posts"
+  ],
+  "postTypes": [
+    {
+      "key": "prtf_portfolio",
+      "labelSingular": "Portfolio",
+      "labelPlural": "Portfolios",
+      "public": true,
+      "supports": [
+        "title",
+        "editor",
+        "thumbnail"
+      ],
+      "fields": [],
+      "adminColumns": []
+    }
+  ],
+  "adminPages": [],
+  "taxonomies": [
+    {
+      "key": "prtf_project_type",
+      "labelSingular": "Project Type",
+      "labelPlural": "Project Types",
+      "postTypes": [
+        "prtf_portfolio"
+      ],
+      "hierarchical": true,
+      "public": true
+    }
+  ],
+  "shortcodes": [
+    {
+      "tag": "portfolio",
+      "description": "Lists recent portfolio projects, optionally filtered by project-type slug, rendered as an escaped grid.",
+      "attributes": [
+        {
+          "name": "type",
+          "default": ""
+        },
+        {
+          "name": "count",
+          "default": "9"
+        }
+      ]
+    }
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [
+    {
+      "action": "prtf_load_more",
+      "public": true,
+      "capability": "",
+      "description": "AJAX load-more handler for portfolio projects. Public (logged-out visitors allowed). MUST verify nonce, sanitize all input (page number, post count, type slug), and only return published content (never drafts/private). Returns escaped HTML of next page of projects."
+    }
+  ],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "Portfolio projects stored as custom post type 'prtf_portfolio' with core WP posts table. Project Type taxonomy stored in core terms/term_taxonomy tables. Featured images via core post meta (_thumbnail_id). No custom tables required.",
+  "securityRequirements": [
+    "Escape all output (esc_html, esc_attr, esc_url) in shortcode and AJAX responses",
+    "Nonce verification required for AJAX load-more action (check_ajax_referer)",
+    "Sanitize all AJAX input: page number (absint), count (absint), type slug (sanitize_key)",
+    "AJAX handler MUST only query post_status='publish' to prevent exposure of drafts/private posts",
+    "Featured images output via esc_url(get_the_post_thumbnail_url())",
+    "Taxonomy term names escaped with esc_html when displayed"
+  ],
+  "smokeAssertions": [
+    "post_type_exists('prtf_portfolio')",
+    "taxonomy_exists('prtf_project_type')",
+    "shortcode_exists('portfolio')",
+    "has_action('wp_ajax_prtf_load_more') !== false",
+    "has_action('wp_ajax_nopriv_prtf_load_more') !== false"
+  ]
+}

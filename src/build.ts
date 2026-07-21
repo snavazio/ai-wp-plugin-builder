@@ -17,7 +17,7 @@ import {
   type RoleConfig,
 } from './agents.js';
 import { makeCoderHooks, newHookStats, type HookStats } from './hooks.js';
-import { scaffoldPlugin, validateSpec, type StructuredSpec } from './spec.js';
+import { scaffoldPlugin, validateSpec, normalizeSpec, type StructuredSpec } from './spec.js';
 import { runPipeline } from './pipeline.js';
 import { renderTerminal, renderMarkdown } from './report.js';
 import { WpEnv, dockerAvailable } from './wpEnv.js';
@@ -29,10 +29,10 @@ export interface BuildEnv {
   harnessDir: string;
 }
 
-const MAX_FIX_ITERATIONS = 5;
-const MAX_AUDIT_ROUNDS = 2;
+export const MAX_FIX_ITERATIONS = 5;
+export const MAX_AUDIT_ROUNDS = 2;
 
-interface AgentRun {
+export interface AgentRun {
   text: string;
   costUsd: number;
   turns: number;
@@ -40,7 +40,7 @@ interface AgentRun {
   errorInfo: string;
 }
 
-async function runAgent(params: {
+export async function runAgent(params: {
   repoRoot: string;
   role: RoleConfig;
   rulesAppend: string;
@@ -84,7 +84,7 @@ async function runAgent(params: {
 }
 
 /** Concise failing-gate error digest to feed back to the coder. */
-function digestFailures(pipe: PipelineResult): string {
+export function digestFailures(pipe: PipelineResult): string {
   const lines: string[] = [];
   for (const r of pipe.results) {
     if (r.passed || r.skipped) continue;
@@ -95,7 +95,7 @@ function digestFailures(pipe: PipelineResult): string {
   return lines.join('\n');
 }
 
-interface AuditFinding {
+export interface AuditFinding {
   severity: 'high' | 'medium' | 'low';
   file?: string;
   line?: number;
@@ -103,7 +103,7 @@ interface AuditFinding {
   required_fix: string;
 }
 
-function parseFindings(text: string): { findings: AuditFinding[]; parseNote: string } {
+export function parseFindings(text: string): { findings: AuditFinding[]; parseNote: string } {
   const fence = text.match(/```json\s*([\s\S]*?)```/i) ?? text.match(/(\{[\s\S]*"findings"[\s\S]*\})/);
   if (!fence) return { findings: [], parseNote: 'No JSON findings block found in auditor output.' };
   try {
@@ -115,7 +115,7 @@ function parseFindings(text: string): { findings: AuditFinding[]; parseNote: str
   }
 }
 
-function blockingFindings(findings: AuditFinding[]): AuditFinding[] {
+export function blockingFindings(findings: AuditFinding[]): AuditFinding[] {
   return findings.filter((f) => f.severity === 'high' || f.severity === 'medium');
 }
 
@@ -158,9 +158,9 @@ export async function runBuild(args: string[], env: BuildEnv): Promise<number> {
     totalCost += r.costUsd;
     console.log(`  spec-writer done (${r.turns} turns, $${r.costUsd.toFixed(4)}).`);
     try {
-      const parsed = JSON.parse(await readFile(stagingPath, 'utf8'));
+      const parsed = normalizeSpec(JSON.parse(await readFile(stagingPath, 'utf8')));
       specProblems = validateSpec(parsed);
-      if (specProblems.length === 0) spec = parsed as StructuredSpec;
+      if (specProblems.length === 0) spec = parsed as unknown as StructuredSpec;
       else console.log(`  spec invalid: ${specProblems.join('; ')}`);
     } catch (e) {
       specProblems = ['SPEC.json was not written or is not valid JSON.'];
@@ -316,7 +316,7 @@ export async function runBuild(args: string[], env: BuildEnv): Promise<number> {
   return 0;
 }
 
-async function writeReport(p: {
+export async function writeReport(p: {
   repoRoot: string;
   spec: StructuredSpec;
   pipe: PipelineResult;
@@ -345,10 +345,14 @@ async function writeReport(p: {
   lines.push(spec.description);
   lines.push('');
   if (spec.postTypes.length) lines.push(`- **Custom post types:** ${spec.postTypes.map((c) => `\`${c.key}\` (${c.labelPlural})`).join(', ')}`);
+  if (spec.taxonomies?.length) lines.push(`- **Taxonomies:** ${spec.taxonomies.map((t) => `\`${t.key}\``).join(', ')}`);
   if (spec.adminPages.length) lines.push(`- **Admin pages:** ${spec.adminPages.map((a) => a.title).join(', ')}`);
   if (spec.shortcodes.length) lines.push(`- **Shortcodes:** ${spec.shortcodes.map((s) => `\`[${s.tag}]\``).join(', ')}`);
   if (spec.blocks.length) lines.push(`- **Blocks:** ${spec.blocks.map((b) => b.title).join(', ')}`);
   if (spec.restEndpoints.length) lines.push(`- **REST endpoints:** ${spec.restEndpoints.map((r) => `\`${r.namespace}${r.route}\` (${r.methods.join('/')})`).join(', ')}`);
+  if (spec.ajaxActions?.length) lines.push(`- **AJAX actions:** ${spec.ajaxActions.map((a) => `\`${a.action}\``).join(', ')}`);
+  if (spec.cronEvents?.length) lines.push(`- **Cron events:** ${spec.cronEvents.map((c) => `\`${c.hook}\` (${c.recurrence})`).join(', ')}`);
+  if (spec.widgets?.length) lines.push(`- **Widgets:** ${spec.widgets.map((w) => w.name).join(', ')}`);
   lines.push('');
 
   lines.push(renderMarkdown(pipe));

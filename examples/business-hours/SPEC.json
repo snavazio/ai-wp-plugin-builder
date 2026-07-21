@@ -2,7 +2,7 @@
   "slug": "business-hours",
   "pluginName": "Business Hours",
   "description": "Display business opening hours via settings page and shortcode.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "prefix": "bhrs",
   "requiresWp": "6.0",
   "requiresPhp": "7.4",

@@ -17,7 +17,7 @@ class Bhrs_Smoke_Test extends WP_UnitTestCase {
 	 */
 	public function test_plugin_loaded() {
 		$this->assertTrue( defined( 'BHRS_VERSION' ), 'BHRS_VERSION should be defined.' );
-		$this->assertSame( '1.0.0', BHRS_VERSION );
+		$this->assertSame( '1.0.1', BHRS_VERSION );
 	}
 
 	/**
@@ -27,6 +27,15 @@ class Bhrs_Smoke_Test extends WP_UnitTestCase {
 	 */
 	public function test_shortcode_registered() {
 		$this->assertTrue( shortcode_exists( 'business_hours' ), 'business_hours shortcode should be registered.' );
+	}
+
+	/**
+	 * Test that the business_hours_today shortcode is registered.
+	 *
+	 * @return void
+	 */
+	public function test_today_shortcode_registered() {
+		$this->assertTrue( shortcode_exists( 'business_hours_today' ), 'business_hours_today shortcode should be registered.' );
 	}
 
 	/**

@@ -1,0 +1,29 @@
+{
+  "slug": "greeting-box",
+  "pluginName": "Greeting Box",
+  "description": "A very small plugin that provides a single shortcode [greeting_box] for the front end.",
+  "version": "1.0.0",
+  "prefix": "gbox",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "greeting_box"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "none",
+  "securityRequirements": [
+    "sanitize name attribute",
+    "escape output"
+  ],
+  "smokeAssertions": [
+    "shortcode_exists('greeting_box')"
+  ]
+}

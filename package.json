@@ -9,7 +9,11 @@
   },
   "scripts": {
     "verify": "tsx src/run.ts verify",
+    "verify-all": "tsx src/run.ts verify-all",
+    "regression": "tsx src/run.ts regression",
     "build": "tsx src/run.ts build",
+    "build-local": "tsx src/run.ts build-local",
+    "revise": "tsx src/run.ts revise",
     "typecheck": "tsc --noEmit",
     "wp-env": "wp-env",
     "wp-env:start": "wp-env start",

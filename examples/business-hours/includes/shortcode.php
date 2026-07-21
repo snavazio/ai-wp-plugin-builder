@@ -66,3 +66,53 @@ function bhrs_business_hours_shortcode( $atts ) {
 	return $output;
 }
 add_shortcode( 'business_hours', 'bhrs_business_hours_shortcode' );
+
+/**
+ * Register the business_hours_today shortcode.
+ *
+ * @param array $atts Shortcode attributes (unused).
+ * @return string
+ */
+function bhrs_business_hours_today_shortcode( $atts ) {
+	unset( $atts );
+
+	$days_map = array(
+		'monday'    => __( 'Monday', 'business-hours' ),
+		'tuesday'   => __( 'Tuesday', 'business-hours' ),
+		'wednesday' => __( 'Wednesday', 'business-hours' ),
+		'thursday'  => __( 'Thursday', 'business-hours' ),
+		'friday'    => __( 'Friday', 'business-hours' ),
+		'saturday'  => __( 'Saturday', 'business-hours' ),
+		'sunday'    => __( 'Sunday', 'business-hours' ),
+	);
+
+	// Get current day (lowercase).
+	$current_day_name = strtolower( gmdate( 'l' ) );
+
+	// Check if the current day exists in our map.
+	if ( ! isset( $days_map[ $current_day_name ] ) ) {
+		return '';
+	}
+
+	$day_label = $days_map[ $current_day_name ];
+	$is_closed = get_option( 'bhrs_' . $current_day_name . '_closed', false );
+	$open      = get_option( 'bhrs_' . $current_day_name . '_open', '' );
+	$close     = get_option( 'bhrs_' . $current_day_name . '_close', '' );
+
+	$output = '<div class="bhrs-today-hours">';
+
+	if ( $is_closed ) {
+		$output .= '<span class="bhrs-closed">' . esc_html__( 'Closed', 'business-hours' ) . '</span>';
+	} elseif ( ! empty( $open ) && ! empty( $close ) ) {
+		$output .= esc_html( $open ) . ' - ' . esc_html( $close );
+	} elseif ( ! empty( $open ) || ! empty( $close ) ) {
+		$output .= esc_html( $open . $close );
+	} else {
+		$output .= '<span class="bhrs-not-set">' . esc_html__( 'Not set', 'business-hours' ) . '</span>';
+	}
+
+	$output .= '</div>';
+
+	return $output;
+}
+add_shortcode( 'business_hours_today', 'bhrs_business_hours_today_shortcode' );

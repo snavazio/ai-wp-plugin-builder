@@ -66,9 +66,28 @@ async function cmdVerify(args: string[]): Promise<number> {
 }
 
 async function cmdBuild(args: string[]): Promise<number> {
-  // Phase 1 — implemented after the Phase 0 harness is proven.
   const { runBuild } = await import('./build.js');
   return runBuild(args, { repoRoot: REPO_ROOT, harnessDir: HARNESS_DIR });
+}
+
+async function cmdRevise(args: string[]): Promise<number> {
+  const { runRevise } = await import('./revise.js');
+  return runRevise(args, { repoRoot: REPO_ROOT, harnessDir: HARNESS_DIR });
+}
+
+async function cmdBuildLocal(args: string[]): Promise<number> {
+  const { runBuildLocal } = await import('./buildLocal.js');
+  return runBuildLocal(args, { repoRoot: REPO_ROOT, harnessDir: HARNESS_DIR });
+}
+
+async function cmdVerifyAll(args: string[]): Promise<number> {
+  const { runVerifyAll } = await import('./verifyAll.js');
+  return runVerifyAll(args, { repoRoot: REPO_ROOT, harnessDir: HARNESS_DIR });
+}
+
+async function cmdRegression(args: string[]): Promise<number> {
+  const { runRegression } = await import('./regression.js');
+  return runRegression(args, { repoRoot: REPO_ROOT, harnessDir: HARNESS_DIR });
 }
 
 async function main(): Promise<void> {
@@ -78,11 +97,25 @@ async function main(): Promise<void> {
     case 'verify':
       code = await cmdVerify(rest);
       break;
+    case 'verify-all':
+      code = await cmdVerifyAll(rest);
+      break;
+    case 'regression':
+      code = await cmdRegression(rest);
+      break;
     case 'build':
       code = await cmdBuild(rest);
       break;
+    case 'build-local':
+      code = await cmdBuildLocal(rest);
+      break;
+    case 'revise':
+      code = await cmdRevise(rest);
+      break;
     default:
-      console.error('Commands: verify <plugin-dir> | build <spec.md>');
+      console.error(
+        'Commands: verify <dir> | verify-all <dir> | regression | build <spec.md> | build-local <spec.md> | revise <slug> "change"',
+      );
       code = 2;
   }
   process.exit(code);

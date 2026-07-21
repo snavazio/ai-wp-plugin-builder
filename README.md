@@ -55,8 +55,49 @@ npm run build -- specs/<name>.md         # → dist/<slug>.<version>.zip + dist/
 ```
 
 Write a spec as a markdown file in `specs/` describing the feature in plain language (plugin name, custom
-post types + fields, admin screens, shortcodes/blocks, REST endpoints, capabilities, data storage). The
-`spec-writer` agent turns it into a precise structured spec before any code is written.
+post types + fields, taxonomies, admin screens, shortcodes/blocks, REST endpoints, AJAX actions, cron
+events, widgets, capabilities, data storage). The `spec-writer` agent turns it into a precise structured
+spec before any code is written.
+
+### Revise an existing plugin (Phase 2)
+
+```bash
+npm run revise -- <slug> "your change request" [--version X.Y.Z]
+```
+
+Applies a change to an already-built plugin (found in `examples/<slug>`, `build/<slug>`, or a path),
+bumps the version everywhere (header, readme Stable tag, `*_VERSION`), and re-runs the full harness +
+independent auditor before re-packaging. Same 8-gate bar as a fresh build.
+
+### Batch verification & regression (Phase 3 — fully local, no API)
+
+```bash
+npm run verify-all -- examples            # verify every plugin under a dir; combined table
+npm run verify-all -- examples --no-docker # static gates only (fast, offline)
+npm run regression                        # golden-set: assert known gate OUTCOMES hold
+npm run regression -- --static            # fast offline regression (static gates)
+```
+
+`regression` is the guardrail on the harness itself: it asserts the good sample passes, the bad sample
+*fails on the specific gates that must catch it* (incl. that phpcs really reports a security error), and
+every committed example stays green. Run it after any change to the gates or templates.
+
+### Local generation on Ollama (Phase 4 — no API, runs offline)
+
+```bash
+npm run build-local -- specs/<name>.md
+# point at a remote box (e.g. an Olares node) and/or a bigger model:
+OLLAMA_HOST=http://<host>:11434 OLLAMA_MODEL=qwen2.5-coder:32b npm run build-local -- specs/x.md
+```
+
+Same loop as `build`, but generation runs on a **local Ollama model** (default `qwen2.5-coder:14b`)
+with a small local **RAG** (`nomic-embed-text`) that feeds the WordPress rules + a clean reference plugin
+to the model. The 8-gate harness is still the objective judge, so local output is held to the exact same
+bar — and the report honestly shows where a smaller model falls short. Cost: $0. Config via env
+(`OLLAMA_HOST`, `OLLAMA_MODEL`, `OLLAMA_EMBED_MODEL`).
+
+**Suggested models:** `qwen2.5-coder:32b` (Q4 ≈20 GB VRAM — best local quality), `qwen2.5-coder:14b`
+(portable default). Pull once with `ollama pull <model>`.
 
 ## The gates (cheap → expensive, fail early)
 

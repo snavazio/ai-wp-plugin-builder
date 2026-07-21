@@ -56,17 +56,27 @@ The JSON MUST match this shape (use [] for empty arrays, never omit a key):
   "adminPages": [ { "type": "settings", "title": "Settings", "menuSlug": "abcd-settings",
                     "capability": "manage_options",
                     "fields": [ { "key": "abcd_hours", "label": "Hours", "type": "textarea" } ] } ],
+  "taxonomies": [ { "key": "abcd_type", "labelSingular": "Type", "labelPlural": "Types",
+                    "postTypes": ["abcd_item"], "hierarchical": true, "public": false } ],
   "shortcodes": [ { "tag": "abcd_list", "description": "...", "attributes": [ { "name": "count", "default": "5" } ] } ],
   "blocks": [],
   "restEndpoints": [ { "namespace": "abcd/v1", "route": "/items", "methods": ["GET"],
                        "public": true, "description": "Read-only list of published items." } ],
+  "ajaxActions": [ { "action": "abcd_do_thing", "public": false, "capability": "edit_posts",
+                     "description": "Admin AJAX handler — MUST verify nonce + capability." } ],
+  "cronEvents": [ { "hook": "abcd_daily_task", "recurrence": "daily", "description": "..." } ],
+  "widgets": [ { "idBase": "abcd_widget", "name": "Recent Items", "description": "..." } ],
   "dataStorage": "Where/how data is stored (CPT + post meta, options, etc.).",
   "securityRequirements": ["Escape all output", "Nonce + capability on writes", "$wpdb->prepare for any SQL"],
   "smokeAssertions": ["post_type_exists('abcd_item')", "shortcode_exists('abcd_list')"]
 }
 
 Rules:
-- Keys 'key', 'menuSlug', 'namespace', etc. must all use the plugin prefix so nothing collides with core.
+- Keys 'key', 'menuSlug', 'namespace', 'action', 'hook', 'idBase', etc. must all use the plugin prefix so nothing collides with core.
+- Only include arrays for features the spec actually calls for; use [] for the rest. Supported feature types:
+  postTypes, taxonomies, adminPages, shortcodes, blocks, restEndpoints, ajaxActions, cronEvents, widgets.
+- AJAX + REST-write + cron-triggered writes are state-changing: capture the required capability and note the
+  nonce requirement in securityRequirements.
 - Prefer core APIs (CPT + meta, options) over custom tables unless the spec truly needs them.
 - smokeAssertions are PHP boolean expressions that will become PHPUnit assertions; make them specific and true-after-implementation.
 - Output ONLY by writing the file. Your final message should just confirm the path you wrote.`,

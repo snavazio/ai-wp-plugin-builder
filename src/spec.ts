@@ -8,8 +8,37 @@ import { join, dirname } from 'node:path';
 export interface SpecField {
   key: string;
   label: string;
-  type: 'text' | 'textarea' | 'int' | 'email' | 'url' | 'checkbox' | 'select';
+  type: 'text' | 'textarea' | 'int' | 'email' | 'url' | 'checkbox' | 'select' | 'date' | 'color' | 'number';
   options?: string[];
+}
+
+export interface SpecTaxonomy {
+  key: string;
+  labelSingular: string;
+  labelPlural: string;
+  postTypes: string[];
+  hierarchical: boolean;
+  public: boolean;
+}
+
+export interface SpecAjaxAction {
+  action: string;
+  /** true if the endpoint is available to logged-out users (wp_ajax_nopriv). */
+  public: boolean;
+  capability?: string;
+  description: string;
+}
+
+export interface SpecCronEvent {
+  hook: string;
+  recurrence: 'hourly' | 'twicedaily' | 'daily' | 'weekly';
+  description: string;
+}
+
+export interface SpecWidget {
+  idBase: string;
+  name: string;
+  description: string;
 }
 
 export interface SpecPostType {
@@ -61,10 +90,14 @@ export interface StructuredSpec {
   requiresPhp: string;
   capabilities: string[];
   postTypes: SpecPostType[];
+  taxonomies: SpecTaxonomy[];
   adminPages: SpecAdminPage[];
   shortcodes: SpecShortcode[];
   blocks: SpecBlock[];
   restEndpoints: SpecRestEndpoint[];
+  ajaxActions: SpecAjaxAction[];
+  cronEvents: SpecCronEvent[];
+  widgets: SpecWidget[];
   dataStorage: string;
   securityRequirements: string[];
   /** PHP boolean expressions the smoke test should assert are true, e.g. "post_type_exists('x_item')". */
@@ -72,6 +105,29 @@ export interface StructuredSpec {
 }
 
 const RESERVED_PREFIXES = ['wp', 'wp_', '__', '_'];
+
+const ARRAY_KEYS = [
+  'capabilities',
+  'postTypes',
+  'taxonomies',
+  'adminPages',
+  'shortcodes',
+  'blocks',
+  'restEndpoints',
+  'ajaxActions',
+  'cronEvents',
+  'widgets',
+  'securityRequirements',
+  'smokeAssertions',
+] as const;
+
+/** Fill any missing array fields with [] so older specs and partial specs stay valid. */
+export function normalizeSpec(spec: Record<string, unknown>): Record<string, unknown> {
+  for (const k of ARRAY_KEYS) {
+    if (!Array.isArray(spec[k])) spec[k] = [];
+  }
+  return spec;
+}
 
 /** Validate a parsed spec object; returns a list of problems (empty = valid). */
 export function validateSpec(spec: unknown): string[] {
@@ -86,13 +142,13 @@ export function validateSpec(spec: unknown): string[] {
   need(typeof s.description === 'string' && !!s.description, 'description is required.');
   need(typeof s.version === 'string' && /^\d+\.\d+(\.\d+)?$/.test(s.version ?? ''), 'version must look like 1.0.0.');
   need(
-    typeof s.prefix === 'string' && /^[a-z][a-z0-9]{3,6}$/.test(s.prefix ?? '') && !RESERVED_PREFIXES.includes(s.prefix ?? ''),
-    'prefix must be 4-7 lowercase alnum chars and not a reserved WP prefix.',
+    typeof s.prefix === 'string' && /^[a-z][a-z0-9]{2,7}$/.test(s.prefix ?? '') && !RESERVED_PREFIXES.includes(s.prefix ?? ''),
+    'prefix must be 3-8 lowercase alnum chars and not a reserved WP prefix (wp/__/_).',
   );
   need(typeof s.requiresWp === 'string' && !!s.requiresWp, 'requiresWp is required.');
   need(typeof s.requiresPhp === 'string' && !!s.requiresPhp, 'requiresPhp is required.');
-  for (const arrKey of ['postTypes', 'adminPages', 'shortcodes', 'blocks', 'restEndpoints', 'capabilities', 'securityRequirements', 'smokeAssertions'] as const) {
-    need(Array.isArray(s[arrKey]), `${arrKey} must be an array (use [] if none).`);
+  for (const arrKey of ARRAY_KEYS) {
+    need(Array.isArray((s as Record<string, unknown>)[arrKey]), `${arrKey} must be an array (use [] if none).`);
   }
   return problems;
 }
@@ -146,8 +202,8 @@ export async function scaffoldPlugin(spec: StructuredSpec, repoRoot: string): Pr
   return dir;
 }
 
-/** Read and parse a SPEC.json file. */
+/** Read and parse a SPEC.json file (normalized so missing array fields default to []). */
 export async function readSpec(path: string): Promise<StructuredSpec> {
   const raw = await readFile(path, 'utf8');
-  return JSON.parse(raw) as StructuredSpec;
+  return normalizeSpec(JSON.parse(raw)) as unknown as StructuredSpec;
 }

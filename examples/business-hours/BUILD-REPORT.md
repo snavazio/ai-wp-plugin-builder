@@ -1,9 +1,9 @@
 # Build report: Business Hours
 
-- **Slug:** `business-hours`  ·  **Version:** 1.0.0  ·  **Prefix:** `bhrs`
+- **Slug:** `business-hours`  ·  **Version:** 1.0.1  ·  **Prefix:** `bhrs`
 - **Outcome:** ✅ install-ready .zip produced
-- **Artifact:** `dist/business-hours.1.0.0.zip`
-- **Iterations:** 1  ·  **Duration:** 12.9 min  ·  **Token cost:** $0.6410
+- **Artifact:** `dist/business-hours.1.0.1.zip`
+- **Iterations:** 0  ·  **Duration:** 6.6 min  ·  **Token cost:** $0.3042
 
 ## What it built (plain English)
 
@@ -14,18 +14,18 @@ Display business opening hours via settings page and shortcode.
 
 ## Verification: `business-hours`
 
-**Overall: ✅ PASS**  (total 13.3s)
+**Overall: ✅ PASS**  (total 41.0s)
 
 | Gate | Status | Time | Errors | Warnings |
 | --- | --- | --- | --- | --- |
-| PHP lint (php -l) | ✅ pass | 90ms | 0 | 0 |
-| Static structure & header checks | ✅ pass | 5ms | 0 | 0 |
-| PHP_CodeSniffer (WordPress) | ✅ pass | 289ms | 0 | 0 |
-| PHPStan (level 5, WP stubs) | ✅ pass | 173ms | 0 | 0 |
-| WordPress Plugin Check | ✅ pass | 7.3s | 0 | 3 |
+| PHP lint (php -l) | ✅ pass | 78ms | 0 | 0 |
+| Static structure & header checks | ✅ pass | 3ms | 0 | 0 |
+| PHP_CodeSniffer (WordPress) | ✅ pass | 285ms | 0 | 0 |
+| PHPStan (level 5, WP stubs) | ✅ pass | 1.6s | 0 | 0 |
+| WordPress Plugin Check | ✅ pass | 7.5s | 0 | 3 |
 | Install + activate (wp-env) | ✅ pass | 4.2s | 0 | 0 |
 | PHPUnit smoke test | ✅ pass | 1.2s | 0 | 0 |
-| Version consistency | ✅ pass | 3ms | 0 | 0 |
+| Version consistency | ✅ pass | 1ms | 0 | 0 |
 
 ### PHP lint (php -l)
 - _6/6 files lint-clean._
@@ -50,11 +50,11 @@ Display business opening hours via settings page and shortcode.
 - _No PHP fatals in debug.log._
 
 ### PHPUnit smoke test
-- _OK (5 tests, 9 assertions)_
+- _OK (6 tests, 10 assertions)_
 
 ### Version consistency
-- _Header Version: 1.0.0_
-- _readme Stable tag matches: 1.0.0_
+- _Header Version: 1.0.1_
+- _readme Stable tag matches: 1.0.1_
 - _Checked 1 *_VERSION constant(s)._
 
 ## Independent security auditor
