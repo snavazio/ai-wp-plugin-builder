@@ -96,8 +96,27 @@ to the model. The 8-gate harness is still the objective judge, so local output i
 bar — and the report honestly shows where a smaller model falls short. Cost: $0. Config via env
 (`OLLAMA_HOST`, `OLLAMA_MODEL`, `OLLAMA_EMBED_MODEL`).
 
-**Suggested models:** `qwen2.5-coder:32b` (Q4 ≈20 GB VRAM — best local quality), `qwen2.5-coder:14b`
-(portable default). Pull once with `ollama pull <model>`.
+**Suggested models (measured):** `qwen3:30b` builds complex plugins (CPT+taxonomy+AJAX, REST,
+settings+shortcode) passing **all 8 gates** locally, $0 — recommended for hands-off local builds.
+`qwen2.5-coder:14b` is a portable fallback (writes clean PHP but needs a bigger model to clear strict
+WPCS unaided). Pull once with `ollama pull <model>`.
+
+#### Exemplar-RAG + the corpus flywheel
+
+`build-local` doesn't just retrieve rule text — it retrieves the **closest harness-verified plugin(s)**
+from `corpus/` and injects their full source as a *template*, because a local model is far more reliable
+adapting a working, gate-passing example than generating from rules alone. Measured effect: it eliminates
+the dominant "first-pass WPCS style" failure and the fix-regression oscillation.
+
+Every green `build`/`build-local` **appends its plugin to `corpus/`** (the flywheel). That corpus powers
+exemplar retrieval today and becomes a finetuning dataset later — with every label harness-verified correct.
+
+```bash
+npm run corpus        # (re)seed corpus/ from examples/ and list what's indexed
+```
+
+A canonical **fix knowledge-base** (`src/fixKb.ts`) also maps recurring gate errors (escaping, nonce,
+inline-comment punctuation, i18n placeholders, …) to precise fixes, injected on fix turns.
 
 ## The gates (cheap → expensive, fail early)
 

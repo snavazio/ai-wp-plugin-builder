@@ -22,6 +22,7 @@ import { runPipeline } from './pipeline.js';
 import { renderTerminal, renderMarkdown } from './report.js';
 import { WpEnv, dockerAvailable } from './wpEnv.js';
 import { exec } from './util/exec.js';
+import { addToCorpus } from './corpus.js';
 import type { PipelineResult } from './types.js';
 
 export interface BuildEnv {
@@ -303,6 +304,7 @@ export async function runBuild(args: string[], env: BuildEnv): Promise<number> {
     return 1;
   }
   console.log('  ' + pkg.stdout.trim());
+  await addToCorpus(repoRoot, pluginDir, spec);
 
   // ---------- 9. report ----------
   await writeReport({ repoRoot, spec, pipe, findings, auditNote: parseNote, hookStats, iterations, totalCost, startTs, zipPath, runLog });

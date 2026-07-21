@@ -20,6 +20,9 @@ import { exec, findPhpFiles } from './util/exec.js';
 import { ollamaConfig, ollamaHealth, ollamaChat, type OllamaConfig, type ChatMessage } from './engines/ollama.js';
 import { loadOrBuildIndex, retrieve, formatContext, type RagIndex } from './rag.js';
 import { parseFiles, extractJson, writeGeneratedFiles } from './fileProtocol.js';
+import { selectExemplars, formatExemplars } from './exemplarRag.js';
+import { formatFixes } from './fixKb.js';
+import { addToCorpus, readManifest, seedCorpus } from './corpus.js';
 import type { PipelineResult } from './types.js';
 
 const MAX_FIX_ITERATIONS = 6;
@@ -148,11 +151,20 @@ export async function runBuildLocal(args: string[], env: BuildEnv): Promise<numb
   const pluginDir = await scaffoldPlugin(spec, repoRoot);
   console.log(`▶ scaffolded build/${spec.slug}/`);
 
-  // 3. RAG index + retrieval.
+  // 3. RAG index + retrieval (rules) + exemplar retrieval (verified whole-plugin templates).
   console.log('▶ building/loading RAG index…');
   const idx: RagIndex = await loadOrBuildIndex(cfg, repoRoot, (m) => console.log('  ' + m));
   const ragQuery = `${spec.description} ${spec.securityRequirements.join(' ')} WordPress plugin security escaping sanitizing nonce capability`;
-  const ragCtx = formatContext(await retrieve(idx, cfg, ragQuery, 6));
+  const ragCtx = formatContext(await retrieve(idx, cfg, ragQuery, 5));
+
+  // Seed the corpus from examples on first run so exemplar retrieval has templates.
+  if ((await readManifest(repoRoot)).entries.length === 0) {
+    console.log('▶ seeding corpus from examples/…');
+    await seedCorpus(repoRoot, (m) => console.log(m));
+  }
+  const exemplars = await selectExemplars(repoRoot, cfg, spec, 2);
+  const exemplarCtx = formatExemplars(exemplars);
+  if (exemplars.length) console.log(`▶ exemplars: ${exemplars.map((e) => `${e.entry.slug}(${e.score.toFixed(2)})`).join(', ')}`);
 
   const wpEnv = new WpEnv(repoRoot, pluginDir, spec.slug, harnessDir);
   const verify = async (): Promise<PipelineResult> =>
@@ -178,7 +190,8 @@ PHP. Follow these hard rules exactly:\n\n${rules}\n\n${PROTOCOL}`;
         content:
           `Implement this plugin. SPEC:\n${JSON.stringify(spec, null, 2)}\n\n` +
           `The scaffold already exists (below). Modify/extend it and output every file you change.\n\n` +
-          `RELEVANT RULES & A CLEAN REFERENCE PLUGIN (use these patterns):\n${ragCtx}\n\n` +
+          (exemplarCtx ? exemplarCtx + '\n\n' : '') +
+          `RELEVANT RULES:\n${ragCtx}\n\n` +
           `CURRENT SCAFFOLD:\n${scaffold}\n\n` +
           `Implement all features from the SPEC, update tests/test-smoke.php with the smokeAssertions, and ` +
           `update uninstall.php to remove stored data. Escape all output, sanitize all input, and pair every ` +
@@ -200,8 +213,10 @@ PHP. Follow these hard rules exactly:\n\n${rules}\n\n${PROTOCOL}`;
     iterations++;
     const failing = pipe.results.filter((r) => !r.passed && !r.skipped);
     const digest = failing.map((r) => `### ${r.label}\n` + r.errors.slice(0, 12).map((e) => `- ${e}`).join('\n')).join('\n');
+    const allErrors = failing.flatMap((r) => r.errors);
+    const canonicalFixes = formatFixes(allErrors);
     const fixQuery = 'fix ' + failing.map((r) => r.label).join(' ') + ' ' + failing.flatMap((r) => r.errors.slice(0, 3)).join(' ');
-    const fixCtx = formatContext(await retrieve(idx, cfg, fixQuery, 5));
+    const fixCtx = (canonicalFixes ? canonicalFixes + '\n\n' : '') + formatContext(await retrieve(idx, cfg, fixQuery, 4));
     console.log(`\n  Harness failed (${failing.map((r) => r.gate).join(', ')}) — fix iteration ${iterations}/${MAX_FIX_ITERATIONS}.`);
     const snap = await snapshotFiles(pluginDir);
     const example = '===FILE: ' + spec.slug + '.php===\n<?php\n// full corrected file here\n===ENDFILE===';
@@ -233,7 +248,7 @@ PHP. Follow these hard rules exactly:\n\n${rules}\n\n${PROTOCOL}`;
     pipe = await verify();
   }
 
-  // 6. Package if green; always write a report.
+  // 6. Package if green; always write a report. On success, feed the flywheel.
   const durMin = ((Date.now() - startTs) / 60000).toFixed(1);
   let zipPath: string | null = null;
   if (pipe.passed) {
@@ -242,6 +257,8 @@ PHP. Follow these hard rules exactly:\n\n${rules}\n\n${PROTOCOL}`;
     const pkg = await exec('php', [join(harnessDir, 'bin', 'package.php'), pluginDir, spec.slug, zipPath], { timeoutMs: 60_000 });
     if (pkg.code === 0) console.log('\n▶ Packaged: ' + pkg.stdout.trim());
     else zipPath = null;
+    await addToCorpus(repoRoot, pluginDir, spec);
+    console.log(`▶ Added ${spec.slug} to the verified corpus (flywheel).`);
   } else {
     console.log('\n' + renderTerminal(pipe));
   }

@@ -40,13 +40,12 @@ async function run(ctx: GateContext): Promise<GateResult> {
   }
 
   const cwd = `wp-content/plugins/${ctx.slug}`;
-  const res = await env.run(
-    'tests-cli',
-    // --do-not-cache-result: don't drop a .phpunit.result.cache in the plugin dir (keeps the working
-    // tree and Plugin Check clean; it is excluded from the .zip regardless via .distignore).
-    ['php', PHAR_IN_CONTAINER, '-c', 'phpunit.xml.dist', '--colors=never', '--do-not-cache-result'],
-    ['--env-cwd=' + cwd],
-  );
+  // Use `sh -c 'cd … && …'` instead of wp-env's --env-cwd. --env-cwd maps to `docker exec -w`, which
+  // throws "cwd outside container mount namespace root (possible container breakout)" when the plugin
+  // dir's bind-mount has gone stale (e.g. the dir was recreated while the container kept running).
+  // cd-ing inside the shell avoids that -w quirk. --do-not-cache-result keeps the tree/PluginCheck clean.
+  const cmd = `cd ${cwd} && php ${PHAR_IN_CONTAINER} -c phpunit.xml.dist --colors=never --do-not-cache-result`;
+  const res = await env.run('tests-cli', ['sh', '-c', cmd]);
 
   const out = (res.stdout + '\n' + res.stderr).trim();
   if (res.code !== 0) {

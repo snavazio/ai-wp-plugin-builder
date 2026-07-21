@@ -80,6 +80,15 @@ async function cmdBuildLocal(args: string[]): Promise<number> {
   return runBuildLocal(args, { repoRoot: REPO_ROOT, harnessDir: HARNESS_DIR });
 }
 
+async function cmdCorpus(): Promise<number> {
+  const { seedCorpus, readManifest } = await import('./corpus.js');
+  await seedCorpus(REPO_ROOT, (m) => console.log(m));
+  const man = await readManifest(REPO_ROOT);
+  console.log(`\nVerified corpus: ${man.entries.length} plugin(s).`);
+  for (const e of man.entries) console.log(`  ${e.slug.padEnd(18)} [${e.tags.join(', ')}]`);
+  return 0;
+}
+
 async function cmdVerifyAll(args: string[]): Promise<number> {
   const { runVerifyAll } = await import('./verifyAll.js');
   return runVerifyAll(args, { repoRoot: REPO_ROOT, harnessDir: HARNESS_DIR });
@@ -112,9 +121,12 @@ async function main(): Promise<void> {
     case 'revise':
       code = await cmdRevise(rest);
       break;
+    case 'corpus':
+      code = await cmdCorpus();
+      break;
     default:
       console.error(
-        'Commands: verify <dir> | verify-all <dir> | regression | build <spec.md> | build-local <spec.md> | revise <slug> "change"',
+        'Commands: verify <dir> | verify-all <dir> | regression | corpus | build <spec.md> | build-local <spec.md> | revise <slug> "change"',
       );
       code = 2;
   }

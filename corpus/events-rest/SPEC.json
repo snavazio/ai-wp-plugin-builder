@@ -1,0 +1,73 @@
+{
+  "slug": "events-rest",
+  "pluginName": "Events REST",
+  "description": "Registers an Events custom post type with a read-only REST API endpoint for published events.",
+  "version": "1.0.0",
+  "prefix": "evtr",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options",
+    "edit_posts"
+  ],
+  "postTypes": [
+    {
+      "key": "evtr_event",
+      "labelSingular": "Event",
+      "labelPlural": "Events",
+      "public": true,
+      "supports": [
+        "title",
+        "editor"
+      ],
+      "fields": [
+        {
+          "key": "evtr_event_date",
+          "label": "Event Date",
+          "type": "text"
+        },
+        {
+          "key": "evtr_event_location",
+          "label": "Event Location",
+          "type": "text"
+        }
+      ],
+      "adminColumns": [
+        "evtr_event_date",
+        "evtr_event_location"
+      ]
+    }
+  ],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [
+    {
+      "namespace": "events/v1",
+      "route": "/events",
+      "methods": [
+        "GET"
+      ],
+      "public": true,
+      "description": "Read-only endpoint that returns a JSON array of published events with id, title, permalink, event date, and location. Does not expose drafts or private posts."
+    }
+  ],
+  "dataStorage": "Events stored as custom post type 'evtr_event' with post meta fields for event_date and event_location. All data cleaned up on uninstall.",
+  "securityRequirements": [
+    "ABSPATH guard in all PHP files",
+    "Meta box uses wp_nonce_field/check_admin_referer + current_user_can capability check",
+    "Sanitize event_date and event_location on save with sanitize_text_field",
+    "wp_unslash superglobals before sanitizing",
+    "REST endpoint only returns published posts (post_status = publish)",
+    "Escape all output in REST response (esc_url for permalink, esc_html for text fields)",
+    "No dynamic SQL needed; use WP_Query and get_post_meta",
+    "uninstall.php has WP_UNINSTALL_PLUGIN guard and uses $wpdb->prepare if needed for cleanup"
+  ],
+  "smokeAssertions": [
+    "post_type_exists('evtr_event')",
+    "rest_get_server()->get_routes()['events/v1'] !== null",
+    "get_post_type_object('evtr_event')->public === true",
+    "get_post_type_object('evtr_event')->supports['title'] === 'title'",
+    "get_post_type_object('evtr_event')->supports['editor'] === 'editor'"
+  ]
+}

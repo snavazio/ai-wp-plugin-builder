@@ -1,0 +1,151 @@
+{
+  "slug": "business-hours",
+  "pluginName": "Business Hours",
+  "description": "Display business opening hours via settings page and shortcode.",
+  "version": "1.0.1",
+  "prefix": "bhrs",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [],
+  "adminPages": [
+    {
+      "type": "settings",
+      "title": "Business Hours",
+      "menuSlug": "bhrs-settings",
+      "capability": "manage_options",
+      "fields": [
+        {
+          "key": "bhrs_monday_open",
+          "label": "Monday Open",
+          "type": "text"
+        },
+        {
+          "key": "bhrs_monday_close",
+          "label": "Monday Close",
+          "type": "text"
+        },
+        {
+          "key": "bhrs_monday_closed",
+          "label": "Monday Closed",
+          "type": "checkbox"
+        },
+        {
+          "key": "bhrs_tuesday_open",
+          "label": "Tuesday Open",
+          "type": "text"
+        },
+        {
+          "key": "bhrs_tuesday_close",
+          "label": "Tuesday Close",
+          "type": "text"
+        },
+        {
+          "key": "bhrs_tuesday_closed",
+          "label": "Tuesday Closed",
+          "type": "checkbox"
+        },
+        {
+          "key": "bhrs_wednesday_open",
+          "label": "Wednesday Open",
+          "type": "text"
+        },
+        {
+          "key": "bhrs_wednesday_close",
+          "label": "Wednesday Close",
+          "type": "text"
+        },
+        {
+          "key": "bhrs_wednesday_closed",
+          "label": "Wednesday Closed",
+          "type": "checkbox"
+        },
+        {
+          "key": "bhrs_thursday_open",
+          "label": "Thursday Open",
+          "type": "text"
+        },
+        {
+          "key": "bhrs_thursday_close",
+          "label": "Thursday Close",
+          "type": "text"
+        },
+        {
+          "key": "bhrs_thursday_closed",
+          "label": "Thursday Closed",
+          "type": "checkbox"
+        },
+        {
+          "key": "bhrs_friday_open",
+          "label": "Friday Open",
+          "type": "text"
+        },
+        {
+          "key": "bhrs_friday_close",
+          "label": "Friday Close",
+          "type": "text"
+        },
+        {
+          "key": "bhrs_friday_closed",
+          "label": "Friday Closed",
+          "type": "checkbox"
+        },
+        {
+          "key": "bhrs_saturday_open",
+          "label": "Saturday Open",
+          "type": "text"
+        },
+        {
+          "key": "bhrs_saturday_close",
+          "label": "Saturday Close",
+          "type": "text"
+        },
+        {
+          "key": "bhrs_saturday_closed",
+          "label": "Saturday Closed",
+          "type": "checkbox"
+        },
+        {
+          "key": "bhrs_sunday_open",
+          "label": "Sunday Open",
+          "type": "text"
+        },
+        {
+          "key": "bhrs_sunday_close",
+          "label": "Sunday Close",
+          "type": "text"
+        },
+        {
+          "key": "bhrs_sunday_closed",
+          "label": "Sunday Closed",
+          "type": "checkbox"
+        }
+      ]
+    }
+  ],
+  "shortcodes": [
+    {
+      "tag": "business_hours",
+      "description": "Displays the weekly business hours as a formatted list or table, showing open/close times or 'Closed' for each day.",
+      "attributes": []
+    }
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "dataStorage": "Settings stored in wp_options table using WordPress Settings API with prefixed option keys (bhrs_monday_open, bhrs_monday_close, bhrs_monday_closed, etc. for all seven days).",
+  "securityRequirements": [
+    "Escape all output with esc_html(), esc_attr(), or wp_kses_post() as appropriate",
+    "Nonce verification via Settings API built-in protection or explicit check_admin_referer() with capability check for manage_options",
+    "Sanitize all input with sanitize_text_field() for time text inputs and rest_sanitize_boolean() or checkbox validation for closed checkboxes",
+    "ABSPATH guard at top of every PHP file",
+    "Use get_option() and update_option() core APIs exclusively"
+  ],
+  "smokeAssertions": [
+    "shortcode_exists('business_hours')",
+    "false !== get_option('bhrs_monday_open', false) || false !== get_option('bhrs_monday_closed', false)",
+    "has_action('admin_menu', 'bhrs_add_settings_page') !== false || function_exists('bhrs_add_settings_page')",
+    "has_action('admin_init', 'bhrs_register_settings') !== false || function_exists('bhrs_register_settings')"
+  ]
+}

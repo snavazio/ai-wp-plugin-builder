@@ -1,0 +1,113 @@
+{
+  "entries": [
+    {
+      "slug": "business-hours",
+      "pluginName": "Business Hours",
+      "description": "Display business opening hours via settings page and shortcode.",
+      "version": "1.0.1",
+      "prefix": "bhrs",
+      "tags": [
+        "settings",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "business-hours.php",
+        "includes/admin-settings.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "events-rest",
+      "pluginName": "Events REST",
+      "description": "Registers an Events custom post type with a read-only REST API endpoint for published events.",
+      "version": "1.0.0",
+      "prefix": "evtr",
+      "tags": [
+        "cpt",
+        "metabox",
+        "rest"
+      ],
+      "files": [
+        "SPEC.json",
+        "events-rest.php",
+        "includes/class-evtr-post-type.php",
+        "includes/class-evtr-rest-api.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "greeting-box",
+      "pluginName": "Greeting Box",
+      "description": "A very small plugin that provides a single shortcode [greeting_box] for the front end.",
+      "version": "1.0.0",
+      "prefix": "gbox",
+      "tags": [
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "greeting-box.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "portfolio",
+      "pluginName": "Portfolio",
+      "description": "A plugin for showcasing agency projects with custom post type, taxonomy, shortcode, and AJAX load-more functionality.",
+      "version": "1.0.0",
+      "prefix": "prtf",
+      "tags": [
+        "cpt",
+        "taxonomy",
+        "shortcode",
+        "ajax"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/ajax.php",
+        "includes/assets.php",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "includes/taxonomies.php",
+        "portfolio.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "testimonials",
+      "pluginName": "Testimonials",
+      "description": "Manage client testimonials with ratings, customer details, and admin display.",
+      "version": "1.0.0",
+      "prefix": "tmnl",
+      "tags": [
+        "cpt",
+        "metabox"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/admin-columns.php",
+        "includes/meta-box.php",
+        "includes/post-type.php",
+        "readme.txt",
+        "testimonials.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    }
+  ]
+}
