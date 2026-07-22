@@ -1,0 +1,28 @@
+{
+  "slug": "pricing-table-block",
+  "pluginName": "Pricing Table Block",
+  "description": "A dynamic server-rendered Gutenberg block rendering a single pricing tier: plan name, price, and a list of features from block attributes, all escaped. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
+  "version": "1.0.0",
+  "prefix": "ptbl",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [
+    "pricing-table"
+  ],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "",
+  "securityRequirements": [
+    "current_user_can( 'edit_posts' )"
+  ],
+  "smokeAssertions": [
+    "wp_get_registered_block_type( 'pricing-table' ) !== false"
+  ]
+}

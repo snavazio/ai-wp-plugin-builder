@@ -1,0 +1,28 @@
+{
+  "slug": "job-listings",
+  "pluginName": "Job Listings",
+  "description": "A Job CPT with meta for location, employment type, and salary range, admin columns, and [jobs] shortcode.",
+  "version": "1.0.0",
+  "prefix": "jobl",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "job"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "jobs"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "post_meta",
+  "securityRequirements": [
+    "shortcode_exists('jobs')"
+  ],
+  "smokeAssertions": []
+}

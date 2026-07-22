@@ -1,0 +1,27 @@
+{
+  "slug": "alert-banner-block",
+  "pluginName": "Alert Banner Block",
+  "description": "A dynamic server-rendered Gutenberg block that renders a dismissible alert banner with a 'type' attribute (info/success/warning/error) and a message attribute, all escaped. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
+  "version": "1.0.0",
+  "prefix": "ablk",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [
+    "alert-banner"
+  ],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "",
+  "securityRequirements": [
+    "wp_verify_nonce( $nonce, 'alert_banner_nonce' )",
+    "current_user_can( 'manage_options' )"
+  ],
+  "smokeAssertions": []
+}

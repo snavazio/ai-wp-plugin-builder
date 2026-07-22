@@ -1,0 +1,28 @@
+{
+  "slug": "scroll-to-top",
+  "pluginName": "Scroll To Top",
+  "description": "Adds a scroll to top button in the footer with customizable settings.",
+  "version": "1.0.0",
+  "prefix": "sttop",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [
+    "scroll-to-top-settings"
+  ],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "options_api",
+  "securityRequirements": [
+    "wp_verify_nonce($_POST['sttop_nonce'], 'sttop_settings') && current_user_can('manage_options')"
+  ],
+  "smokeAssertions": []
+}

@@ -1,0 +1,32 @@
+{
+  "slug": "tutorials",
+  "pluginName": "Tutorials",
+  "description": "Custom post type for tutorials with difficulty taxonomy and shortcode listing.",
+  "version": "1.0.0",
+  "prefix": "tutly",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "tutorials"
+  ],
+  "taxonomies": [
+    "difficulty"
+  ],
+  "adminPages": [],
+  "shortcodes": [
+    "tutorials"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "WordPress database (CPT, taxonomy)",
+  "securityRequirements": [
+    "post_type_exists('tutorials')",
+    "taxonomy_exists('difficulty')",
+    "shortcode_exists('tutorials')"
+  ],
+  "smokeAssertions": []
+}

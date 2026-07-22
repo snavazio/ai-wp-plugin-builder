@@ -1,0 +1,36 @@
+{
+  "slug": "seo-defaults",
+  "pluginName": "SEO Defaults",
+  "description": "Adds a default meta description field and outputs it in wp_head when missing.",
+  "version": "1.0.0",
+  "prefix": "seod",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [
+    {
+      "title": "SEO Defaults",
+      "menu_title": "SEO Defaults",
+      "capability": "manage_options",
+      "type": "settings"
+    }
+  ],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "options",
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['seo_defaults_nonce'], 'seo_defaults_nonce' )",
+    "current_user_can( 'manage_options' )"
+  ],
+  "smokeAssertions": [
+    "has_action( 'wp_head', 'seo_default_meta_description' )"
+  ]
+}

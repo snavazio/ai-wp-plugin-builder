@@ -1,0 +1,28 @@
+{
+  "slug": "reaction-buttons",
+  "pluginName": "Reaction Buttons",
+  "description": "A shortcode displaying emoji reaction buttons for posts, with AJAX click tracking stored in post meta.",
+  "version": "1.0.0",
+  "prefix": "reac",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "reactions"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [
+    "reaction_click"
+  ],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "post_meta",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "shortcode_exists('reactions')"
+  ]
+}

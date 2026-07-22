@@ -1,0 +1,31 @@
+{
+  "slug": "press-releases",
+  "pluginName": "Press Releases",
+  "description": "Custom Post Type for press releases with date meta and shortcode listing.",
+  "version": "1.0.0",
+  "prefix": "prcs",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "press_release"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "press_releases"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "post_meta",
+  "securityRequirements": [
+    "shortcode_exists('press_releases')"
+  ],
+  "smokeAssertions": [
+    "post_type_exists('press_release')",
+    "shortcode_exists('press_releases')"
+  ]
+}

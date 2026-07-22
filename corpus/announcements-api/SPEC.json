@@ -1,0 +1,35 @@
+{
+  "slug": "announcements-api",
+  "pluginName": "Announcements API",
+  "description": "Provides a public REST endpoint for published announcements with proper security and sanitization.",
+  "version": "1.0.0",
+  "prefix": "annapi",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "read"
+  ],
+  "postTypes": [
+    "announcement"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [
+    "announcements"
+  ],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "post_type",
+  "securityRequirements": [
+    "Escape all output",
+    "Sanitize all input",
+    "Nonce and capability check for state-changing actions"
+  ],
+  "smokeAssertions": [
+    "post_type_exists('announcement')",
+    "rest_get_server()->get_endpoint('announcements')"
+  ]
+}

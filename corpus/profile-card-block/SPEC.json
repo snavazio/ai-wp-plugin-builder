@@ -1,0 +1,26 @@
+{
+  "slug": "profile-card-block",
+  "pluginName": "Profile Card Block",
+  "description": "A dynamic server-rendered Gutenberg block for displaying person profile cards with name, title, and bio.",
+  "version": "1.0.0",
+  "prefix": "pccard",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [
+    "profile-card"
+  ],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "Post content (Gutenberg block attributes)",
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['profile_card_nonce'], 'profile_card_action' ) && current_user_can( 'edit_posts' )"
+  ],
+  "smokeAssertions": []
+}

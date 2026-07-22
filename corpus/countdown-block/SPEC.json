@@ -1,0 +1,28 @@
+{
+  "slug": "countdown-block",
+  "pluginName": "Countdown Block",
+  "description": "A dynamic server-rendered Gutenberg block that renders a countdown to a target date attribute (sanitized), showing days remaining, escaped. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
+  "version": "1.0.0",
+  "prefix": "cdtblk",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [
+    "countdown"
+  ],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "",
+  "securityRequirements": [
+    "block_exists('countdown')"
+  ],
+  "smokeAssertions": [
+    "block_exists('countdown')"
+  ]
+}

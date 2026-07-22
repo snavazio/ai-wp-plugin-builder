@@ -1,0 +1,36 @@
+{
+  "slug": "cookbook",
+  "pluginName": "Cookbook",
+  "description": "A Recipe CPT with Course and Cuisine taxonomies, and a [recipes] shortcode.",
+  "version": "1.0.0",
+  "prefix": "cook",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "recipe"
+  ],
+  "taxonomies": [
+    "course",
+    "cuisine"
+  ],
+  "adminPages": [],
+  "shortcodes": [
+    "recipes"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "options",
+  "securityRequirements": [
+    "shortcode_exists('recipes')"
+  ],
+  "smokeAssertions": [
+    "post_type_exists('recipe')",
+    "taxonomy_exists('course')",
+    "taxonomy_exists('cuisine')",
+    "shortcode_exists('recipes')"
+  ]
+}

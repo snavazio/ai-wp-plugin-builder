@@ -1,0 +1,29 @@
+{
+  "slug": "real-estate-listings",
+  "pluginName": "Real Estate Listings",
+  "description": "A plugin for managing real estate listings with properties as a custom post type.",
+  "version": "1.0.0",
+  "prefix": "reli",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "property"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "properties"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "Post meta for property details (price, bedrooms, bathrooms)",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "post_type_exists('property')",
+    "shortcode_exists('properties')"
+  ]
+}

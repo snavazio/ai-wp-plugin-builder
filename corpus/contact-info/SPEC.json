@@ -1,0 +1,30 @@
+{
+  "slug": "contact-info",
+  "pluginName": "Contact Info",
+  "description": "Stores and displays contact information (phone, email, address) via a settings page and shortcode.",
+  "version": "1.0.0",
+  "prefix": "cinfo",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [
+    "contact-info-settings"
+  ],
+  "shortcodes": [
+    "contact_info"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "options",
+  "securityRequirements": [
+    "shortcode_exists('contact_info')"
+  ],
+  "smokeAssertions": []
+}

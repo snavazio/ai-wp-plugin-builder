@@ -1,0 +1,29 @@
+{
+  "slug": "call-to-action-widget",
+  "pluginName": "Call To Action Widget",
+  "description": "A classic sidebar widget rendering a heading, a short message, and a button (label + URL) from its instance settings, all escaped. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
+  "version": "1.0.0",
+  "prefix": "ctaw",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [
+    "CTA_Widget"
+  ],
+  "dataStorage": "options",
+  "securityRequirements": [
+    "function_exists('wp_verify_nonce')",
+    "function_exists('current_user_can')"
+  ],
+  "smokeAssertions": [
+    "class_exists('CTA_Widget')"
+  ]
+}

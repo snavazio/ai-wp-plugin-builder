@@ -1,0 +1,32 @@
+{
+  "slug": "scheduled-cache-purge",
+  "pluginName": "Scheduled Cache Purge",
+  "description": "Schedules daily cache purging via WP-Cron, deletes expired option-based cache entries, records last run time, and manages cron schedules on activation/deactivation.",
+  "version": "1.0.0",
+  "prefix": "scpc",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [
+    "scp_daily_purge"
+  ],
+  "widgets": [],
+  "dataStorage": "options",
+  "securityRequirements": [
+    "escape output",
+    "sanitize input",
+    "nonce and capability checks"
+  ],
+  "smokeAssertions": [
+    "wp_get_scheduled_event('scp_daily_purge') !== false"
+  ]
+}

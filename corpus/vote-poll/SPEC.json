@@ -1,0 +1,28 @@
+{
+  "slug": "vote-poll",
+  "pluginName": "Vote Poll",
+  "description": "A shortcode for yes/no polls with AJAX voting, storing counts in options.",
+  "version": "1.0.0",
+  "prefix": "vtpol",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "poll"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [
+    "vote_poll"
+  ],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "options",
+  "securityRequirements": [
+    "shortcode_exists('poll')"
+  ],
+  "smokeAssertions": []
+}

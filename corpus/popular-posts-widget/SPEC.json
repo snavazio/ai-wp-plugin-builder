@@ -1,0 +1,26 @@
+{
+  "slug": "popular-posts-widget",
+  "pluginName": "Popular Posts Widget",
+  "description": "A classic sidebar widget listing the N most-commented published posts with configurable count and heading.",
+  "version": "1.0.0",
+  "prefix": "ppwgt",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [
+    "Popular_Posts_Widget"
+  ],
+  "dataStorage": "",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "class_exists('Popular_Posts_Widget')"
+  ]
+}

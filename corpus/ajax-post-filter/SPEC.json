@@ -1,0 +1,33 @@
+{
+  "slug": "ajax-post-filter",
+  "pluginName": "AJAX Post Filter",
+  "description": "A shortcode with category buttons that fetches published posts via AJAX, allowing logged-out users with proper nonce and capability checks.",
+  "version": "1.0.0",
+  "prefix": "apf1",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "post_filter"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [
+    "post_filter"
+  ],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": [],
+  "securityRequirements": [
+    "nonce verification",
+    "input sanitization",
+    "output escaping"
+  ],
+  "smokeAssertions": [
+    "shortcode_exists('post_filter')",
+    "has_action('wp_ajax_nopriv_post_filter')"
+  ]
+}

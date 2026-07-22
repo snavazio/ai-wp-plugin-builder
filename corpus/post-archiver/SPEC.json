@@ -1,0 +1,29 @@
+{
+  "slug": "post-archiver",
+  "pluginName": "Post Archiver",
+  "description": "Schedule weekly archiving of old posts to private status with count tracking.",
+  "version": "1.0.0",
+  "prefix": "parch",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [
+    "parch_weekly_archive"
+  ],
+  "widgets": [],
+  "dataStorage": "option",
+  "securityRequirements": [
+    "esc_html",
+    "sanitize_text_field",
+    "wp_verify_nonce",
+    "current_user_can"
+  ],
+  "smokeAssertions": []
+}

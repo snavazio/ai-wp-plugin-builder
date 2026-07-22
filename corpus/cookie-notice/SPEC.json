@@ -1,0 +1,29 @@
+{
+  "slug": "cookie-notice",
+  "pluginName": "Cookie Notice",
+  "description": "Adds a dismissible cookie consent banner in the footer with customizable message and button label.",
+  "version": "1.0.0",
+  "prefix": "cns1",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [
+    "cookie-notice-settings"
+  ],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "options_api",
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['nonce'], 'cookie_notice_nonce' )",
+    "current_user_can( 'manage_options' )"
+  ],
+  "smokeAssertions": []
+}

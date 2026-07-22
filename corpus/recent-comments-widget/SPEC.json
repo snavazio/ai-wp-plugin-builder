@@ -1,0 +1,26 @@
+{
+  "slug": "recent-comments-widget",
+  "pluginName": "Recent Comments Widget",
+  "description": "A classic sidebar widget listing the N most recent approved comments with escaped author and excerpt and a configurable count.",
+  "version": "1.0.0",
+  "prefix": "rcws",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [
+    "recent-comments-widget"
+  ],
+  "dataStorage": [],
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "class_exists('Recent_Comments_Widget')"
+  ]
+}
