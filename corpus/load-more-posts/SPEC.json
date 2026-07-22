@@ -1,0 +1,28 @@
+{
+  "slug": "load-more-posts",
+  "pluginName": "Load More Posts",
+  "description": "A [load_more] shortcode listing recent published posts with a button that loads the next page via AJAX (available logged-out).",
+  "version": "1.0.0",
+  "prefix": "lmpa",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "load_more"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [
+    "load_more_posts"
+  ],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": [],
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "shortcode_exists('load_more')"
+  ]
+}

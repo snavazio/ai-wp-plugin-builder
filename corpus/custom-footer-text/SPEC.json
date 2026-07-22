@@ -1,0 +1,27 @@
+{
+  "slug": "custom-footer-text",
+  "pluginName": "Custom Footer Text",
+  "description": "Adds a settings page to customize site footer text with basic HTML support.",
+  "version": "1.0.0",
+  "prefix": "cftx",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [
+    "cft_footer_settings"
+  ],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "options",
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['cft_nonce'], 'cft_save' )",
+    "current_user_can( 'manage_options' )"
+  ],
+  "smokeAssertions": []
+}

@@ -1,0 +1,29 @@
+{
+  "slug": "team-members",
+  "pluginName": "Team Members",
+  "description": "A Team Member CPT (title = name, editor = bio) with meta fields for role and email, editable in a secure meta box, plus an admin Role column. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check. Clean up on uninstall.",
+  "version": "1.0.0",
+  "prefix": "team",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "team_member"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "post_meta",
+  "securityRequirements": [
+    "wp_verify_nonce(...)",
+    "current_user_can(...)"
+  ],
+  "smokeAssertions": [
+    "post_type_exists('team_member')"
+  ]
+}

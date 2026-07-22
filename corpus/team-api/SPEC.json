@@ -1,0 +1,34 @@
+{
+  "slug": "team-api",
+  "pluginName": "Team API",
+  "description": "Member Custom Post Type with role meta and public REST API endpoint.",
+  "version": "1.0.0",
+  "prefix": "tapi",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "edit_posts",
+    "publish_posts"
+  ],
+  "postTypes": [
+    "member"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [
+    "members"
+  ],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "post_meta",
+  "securityRequirements": [
+    "function_exists('wp_verify_nonce')",
+    "function_exists('current_user_can')"
+  ],
+  "smokeAssertions": [
+    "post_type_exists('member')"
+  ]
+}

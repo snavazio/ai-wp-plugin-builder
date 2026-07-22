@@ -1,0 +1,31 @@
+{
+  "slug": "staff-directory",
+  "pluginName": "Staff Directory",
+  "description": "A Staff Custom Post Type with meta fields for job title and phone, secure meta box, and a [staff_list] shortcode.",
+  "version": "1.0.0",
+  "prefix": "staff",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "edit_posts"
+  ],
+  "postTypes": [
+    "staff"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "staff_list"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "post_meta",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "shortcode_exists('staff_list')",
+    "post_type_exists('staff')"
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "slug": "social-links-widget",
+  "pluginName": "Social Links Widget",
+  "description": "Stores social profile URLs via a settings page and displays them as configurable sidebar links with proper escaping and sanitization.",
+  "version": "1.0.0",
+  "prefix": "slwgt",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [
+    "social-links-settings"
+  ],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [
+    "social-links-widget"
+  ],
+  "dataStorage": "options",
+  "securityRequirements": [
+    "wp_verify_nonce($_POST['slw_nonce'], 'slw_settings_nonce')",
+    "current_user_can('manage_options')"
+  ],
+  "smokeAssertions": [
+    "class_exists('SLWGT_Social_Links_Widget')"
+  ]
+}

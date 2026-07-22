@@ -21,10 +21,13 @@ class {{CLASS}}_Smoke_Test extends WP_UnitTestCase {
 	}
 
 	/*
-	 * TODO(coder): add feature-specific assertions here, e.g.:
-	 *   $this->assertTrue( post_type_exists( '{{PREFIX}}_item' ) );
-	 *   $this->assertTrue( shortcode_exists( 'your_shortcode' ) );
-	 *   $this->assertNotFalse( has_action( 'rest_api_init' ) );
-	 * Base your assertions on the SPEC's smokeAssertions.
+	 * TODO(coder): add feature-specific assertions based on the SPEC's smokeAssertions.
+	 * IMPORTANT — assertTrue() is STRICT (assertTrue(10) FAILS):
+	 *   - Real booleans use assertTrue():   assertTrue( post_type_exists( '{{PREFIX}}_item' ) );
+	 *                                       assertTrue( taxonomy_exists( '{{PREFIX}}_type' ) );
+	 *                                       assertTrue( shortcode_exists( 'your_shortcode' ) );
+	 *   - has_action()/has_filter() return an int priority or false — use assertNotFalse():
+	 *                                       assertNotFalse( has_action( 'rest_api_init' ) );
+	 * Do not assert rendered markup or option values that need fixtures.
 	 */
 }

@@ -1,0 +1,32 @@
+{
+  "slug": "login-logo",
+  "pluginName": "Login Logo",
+  "description": "Adds a settings page to replace the WordPress login logo with a custom image URL.",
+  "version": "1.0.0",
+  "prefix": "lgnl",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [
+    "lgnl-settings"
+  ],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "options_api",
+  "securityRequirements": [
+    "nonce verification",
+    "capability check"
+  ],
+  "smokeAssertions": [
+    "wp_verify_nonce( $_POST['lgnl_nonce'], 'lgnl_settings_nonce' )",
+    "current_user_can( 'manage_options' )"
+  ]
+}

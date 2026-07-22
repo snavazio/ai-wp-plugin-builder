@@ -1,0 +1,36 @@
+{
+  "slug": "simple-crm",
+  "pluginName": "Simple CRM",
+  "description": "A Contact CPT with meta fields for email and phone (secure meta box), a hierarchical Status taxonomy (e.g. Lead/Customer), an admin Status column, and a [contacts status=\"\"] shortcode listing contacts by status, escaped. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check. Remove data and terms on uninstall.",
+  "version": "1.0.0",
+  "prefix": "scrm",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "contact"
+  ],
+  "taxonomies": [
+    "status"
+  ],
+  "adminPages": [],
+  "shortcodes": [
+    "contacts"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "meta",
+  "securityRequirements": [
+    "Escape all output",
+    "Sanitize all input",
+    "Pair every state-changing action with a nonce and capability check"
+  ],
+  "smokeAssertions": [
+    "post_type_exists('contact')",
+    "taxonomy_exists('status')",
+    "shortcode_exists('contacts')"
+  ]
+}

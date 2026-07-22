@@ -1,0 +1,28 @@
+{
+  "slug": "current-year",
+  "pluginName": "Current Year",
+  "description": "A [current_year] shortcode that outputs the current four-digit year (useful for footers). Escaped output. No settings.",
+  "version": "1.0.0",
+  "prefix": "cyrs",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "current_year"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "none",
+  "securityRequirements": [
+    "output is escaped using esc_html()"
+  ],
+  "smokeAssertions": [
+    "shortcode_exists('current_year')"
+  ]
+}

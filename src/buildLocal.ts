@@ -83,7 +83,8 @@ async function generateSpec(cfg: OllamaConfig, specText: string, usage: Usage): 
 description, version ("1.0.0"), prefix (4-7 lowercase alnum, not wp/__/_), requiresWp ("6.0"), requiresPhp ("7.4"),
 capabilities [], postTypes [], taxonomies [], adminPages [], shortcodes [], blocks [], restEndpoints [],
 ajaxActions [], cronEvents [], widgets [], dataStorage, securityRequirements [], smokeAssertions []
-(PHP boolean expressions asserting the built features exist, e.g. "shortcode_exists('x_hours')").
+(PHP expressions asserting built features exist; PREFER strict-boolean checks post_type_exists()/
+taxonomy_exists()/shortcode_exists()/defined(), e.g. "shortcode_exists('x_hours')").
 Only fill arrays for features the spec calls for; use [] otherwise. All keys use the prefix.`;
   let feedback = '';
   for (let attempt = 1; attempt <= 3; attempt++) {

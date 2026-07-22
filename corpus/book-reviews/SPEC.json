@@ -1,0 +1,26 @@
+{
+  "slug": "book-reviews",
+  "pluginName": "Book Reviews",
+  "description": "A Book Review CPT with meta fields for author and a 1-5 rating (clamped), editable in a secure meta box, plus an admin Rating column showing stars.",
+  "version": "1.0.0",
+  "prefix": "brpl",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "book_review"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "post_meta",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "post_type_exists('book_review')"
+  ]
+}

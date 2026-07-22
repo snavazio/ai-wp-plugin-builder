@@ -1,0 +1,33 @@
+{
+  "slug": "quick-search",
+  "pluginName": "Quick Search",
+  "description": "Adds a [quick_search] shortcode that provides title suggestions via AJAX for published posts.",
+  "version": "1.0.0",
+  "prefix": "qsrch",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "quick_search"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [
+    "quick_search_suggestions"
+  ],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "none",
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['nonce'], 'quick_search_nonce' )",
+    "sanitize_text_field( $_POST['query'] )",
+    "esc_html( $title )"
+  ],
+  "smokeAssertions": [
+    "shortcode_exists('quick_search')",
+    "has_action('wp_ajax_quick_search_suggestions')"
+  ]
+}

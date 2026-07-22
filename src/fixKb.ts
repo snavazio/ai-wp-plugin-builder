@@ -71,8 +71,13 @@ const RULES: FixRule[] = [
     fix: 'Make the plugin header Version, the readme.txt "Stable tag", and every *_VERSION constant identical.',
   },
   {
-    match: /PHPUnit failed|Tests:.*Failures|assertTrue|assertSame|Failed asserting/i,
-    fix: 'Fix tests/test-smoke.php so assertions match runtime: assert only registration/wiring — post_type_exists(), taxonomy_exists(), shortcode_exists(), has_action()/has_filter(), defined() constants — and a shortcode\'s graceful empty-state. Do NOT assert specific rendered markup or stored option values that need fixtures.',
+    match: /PHPUnit failed|Tests:.*Failures|Failed asserting|assertTrue|assertSame/i,
+    fix:
+      'PHPUnit assertTrue() is STRICT: assertTrue(10) FAILS because 10 !== true. has_action()/has_filter() ' +
+      'return an int priority (often 10) or false — assert them with assertNotFalse(), NEVER assertTrue(). ' +
+      'Use assertTrue() ONLY for real booleans: post_type_exists(), taxonomy_exists(), shortcode_exists(), ' +
+      'is_*(), defined(). Keep smoke assertions to registration/wiring and a shortcode\'s graceful empty-state; ' +
+      'do NOT assert rendered markup or option values that need fixtures.',
   },
 ];
 

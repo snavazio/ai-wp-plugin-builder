@@ -1,0 +1,29 @@
+{
+  "slug": "faqs",
+  "pluginName": "FAQs",
+  "description": "Creates an FAQ custom post type with question/answer fields and a shortcode to display FAQs as an accordion.",
+  "version": "1.0.0",
+  "prefix": "faqs",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "faqs_faq"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "faqs"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "post_type",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "post_type_exists('faqs_faq')",
+    "shortcode_exists('faqs')"
+  ]
+}

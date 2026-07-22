@@ -1,0 +1,33 @@
+{
+  "slug": "draft-cleanup",
+  "pluginName": "Draft Cleanup",
+  "description": "Automatically trashes auto-draft posts older than 7 days via weekly cron, records counts in options.",
+  "version": "1.0.0",
+  "prefix": "dctc",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "delete_posts"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [
+    "draft_cleanup_weekly"
+  ],
+  "widgets": [],
+  "dataStorage": "options",
+  "securityRequirements": [
+    "escape output",
+    "sanitize input",
+    "nonce verification",
+    "capability check"
+  ],
+  "smokeAssertions": [
+    "wp_get_scheduled_event('draft_cleanup_weekly')"
+  ]
+}

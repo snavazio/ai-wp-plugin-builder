@@ -1,6 +1,46 @@
 {
   "entries": [
     {
+      "slug": "admin-reminder",
+      "pluginName": "Admin Reminder",
+      "description": "A settings page with a dismissible admin notice for editors.",
+      "version": "1.0.0",
+      "prefix": "arrem",
+      "tags": [
+        "metabox"
+      ],
+      "files": [
+        "SPEC.json",
+        "admin-reminder.php",
+        "includes/admin-page.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "book-reviews",
+      "pluginName": "Book Reviews",
+      "description": "A Book Review CPT with meta fields for author and a 1-5 rating (clamped), editable in a secure meta box, plus an admin Rating column showing stars.",
+      "version": "1.0.0",
+      "prefix": "brpl",
+      "tags": [
+        "cpt"
+      ],
+      "files": [
+        "SPEC.json",
+        "book-reviews.php",
+        "includes/admin-columns.php",
+        "includes/meta-box.php",
+        "includes/post-type.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "business-hours",
       "pluginName": "Business Hours",
       "description": "Display business opening hours via settings page and shortcode.",
@@ -15,6 +55,135 @@
         "business-hours.php",
         "includes/admin-settings.php",
         "includes/shortcode.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "content-stats",
+      "pluginName": "Content Stats",
+      "description": "An admin dashboard widget showing counts of published posts, pages, and comments, visible only to users who can edit posts.",
+      "version": "1.0.0",
+      "prefix": "cstw",
+      "tags": [
+        "widget"
+      ],
+      "files": [
+        "SPEC.json",
+        "content-stats.php",
+        "includes/widget.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "cta-button",
+      "pluginName": "CTA Button",
+      "description": "A shortcode for rendering a styled call-to-action button with sanitized URL and escaped text.",
+      "version": "1.0.0",
+      "prefix": "ctabtn",
+      "tags": [
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "cta-button.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "current-year",
+      "pluginName": "Current Year",
+      "description": "A [current_year] shortcode that outputs the current four-digit year (useful for footers). Escaped output. No settings.",
+      "version": "1.0.0",
+      "prefix": "cyrs",
+      "tags": [
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "current-year.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "custom-footer-text",
+      "pluginName": "Custom Footer Text",
+      "description": "Adds a settings page to customize site footer text with basic HTML support.",
+      "version": "1.0.0",
+      "prefix": "cftx",
+      "tags": [
+        "metabox"
+      ],
+      "files": [
+        "SPEC.json",
+        "custom-footer-text.php",
+        "includes/admin-page.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "custom-head-markup",
+      "pluginName": "Custom Head Markup",
+      "description": "Adds a settings page for custom <head> markup (e.g., analytics/meta tags) output via wp_head, with admin-only access and full sanitization.",
+      "version": "1.0.0",
+      "prefix": "chmp",
+      "tags": [
+        "metabox"
+      ],
+      "files": [
+        "SPEC.json",
+        "custom-head-markup.php",
+        "includes/admin-page.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "days-online",
+      "pluginName": "Days Online",
+      "description": "Outputs the number of whole days since a specified start date via a shortcode.",
+      "version": "1.0.0",
+      "prefix": "dolx",
+      "tags": [
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "days-online.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "draft-cleanup",
+      "pluginName": "Draft Cleanup",
+      "description": "Automatically trashes auto-draft posts older than 7 days via weekly cron, records counts in options.",
+      "version": "1.0.0",
+      "prefix": "dctc",
+      "tags": [
+        "cron"
+      ],
+      "files": [
+        "SPEC.json",
+        "draft-cleanup.php",
         "readme.txt",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
@@ -44,6 +213,28 @@
       ]
     },
     {
+      "slug": "faqs",
+      "pluginName": "FAQs",
+      "description": "Creates an FAQ custom post type with question/answer fields and a shortcode to display FAQs as an accordion.",
+      "version": "1.0.0",
+      "prefix": "faqs",
+      "tags": [
+        "cpt",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "faqs.php",
+        "includes/assets.php",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "greeting-box",
       "pluginName": "Greeting Box",
       "description": "A very small plugin that provides a single shortcode [greeting_box] for the front end.",
@@ -55,6 +246,107 @@
       "files": [
         "SPEC.json",
         "greeting-box.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "knowledge-base",
+      "pluginName": "Knowledge Base Plugin",
+      "description": "A plugin providing a hierarchical Topic taxonomy for Articles, with a shortcode to list articles by topic.",
+      "version": "1.0.0",
+      "prefix": "kbpl",
+      "tags": [
+        "cpt",
+        "taxonomy",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "includes/taxonomies.php",
+        "knowledge-base.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "load-more-posts",
+      "pluginName": "Load More Posts",
+      "description": "A [load_more] shortcode listing recent published posts with a button that loads the next page via AJAX (available logged-out).",
+      "version": "1.0.0",
+      "prefix": "lmpa",
+      "tags": [
+        "shortcode",
+        "ajax"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/ajax.php",
+        "includes/assets.php",
+        "includes/shortcode.php",
+        "load-more-posts.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "login-logo",
+      "pluginName": "Login Logo",
+      "description": "Adds a settings page to replace the WordPress login logo with a custom image URL.",
+      "version": "1.0.0",
+      "prefix": "lgnl",
+      "tags": [
+        "metabox"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/admin-page.php",
+        "login-logo.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "maintenance-mode",
+      "pluginName": "Maintenance Mode",
+      "description": "Enable maintenance mode with a custom message for non-logged-in visitors.",
+      "version": "1.0.0",
+      "prefix": "mmtm",
+      "tags": [
+        "metabox"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/admin-page.php",
+        "maintenance-mode.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "notice-block",
+      "pluginName": "Notice Block",
+      "description": "A dynamic server-rendered Gutenberg block that outputs an info/warning notice with a type attribute and message, escaped. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
+      "version": "1.0.0",
+      "prefix": "nblock",
+      "tags": [
+        "block"
+      ],
+      "files": [
+        "SPEC.json",
+        "notice-block.php",
         "readme.txt",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
@@ -88,6 +380,204 @@
       ]
     },
     {
+      "slug": "portfolio-skills",
+      "pluginName": "Portfolio Skills",
+      "description": "Work CPT with non-hierarchical Skill taxonomy (tags) and work_grid shortcode for filtering published works.",
+      "version": "1.0.0",
+      "prefix": "pskl",
+      "tags": [
+        "cpt",
+        "taxonomy",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "includes/taxonomies.php",
+        "portfolio-skills.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "products-catalog",
+      "pluginName": "Products Catalog",
+      "description": "A catalog of products with hierarchical categories and a shortcode for listing.",
+      "version": "1.0.0",
+      "prefix": "prod",
+      "tags": [
+        "cpt",
+        "taxonomy",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "includes/taxonomies.php",
+        "products-catalog.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "quick-search",
+      "pluginName": "Quick Search",
+      "description": "Adds a [quick_search] shortcode that provides title suggestions via AJAX for published posts.",
+      "version": "1.0.0",
+      "prefix": "qsrch",
+      "tags": [
+        "shortcode",
+        "ajax"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/ajax.php",
+        "includes/assets.php",
+        "includes/shortcode.php",
+        "quick-search.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "recipes",
+      "pluginName": "Recipes",
+      "description": "A Recipe Custom Post Type with meta fields for prep time and servings, secure meta box, and recipe_card shortcode.",
+      "version": "1.0.0",
+      "prefix": "rcpr",
+      "tags": [
+        "cpt",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/meta-boxes.php",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "recipes.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "simple-crm",
+      "pluginName": "Simple CRM",
+      "description": "A Contact CPT with meta fields for email and phone (secure meta box), a hierarchical Status taxonomy (e.g. Lead/Customer), an admin Status column, and a [contacts status=\"\"] shortcode listing contacts by status, escaped. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check. Remove data and terms on uninstall.",
+      "version": "1.0.0",
+      "prefix": "scrm",
+      "tags": [
+        "cpt",
+        "taxonomy",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "includes/taxonomies.php",
+        "readme.txt",
+        "simple-crm.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "social-links-widget",
+      "pluginName": "Social Links Widget",
+      "description": "Stores social profile URLs via a settings page and displays them as configurable sidebar links with proper escaping and sanitization.",
+      "version": "1.0.0",
+      "prefix": "slwgt",
+      "tags": [
+        "metabox",
+        "widget"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/admin-page.php",
+        "includes/widget.php",
+        "readme.txt",
+        "social-links-widget.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "staff-directory",
+      "pluginName": "Staff Directory",
+      "description": "A Staff Custom Post Type with meta fields for job title and phone, secure meta box, and a [staff_list] shortcode.",
+      "version": "1.0.0",
+      "prefix": "staff",
+      "tags": [
+        "cpt",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/meta-boxes.php",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "staff-directory.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "team-api",
+      "pluginName": "Team API",
+      "description": "Member Custom Post Type with role meta and public REST API endpoint.",
+      "version": "1.0.0",
+      "prefix": "tapi",
+      "tags": [
+        "cpt",
+        "rest"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/class-tapi-post-type.php",
+        "includes/class-tapi-rest-api.php",
+        "readme.txt",
+        "team-api.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "team-members",
+      "pluginName": "Team Members",
+      "description": "A Team Member CPT (title = name, editor = bio) with meta fields for role and email, editable in a secure meta box, plus an admin Role column. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check. Clean up on uninstall.",
+      "version": "1.0.0",
+      "prefix": "team",
+      "tags": [
+        "cpt"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/admin-columns.php",
+        "includes/meta-box.php",
+        "includes/post-type.php",
+        "readme.txt",
+        "team-members.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "testimonials",
       "pluginName": "Testimonials",
       "description": "Manage client testimonials with ratings, customer details, and admin display.",
@@ -106,6 +596,45 @@
         "testimonials.php",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "testimonials-api",
+      "pluginName": "Testimonials API",
+      "description": "Testimonial CPT with author meta field and public REST endpoint for published testimonials.",
+      "version": "1.0.0",
+      "prefix": "tstm",
+      "tags": [
+        "cpt",
+        "rest"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/class-tstm-post-type.php",
+        "includes/class-tstm-rest-api.php",
+        "readme.txt",
+        "testimonials-api.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "transient-cleanup",
+      "pluginName": "Transient Cleanup",
+      "description": "Automatically cleans up expired cache entries stored as options with a scheduled daily task.",
+      "version": "1.0.0",
+      "prefix": "tcleanup",
+      "tags": [
+        "cron"
+      ],
+      "files": [
+        "SPEC.json",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "transient-cleanup.php",
         "uninstall.php"
       ]
     }

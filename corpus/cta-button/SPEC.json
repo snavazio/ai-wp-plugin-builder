@@ -1,0 +1,29 @@
+{
+  "slug": "cta-button",
+  "pluginName": "CTA Button",
+  "description": "A shortcode for rendering a styled call-to-action button with sanitized URL and escaped text.",
+  "version": "1.0.0",
+  "prefix": "ctabtn",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "cta_button"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": [],
+  "securityRequirements": [
+    "function_exists('esc_url')",
+    "function_exists('esc_html')"
+  ],
+  "smokeAssertions": [
+    "shortcode_exists('cta_button')"
+  ]
+}

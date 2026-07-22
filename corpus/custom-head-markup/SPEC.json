@@ -1,0 +1,32 @@
+{
+  "slug": "custom-head-markup",
+  "pluginName": "Custom Head Markup",
+  "description": "Adds a settings page for custom <head> markup (e.g., analytics/meta tags) output via wp_head, with admin-only access and full sanitization.",
+  "version": "1.0.0",
+  "prefix": "chmp",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [
+    "chmp-settings"
+  ],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "options_api",
+  "securityRequirements": [
+    "current_user_can( 'manage_options' )",
+    "wp_verify_nonce( $_POST['chmp_nonce'], 'chmp_save' )"
+  ],
+  "smokeAssertions": [
+    "has_action( 'wp_head', 'chmp_output_head_markup' )",
+    "has_action( 'admin_menu', 'chmp_add_settings_page' )"
+  ]
+}

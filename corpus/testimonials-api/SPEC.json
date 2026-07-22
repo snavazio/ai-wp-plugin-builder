@@ -1,0 +1,35 @@
+{
+  "slug": "testimonials-api",
+  "pluginName": "Testimonials API",
+  "description": "Testimonial CPT with author meta field and public REST endpoint for published testimonials.",
+  "version": "1.0.0",
+  "prefix": "tstm",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "testimonial"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [
+    {
+      "namespace": "tstm/v1",
+      "route": "/testimonials",
+      "method": "GET"
+    }
+  ],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "post_meta",
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['nonce'], 'tstm_nonce' )",
+    "current_user_can( 'edit_posts' )"
+  ],
+  "smokeAssertions": [
+    "post_type_exists('testimonial')"
+  ]
+}

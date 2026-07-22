@@ -1,0 +1,29 @@
+{
+  "slug": "recipes",
+  "pluginName": "Recipes",
+  "description": "A Recipe Custom Post Type with meta fields for prep time and servings, secure meta box, and recipe_card shortcode.",
+  "version": "1.0.0",
+  "prefix": "rcpr",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "recipe"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "recipe_card"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "post_meta",
+  "securityRequirements": [
+    "post_type_exists('recipe')",
+    "shortcode_exists('recipe_card')"
+  ],
+  "smokeAssertions": []
+}

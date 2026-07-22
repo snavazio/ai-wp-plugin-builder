@@ -1,0 +1,30 @@
+{
+  "slug": "content-stats",
+  "pluginName": "Content Stats",
+  "description": "An admin dashboard widget showing counts of published posts, pages, and comments, visible only to users who can edit posts.",
+  "version": "1.0.0",
+  "prefix": "cstw",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "edit_posts"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [
+    "content_stats_widget"
+  ],
+  "dataStorage": "",
+  "securityRequirements": [
+    "escape_output",
+    "sanitize_input",
+    "nonce_and_capability_check"
+  ],
+  "smokeAssertions": []
+}

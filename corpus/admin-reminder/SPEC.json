@@ -1,0 +1,27 @@
+{
+  "slug": "admin-reminder",
+  "pluginName": "Admin Reminder",
+  "description": "A settings page with a dismissible admin notice for editors.",
+  "version": "1.0.0",
+  "prefix": "arrem",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [
+    "admin-reminder"
+  ],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "options",
+  "securityRequirements": [
+    "wp_verify_nonce($_POST['nonce'], 'arrem_nonce')",
+    "current_user_can('edit_posts')"
+  ],
+  "smokeAssertions": []
+}

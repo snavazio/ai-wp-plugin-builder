@@ -1,0 +1,31 @@
+{
+  "slug": "transient-cleanup",
+  "pluginName": "Transient Cleanup",
+  "description": "Automatically cleans up expired cache entries stored as options with a scheduled daily task.",
+  "version": "1.0.0",
+  "prefix": "tcleanup",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [
+    "tcleanup_daily_cron"
+  ],
+  "widgets": [],
+  "dataStorage": "options",
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['nonce'], 'tcleanup_nonce' )",
+    "current_user_can( 'manage_options' )"
+  ],
+  "smokeAssertions": [
+    "wp_get_schedule( 'tcleanup_daily_cron' )"
+  ]
+}

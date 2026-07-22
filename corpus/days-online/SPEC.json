@@ -1,0 +1,29 @@
+{
+  "slug": "days-online",
+  "pluginName": "Days Online",
+  "description": "Outputs the number of whole days since a specified start date via a shortcode.",
+  "version": "1.0.0",
+  "prefix": "dolx",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "days_online"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": [],
+  "securityRequirements": [
+    "sanitize start attribute",
+    "escape output"
+  ],
+  "smokeAssertions": [
+    "shortcode_exists('days_online')"
+  ]
+}

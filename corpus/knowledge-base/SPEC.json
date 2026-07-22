@@ -1,0 +1,32 @@
+{
+  "slug": "knowledge-base",
+  "pluginName": "Knowledge Base Plugin",
+  "description": "A plugin providing a hierarchical Topic taxonomy for Articles, with a shortcode to list articles by topic.",
+  "version": "1.0.0",
+  "prefix": "kbpl",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "article"
+  ],
+  "taxonomies": [
+    "topic"
+  ],
+  "adminPages": [],
+  "shortcodes": [
+    "kb_articles"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": [],
+  "securityRequirements": [
+    "post_type_exists('article')",
+    "taxonomy_exists('topic')",
+    "shortcode_exists('kb_articles')"
+  ],
+  "smokeAssertions": []
+}

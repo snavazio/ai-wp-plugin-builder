@@ -1,0 +1,36 @@
+{
+  "slug": "portfolio-skills",
+  "pluginName": "Portfolio Skills",
+  "description": "Work CPT with non-hierarchical Skill taxonomy (tags) and work_grid shortcode for filtering published works.",
+  "version": "1.0.0",
+  "prefix": "pskl",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "work"
+  ],
+  "taxonomies": [
+    "skill"
+  ],
+  "adminPages": [],
+  "shortcodes": [
+    "work_grid"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "default",
+  "securityRequirements": [
+    "Escape all output",
+    "Sanitize all input",
+    "Nonce and capability check for state-changing actions"
+  ],
+  "smokeAssertions": [
+    "post_type_exists('work')",
+    "taxonomy_exists('skill')",
+    "shortcode_exists('work_grid')"
+  ]
+}

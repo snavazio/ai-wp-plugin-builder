@@ -1,0 +1,30 @@
+{
+  "slug": "maintenance-mode",
+  "pluginName": "Maintenance Mode",
+  "description": "Enable maintenance mode with a custom message for non-logged-in visitors.",
+  "version": "1.0.0",
+  "prefix": "mmtm",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [
+    "maintenance-mode"
+  ],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "options",
+  "securityRequirements": [
+    "sanitization",
+    "nonce validation",
+    "capability check"
+  ],
+  "smokeAssertions": []
+}
