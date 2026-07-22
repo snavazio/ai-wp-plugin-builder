@@ -1,0 +1,29 @@
+{
+  "slug": "company-footer-settings",
+  "pluginName": "Company Footer Settings",
+  "description": "Adds a company name field to settings for footer copyright notice.",
+  "version": "1.0.0",
+  "prefix": "cfst",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [
+    {
+      "type": "settings"
+    }
+  ],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "options",
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['nonce'], 'cfst_nonce_action' )",
+    "current_user_can( 'manage_options' )"
+  ],
+  "smokeAssertions": []
+}

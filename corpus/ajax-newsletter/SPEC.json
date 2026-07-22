@@ -1,0 +1,32 @@
+{
+  "slug": "ajax-newsletter",
+  "pluginName": "AJAX Newsletter",
+  "description": "A newsletter shortcode with AJAX submission for logged-out users, storing emails in an option list with deduplication.",
+  "version": "1.0.0",
+  "prefix": "anews",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "newsletter"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [
+    "anews_submit"
+  ],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "option",
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['nonce'], 'anews_nonce' ) && current_user_can( 'edit_posts' )"
+  ],
+  "smokeAssertions": [
+    "shortcode_exists('newsletter')",
+    "has_action('wp_ajax_anews_submit')",
+    "has_action('wp_ajax_nopriv_anews_submit')"
+  ]
+}

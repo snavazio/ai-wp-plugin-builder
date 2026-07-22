@@ -1,0 +1,49 @@
+{
+  "slug": "wine-catalog",
+  "pluginName": "Wine Catalog",
+  "description": "A Wine CPT with a vintage meta (secure meta box), a hierarchical Region taxonomy and a Varietal taxonomy, and a [wines region=\"\" varietal=\"\"] shortcode filtering published wines, escaped. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check. Remove posts and terms on uninstall.",
+  "version": "1.0.0",
+  "prefix": "winec",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    {
+      "slug": "wine"
+    }
+  ],
+  "taxonomies": [
+    {
+      "slug": "region",
+      "hierarchical": true
+    },
+    {
+      "slug": "varietal"
+    }
+  ],
+  "adminPages": [],
+  "shortcodes": [
+    "wines"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": [
+    "meta_box",
+    "taxonomy"
+  ],
+  "securityRequirements": [
+    "sanitize_input",
+    "escape_output",
+    "nonce_check",
+    "capability_check"
+  ],
+  "smokeAssertions": [
+    "post_type_exists('wine')",
+    "taxonomy_exists('region')",
+    "taxonomy_exists('varietal')",
+    "shortcode_exists('wines')"
+  ]
+}

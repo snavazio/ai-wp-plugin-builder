@@ -1,0 +1,24 @@
+{
+  "slug": "maintenance-schedule",
+  "pluginName": "Maintenance Schedule",
+  "description": "A settings page with a scheduled-maintenance message and toggle; when on, show the escaped message to logged-out visitors. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
+  "version": "1.0.0",
+  "prefix": "mstg",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [
+    "maintenance-schedule"
+  ],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "options",
+  "securityRequirements": [],
+  "smokeAssertions": []
+}

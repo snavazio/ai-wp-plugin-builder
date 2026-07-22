@@ -1,0 +1,24 @@
+{
+  "slug": "rating-stars-block",
+  "pluginName": "Rating Stars Block",
+  "description": "A dynamic server-rendered Gutenberg block rendering a 1-5 star rating from a value attribute (clamped).",
+  "version": "1.0.0",
+  "prefix": "rsblock",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [
+    "rating-stars"
+  ],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "input_sanitized",
+  "securityRequirements": [],
+  "smokeAssertions": []
+}

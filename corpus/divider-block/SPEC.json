@@ -1,0 +1,29 @@
+{
+  "slug": "divider-block",
+  "pluginName": "Divider Block",
+  "description": "A dynamic server-rendered Gutenberg block for styled dividers with solid, dashed, or dotted styles.",
+  "version": "1.0.0",
+  "prefix": "divb",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [
+    "divb/divider-block"
+  ],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": {},
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['nonce'], 'divb_nonce' )",
+    "current_user_can( 'edit_posts' )"
+  ],
+  "smokeAssertions": [
+    "wp_get_registered_block_type( 'divb/divider-block' ) !== false"
+  ]
+}

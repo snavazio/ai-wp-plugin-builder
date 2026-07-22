@@ -1,0 +1,37 @@
+{
+  "slug": "beer-list",
+  "pluginName": "Beer List",
+  "description": "A custom post type for beers with ABV meta and style taxonomy, featuring a shortcode for filtering.",
+  "version": "1.0.0",
+  "prefix": "beers",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "beer"
+  ],
+  "taxonomies": [
+    "style"
+  ],
+  "adminPages": [],
+  "shortcodes": [
+    "beers"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "post_meta",
+  "securityRequirements": [
+    "esc_html",
+    "sanitize_text_field",
+    "nonce_verification",
+    "capability_check"
+  ],
+  "smokeAssertions": [
+    "post_type_exists('beer')",
+    "taxonomy_exists('style')",
+    "shortcode_exists('beers')"
+  ]
+}

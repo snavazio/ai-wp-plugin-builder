@@ -1,0 +1,28 @@
+{
+  "slug": "stores-api",
+  "pluginName": "Stores API",
+  "description": "A Store CPT with address and hours meta (secure meta box) and a public read-only REST endpoint (GET) returning id, title, address, and hours for published stores.",
+  "version": "1.0.0",
+  "prefix": "strs",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "store"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [
+    "stores"
+  ],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "meta",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "post_type_exists( \"store\" )"
+  ]
+}

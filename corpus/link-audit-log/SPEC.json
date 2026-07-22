@@ -1,0 +1,31 @@
+{
+  "slug": "link-audit-log",
+  "pluginName": "Link Audit Log",
+  "description": "Schedule a daily WP-Cron event that counts published posts containing external links and stores the tally with a timestamp in an option (keep last 14). Register/clear on activation/deactivation. A [link_audit] shortcode shows the latest, escaped.",
+  "version": "1.0.0",
+  "prefix": "lalx",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "link_audit"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [
+    "lalx_daily_audit"
+  ],
+  "widgets": [],
+  "dataStorage": "option: lalx_audit_log",
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['_wpnonce'], 'lalx_nonce' )",
+    "current_user_can( 'manage_options' )"
+  ],
+  "smokeAssertions": [
+    "shortcode_exists('link_audit')"
+  ]
+}

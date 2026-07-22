@@ -1,0 +1,30 @@
+{
+  "slug": "ajax-wishlist",
+  "pluginName": "AJAX Wishlist",
+  "description": "Adds a [wishlist_button] shortcode for users to add the current post to a per-user wishlist via AJAX (logged-out allowed, stored in a cookie-keyed option).",
+  "version": "1.0.0",
+  "prefix": "ajaxw",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "wishlist_button"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "option",
+  "securityRequirements": [
+    "nonce verification",
+    "input sanitization",
+    "capability check"
+  ],
+  "smokeAssertions": [
+    "shortcode_exists('wishlist_button')"
+  ]
+}

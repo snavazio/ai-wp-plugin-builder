@@ -1,0 +1,26 @@
+{
+  "slug": "progress-bar-block",
+  "pluginName": "Progress Bar Block",
+  "description": "A dynamic server-rendered Gutenberg block rendering a labelled progress bar from a percent attribute (clamped 0-100), escaped. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
+  "version": "1.0.0",
+  "prefix": "pbar",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [
+    "progress-bar"
+  ],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": [],
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "wp_get_block_type( 'progress-bar' )"
+  ]
+}

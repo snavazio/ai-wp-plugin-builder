@@ -1,0 +1,29 @@
+{
+  "slug": "announcement-bar",
+  "pluginName": "Announcement Bar",
+  "description": "Adds a configurable announcement bar at the top of the site with a settings page for message and toggle.",
+  "version": "1.0.0",
+  "prefix": "annbar",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [
+    "announcement-bar-settings"
+  ],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "options_api",
+  "securityRequirements": [
+    "current_user_can('manage_options')",
+    "wp_verify_nonce($_POST['nonce'], 'announcement_bar_nonce')"
+  ],
+  "smokeAssertions": []
+}

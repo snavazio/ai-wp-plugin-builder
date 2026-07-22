@@ -1,0 +1,30 @@
+{
+  "slug": "daily-quote-rotator",
+  "pluginName": "Daily Quote Rotator",
+  "description": "Schedule a daily WP-Cron event that picks a random quote from a stored list and sets it as the 'quote of the day' option. A [quote_of_day] shortcode renders it, escaped. Register/clear on activation/deactivation. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
+  "version": "1.0.0",
+  "prefix": "daily",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "quote_of_day"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [
+    "daily_quote_rotator"
+  ],
+  "widgets": [],
+  "dataStorage": "options",
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['_wpnonce'], 'daily_quote_nonce' ) && current_user_can( 'manage_options' )"
+  ],
+  "smokeAssertions": [
+    "shortcode_exists('quote_of_day')"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "slug": "mini-cta-widget",
+  "pluginName": "Mini CTA Widget",
+  "description": "A classic sidebar widget rendering a heading, message, and a single button (label + URL) from instance settings, all escaped.",
+  "version": "1.0.0",
+  "prefix": "mctw",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [
+    "Mini_CTA_Widget"
+  ],
+  "dataStorage": "options",
+  "securityRequirements": [
+    "function_exists('wp_verify_nonce')",
+    "function_exists('current_user_can')"
+  ],
+  "smokeAssertions": [
+    "class_exists('Mini_CTA_Widget')"
+  ]
+}

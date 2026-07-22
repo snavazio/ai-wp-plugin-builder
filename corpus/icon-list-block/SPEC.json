@@ -1,0 +1,26 @@
+{
+  "slug": "icon-list-block",
+  "pluginName": "Icon List Block",
+  "description": "A dynamic Gutenberg block rendering a list of items with icon names and text attributes, with full output escaping and input sanitization.",
+  "version": "1.0.0",
+  "prefix": "ilblock",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [
+    "icon-list"
+  ],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "wp_get_block_type( 'icon-list' )"
+  ]
+}

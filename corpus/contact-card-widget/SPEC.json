@@ -1,0 +1,29 @@
+{
+  "slug": "contact-card-widget",
+  "pluginName": "Contact Card Widget",
+  "description": "A classic sidebar widget rendering phone, email, and address from its instance settings, each escaped, with a configurable heading.",
+  "version": "1.0.0",
+  "prefix": "ccw1",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [
+    "Contact_Card_Widget"
+  ],
+  "dataStorage": "widget_options",
+  "securityRequirements": [
+    "wp_verify_nonce( $nonce, 'ccw_widget_nonce' )",
+    "current_user_can( 'edit_theme_options' )"
+  ],
+  "smokeAssertions": [
+    "class_exists( 'Contact_Card_Widget' )"
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "slug": "ajax-tabs",
+  "pluginName": "AJAX Tabs",
+  "description": "Render tabbed interface with AJAX-loaded post excerpts using [tabs] shortcode.",
+  "version": "1.0.0",
+  "prefix": "ajxt",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "tabs"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [
+    "ajax_tabs_load"
+  ],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": [],
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['nonce'], 'ajax_tabs_nonce' )"
+  ],
+  "smokeAssertions": [
+    "shortcode_exists('tabs')",
+    "has_action('wp_ajax_ajax_tabs_load')"
+  ]
+}

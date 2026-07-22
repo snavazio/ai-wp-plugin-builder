@@ -1,0 +1,30 @@
+{
+  "slug": "orphan-media-cleaner",
+  "pluginName": "Orphan Media Cleaner",
+  "description": "Counts unattached media items weekly and stores tally in WordPress options without deletion.",
+  "version": "1.0.0",
+  "prefix": "omclean",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [
+    "omclean_weekly_cleanup"
+  ],
+  "widgets": [],
+  "dataStorage": "option",
+  "securityRequirements": [
+    "wp_verify_nonce",
+    "current_user_can('manage_options')"
+  ],
+  "smokeAssertions": [
+    "option_exists('omclean_media_count')",
+    "wp_get_schedule('omclean_weekly_cleanup')"
+  ]
+}

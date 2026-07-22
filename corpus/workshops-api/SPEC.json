@@ -1,0 +1,33 @@
+{
+  "slug": "workshops-api",
+  "pluginName": "Workshops API",
+  "description": "Manages workshops as a custom post type with secure date meta and public REST API access.",
+  "version": "1.0.0",
+  "prefix": "wapi",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "edit_posts"
+  ],
+  "postTypes": [
+    "workshop"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [
+    "workshop"
+  ],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "workshop_date",
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['workshop_meta_nonce'], 'workshop_meta_nonce' )",
+    "current_user_can( 'edit_posts' )"
+  ],
+  "smokeAssertions": [
+    "post_type_exists('workshop')"
+  ]
+}

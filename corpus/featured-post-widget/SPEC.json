@@ -1,0 +1,24 @@
+{
+  "slug": "featured-post-widget",
+  "pluginName": "Featured Post Widget",
+  "description": "A classic sidebar widget displaying the title and excerpt of a selected published post with configurable title.",
+  "version": "1.0.0",
+  "prefix": "fpw1",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [
+    "FeaturedPostWidget"
+  ],
+  "dataStorage": [],
+  "securityRequirements": [],
+  "smokeAssertions": []
+}

@@ -1,0 +1,26 @@
+{
+  "slug": "hero-block",
+  "pluginName": "Hero Block",
+  "description": "Dynamic server-rendered Gutenberg block for hero sections with heading, subheading, and button.",
+  "version": "1.0.0",
+  "prefix": "hblock",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [
+    "hero"
+  ],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "shortcode_exists('hero')"
+  ]
+}

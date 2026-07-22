@@ -1,0 +1,26 @@
+{
+  "slug": "back-to-top-button",
+  "pluginName": "Back To Top Button",
+  "description": "Adds a customizable back-to-top button with settings for enablement and label text.",
+  "version": "1.0.0",
+  "prefix": "bttb",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [
+    "bttb_settings"
+  ],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "options",
+  "securityRequirements": [],
+  "smokeAssertions": []
+}

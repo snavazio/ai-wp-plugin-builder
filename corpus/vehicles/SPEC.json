@@ -1,0 +1,29 @@
+{
+  "slug": "vehicles",
+  "pluginName": "Vehicles",
+  "description": "A Vehicle CPT with make, model, and year meta (secure meta box) and a [vehicles] shortcode listing published vehicles.",
+  "version": "1.0.0",
+  "prefix": "vclt",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "vehicle"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "vehicles"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "post_meta",
+  "securityRequirements": [
+    "post_type_exists('vehicle')",
+    "shortcode_exists('vehicles')"
+  ],
+  "smokeAssertions": []
+}

@@ -1,0 +1,50 @@
+{
+  "slug": "sponsors",
+  "pluginName": "Sponsors",
+  "description": "A custom post type for sponsors with tier meta and a shortcode to list them.",
+  "version": "1.0.0",
+  "prefix": "spns",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    {
+      "name": "sponsor",
+      "label": "Sponsors",
+      "description": "Sponsor information",
+      "supports": [
+        "title",
+        "editor",
+        "thumbnail"
+      ],
+      "menuPosition": 5,
+      "showInMenu": true,
+      "hasArchive": false,
+      "rewrite": {
+        "slug": "sponsors"
+      }
+    }
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    {
+      "name": "sponsors",
+      "description": "Lists published sponsors by tier"
+    }
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "post meta",
+  "securityRequirements": [
+    "isset($_POST['spns_sponsor_nonce']) && wp_verify_nonce($_POST['spns_sponsor_nonce'], 'spns_sponsor_meta_box')",
+    "current_user_can('edit_post', $post_id)"
+  ],
+  "smokeAssertions": [
+    "post_type_exists('sponsor')",
+    "shortcode_exists('sponsors')"
+  ]
+}

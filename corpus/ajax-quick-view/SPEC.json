@@ -1,0 +1,31 @@
+{
+  "slug": "ajax-quick-view",
+  "pluginName": "AJAX Quick View",
+  "description": "Loads published post content into a modal via AJAX using a shortcode, supporting logged-out users with proper security.",
+  "version": "1.0.0",
+  "prefix": "aqv1",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "quick_view"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [
+    "ajax_quick_view"
+  ],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": [],
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['nonce'], 'quick_view_nonce' )"
+  ],
+  "smokeAssertions": [
+    "shortcode_exists('quick_view')",
+    "has_action('wp_ajax_ajax_quick_view')"
+  ]
+}

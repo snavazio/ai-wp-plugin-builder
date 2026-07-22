@@ -1,0 +1,30 @@
+{
+  "slug": "featured-rotator",
+  "pluginName": "Featured Rotator",
+  "description": "Schedules a daily WP-Cron event to rotate the featured post ID stored as an option. Includes a [featured_post] shortcode to display the featured post title and link.",
+  "version": "1.0.0",
+  "prefix": "frrot",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "featured_post"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [
+    "featured_rotator_daily"
+  ],
+  "widgets": [],
+  "dataStorage": "options",
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['_wpnonce'], 'featured_rotator_nonce' ) && current_user_can( 'manage_options' )"
+  ],
+  "smokeAssertions": [
+    "shortcode_exists('featured_post')"
+  ]
+}

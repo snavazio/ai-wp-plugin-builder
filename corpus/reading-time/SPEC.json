@@ -1,0 +1,26 @@
+{
+  "slug": "reading-time",
+  "pluginName": "Reading Time",
+  "description": "Adds a 'X min read' estimate to single post content when enabled via a settings toggle.",
+  "version": "1.0.0",
+  "prefix": "rtmin",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [
+    "reading-time-settings"
+  ],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "options",
+  "securityRequirements": [],
+  "smokeAssertions": []
+}

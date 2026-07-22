@@ -1,0 +1,30 @@
+{
+  "slug": "employees",
+  "pluginName": "Employees",
+  "description": "Employee Custom Post Type with department and email meta, admin column, and shortcode listing.",
+  "version": "1.0.0",
+  "prefix": "empc",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "employee"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "employees"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "post_meta",
+  "securityRequirements": [
+    "shortcode_exists('employees')",
+    "defined('EMPLOYEE_NONCE')",
+    "current_user_can('edit_posts')"
+  ],
+  "smokeAssertions": []
+}

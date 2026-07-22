@@ -1,0 +1,29 @@
+{
+  "slug": "quote-widget",
+  "pluginName": "Quote Widget",
+  "description": "Classic sidebar widget for displaying quotes with configurable title and author, featuring full output escaping and input sanitization.",
+  "version": "1.0.0",
+  "prefix": "qwid",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [
+    "Quote_Widget"
+  ],
+  "dataStorage": [],
+  "securityRequirements": [
+    "wp_verify_nonce($nonce, 'qwid_widget_nonce')",
+    "current_user_can('edit_theme_options')"
+  ],
+  "smokeAssertions": [
+    "class_exists('Quote_Widget')"
+  ]
+}

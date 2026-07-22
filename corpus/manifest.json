@@ -38,6 +38,49 @@
       ]
     },
     {
+      "slug": "ajax-availability-check",
+      "pluginName": "AJAX Availability Check",
+      "description": "Provides an [availability] shortcode that checks date availability via AJAX against stored booked dates, allowing logged-out users.",
+      "version": "1.0.0",
+      "prefix": "avch",
+      "tags": [
+        "shortcode",
+        "ajax"
+      ],
+      "files": [
+        "SPEC.json",
+        "ajax-availability-check.php",
+        "includes/ajax.php",
+        "includes/assets.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "ajax-comment-vote",
+      "pluginName": "AJAX Comment Vote",
+      "description": "Adds an upvote button to comments with AJAX voting, incrementing comment meta counts securely.",
+      "version": "1.0.0",
+      "prefix": "acv1",
+      "tags": [
+        "ajax"
+      ],
+      "files": [
+        "SPEC.json",
+        "ajax-comment-vote.php",
+        "includes/ajax.php",
+        "includes/assets.php",
+        "includes/comment.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "ajax-contact-form",
       "pluginName": "AJAX Contact Form",
       "description": "A contact form shortcode with AJAX submission, storing submissions as private CPT",
@@ -84,6 +127,28 @@
       ]
     },
     {
+      "slug": "ajax-newsletter",
+      "pluginName": "AJAX Newsletter",
+      "description": "A newsletter shortcode with AJAX submission for logged-out users, storing emails in an option list with deduplication.",
+      "version": "1.0.0",
+      "prefix": "anews",
+      "tags": [
+        "shortcode",
+        "ajax"
+      ],
+      "files": [
+        "SPEC.json",
+        "ajax-newsletter.php",
+        "includes/ajax.php",
+        "includes/assets.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "ajax-post-filter",
       "pluginName": "AJAX Post Filter",
       "description": "A shortcode with category buttons that fetches published posts via AJAX, allowing logged-out users with proper nonce and capability checks.",
@@ -96,6 +161,28 @@
       "files": [
         "SPEC.json",
         "ajax-post-filter.php",
+        "includes/ajax.php",
+        "includes/assets.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "ajax-quick-view",
+      "pluginName": "AJAX Quick View",
+      "description": "Loads published post content into a modal via AJAX using a shortcode, supporting logged-out users with proper security.",
+      "version": "1.0.0",
+      "prefix": "aqv1",
+      "tags": [
+        "shortcode",
+        "ajax"
+      ],
+      "files": [
+        "SPEC.json",
+        "ajax-quick-view.php",
         "includes/ajax.php",
         "includes/assets.php",
         "includes/shortcode.php",
@@ -128,6 +215,46 @@
       ]
     },
     {
+      "slug": "ajax-tabs",
+      "pluginName": "AJAX Tabs",
+      "description": "Render tabbed interface with AJAX-loaded post excerpts using [tabs] shortcode.",
+      "version": "1.0.0",
+      "prefix": "ajxt",
+      "tags": [
+        "shortcode",
+        "ajax"
+      ],
+      "files": [
+        "SPEC.json",
+        "ajax-tabs.php",
+        "includes/ajax.php",
+        "includes/assets.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "ajax-wishlist",
+      "pluginName": "AJAX Wishlist",
+      "description": "Adds a [wishlist_button] shortcode for users to add the current post to a per-user wishlist via AJAX (logged-out allowed, stored in a cookie-keyed option).",
+      "version": "1.0.0",
+      "prefix": "ajaxw",
+      "tags": [
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "ajax-wishlist.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "alert-banner-block",
       "pluginName": "Alert Banner Block",
       "description": "A dynamic server-rendered Gutenberg block that renders a dismissible alert banner with a 'type' attribute (info/success/warning/error) and a message attribute, all escaped. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
@@ -139,6 +266,25 @@
       "files": [
         "SPEC.json",
         "alert-banner-block.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "announcement-bar",
+      "pluginName": "Announcement Bar",
+      "description": "Adds a configurable announcement bar at the top of the site with a settings page for message and toggle.",
+      "version": "1.0.0",
+      "prefix": "annbar",
+      "tags": [
+        "metabox"
+      ],
+      "files": [
+        "SPEC.json",
+        "announcement-bar.php",
+        "includes/admin-page.php",
         "readme.txt",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
@@ -167,6 +313,48 @@
       ]
     },
     {
+      "slug": "artworks",
+      "pluginName": "Artworks",
+      "description": "A plugin for managing artworks with artist and medium meta.",
+      "version": "1.0.0",
+      "prefix": "artw",
+      "tags": [
+        "cpt",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "artworks.php",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "artworks-api",
+      "pluginName": "Artworks API",
+      "description": "Custom post type for artworks with artist metadata and public REST API endpoint",
+      "version": "1.0.0",
+      "prefix": "artw",
+      "tags": [
+        "cpt",
+        "rest"
+      ],
+      "files": [
+        "SPEC.json",
+        "artworks-api.php",
+        "includes/class-artw-post-type.php",
+        "includes/class-artw-rest-api.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "author-bio-widget",
       "pluginName": "Author Bio Widget",
       "description": "Displays the post author's name and description in the sidebar on single posts with a customizable heading.",
@@ -179,6 +367,89 @@
         "SPEC.json",
         "author-bio-widget.php",
         "includes/widget.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "back-to-top-button",
+      "pluginName": "Back To Top Button",
+      "description": "Adds a customizable back-to-top button with settings for enablement and label text.",
+      "version": "1.0.0",
+      "prefix": "bttb",
+      "tags": [
+        "metabox"
+      ],
+      "files": [
+        "SPEC.json",
+        "back-to-top-button.php",
+        "includes/admin-page.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "banner-cta-block",
+      "pluginName": "Banner CTA Block",
+      "description": "A dynamic server-rendered Gutenberg block for full-width banners with heading and button.",
+      "version": "1.0.0",
+      "prefix": "bctab",
+      "tags": [
+        "block"
+      ],
+      "files": [
+        "SPEC.json",
+        "banner-cta-block.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "beer-list",
+      "pluginName": "Beer List",
+      "description": "A custom post type for beers with ABV meta and style taxonomy, featuring a shortcode for filtering.",
+      "version": "1.0.0",
+      "prefix": "beers",
+      "tags": [
+        "cpt",
+        "taxonomy",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "beer-list.php",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "includes/taxonomies.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "book-library",
+      "pluginName": "Book Library",
+      "description": "A plugin for managing books with custom post types, taxonomies, and a shortcode for displaying library content.",
+      "version": "1.0.0",
+      "prefix": "blib",
+      "tags": [
+        "cpt",
+        "taxonomy",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "book-library.php",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "includes/taxonomies.php",
         "readme.txt",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
@@ -207,6 +478,31 @@
       ]
     },
     {
+      "slug": "booking-slots",
+      "pluginName": "Booking Slots",
+      "description": "A Slot CPT with a datetime meta (secure meta box), a [slots] shortcode listing available published slots each with a 'book' button, and an AJAX handler (logged-out allowed) that marks a slot booked in post meta after verifying a nonce and sanitizing input, returning an escaped result. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
+      "version": "1.0.0",
+      "prefix": "bkslot",
+      "tags": [
+        "cpt",
+        "shortcode",
+        "ajax"
+      ],
+      "files": [
+        "SPEC.json",
+        "booking-slots.php",
+        "includes/ajax.php",
+        "includes/assets.php",
+        "includes/meta-boxes.php",
+        "includes/post-types.php",
+        "includes/shortcodes.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "business-directory",
       "pluginName": "Business Directory",
       "description": "A Business CPT with hierarchical Category and Region taxonomies, plus a [directory] shortcode for listing businesses.",
@@ -222,6 +518,31 @@
         "business-directory.php",
         "includes/post-types.php",
         "includes/shortcode.php",
+        "includes/taxonomies.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "business-directory-pro",
+      "pluginName": "Business Directory Pro",
+      "description": "A Listing CPT with phone and website meta (secure meta box), a hierarchical Category taxonomy and a Region taxonomy, an admin Category column, a [listings category=\"\" region=\"\"] shortcode, and a public read-only REST endpoint (GET) returning published listings.",
+      "version": "1.0.0",
+      "prefix": "bdp",
+      "tags": [
+        "cpt",
+        "taxonomy",
+        "shortcode",
+        "rest"
+      ],
+      "files": [
+        "SPEC.json",
+        "business-directory-pro.php",
+        "includes/post-types.php",
+        "includes/rest.php",
+        "includes/shortcodes.php",
         "includes/taxonomies.php",
         "readme.txt",
         "tests/bootstrap.php",
@@ -286,6 +607,67 @@
         "includes/meta-boxes.php",
         "includes/post-types.php",
         "includes/shortcode.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "comics",
+      "pluginName": "Comics",
+      "description": "Manages comics with custom post type, issue number meta, publisher and series taxonomies, and a shortcode.",
+      "version": "1.0.0",
+      "prefix": "comics",
+      "tags": [
+        "cpt",
+        "taxonomy",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "comics.php",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "includes/taxonomies.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "company-footer-settings",
+      "pluginName": "Company Footer Settings",
+      "description": "Adds a company name field to settings for footer copyright notice.",
+      "version": "1.0.0",
+      "prefix": "cfst",
+      "tags": [
+        "settings"
+      ],
+      "files": [
+        "SPEC.json",
+        "company-footer-settings.php",
+        "includes/admin-page.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "contact-card-widget",
+      "pluginName": "Contact Card Widget",
+      "description": "A classic sidebar widget rendering phone, email, and address from its instance settings, each escaped, with a configurable heading.",
+      "version": "1.0.0",
+      "prefix": "ccw1",
+      "tags": [
+        "widget"
+      ],
+      "files": [
+        "SPEC.json",
+        "contact-card-widget.php",
+        "includes/widget.php",
         "readme.txt",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
@@ -493,6 +875,25 @@
       ]
     },
     {
+      "slug": "custom-404-message",
+      "pluginName": "Custom 404 Message",
+      "description": "A settings page with a custom 404 message (basic HTML allowed, sanitized); render the escaped message on 404 pages via the template flow. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
+      "version": "1.0.0",
+      "prefix": "c404m",
+      "tags": [
+        "metabox"
+      ],
+      "files": [
+        "SPEC.json",
+        "custom-404-message.php",
+        "includes/admin-page.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "custom-admin-footer",
       "pluginName": "Custom Admin Footer",
       "description": "A plugin to replace the WordPress admin footer text with a customizable value.",
@@ -550,6 +951,25 @@
       ]
     },
     {
+      "slug": "daily-quote-rotator",
+      "pluginName": "Daily Quote Rotator",
+      "description": "Schedule a daily WP-Cron event that picks a random quote from a stored list and sets it as the 'quote of the day' option. A [quote_of_day] shortcode renders it, escaped. Register/clear on activation/deactivation. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
+      "version": "1.0.0",
+      "prefix": "daily",
+      "tags": [
+        "shortcode",
+        "cron"
+      ],
+      "files": [
+        "SPEC.json",
+        "daily-quote-rotator.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "days-online",
       "pluginName": "Days Online",
       "description": "Outputs the number of whole days since a specified start date via a shortcode.",
@@ -580,6 +1000,24 @@
         "SPEC.json",
         "disable-comments.php",
         "includes/admin-page.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "divider-block",
+      "pluginName": "Divider Block",
+      "description": "A dynamic server-rendered Gutenberg block for styled dividers with solid, dashed, or dotted styles.",
+      "version": "1.0.0",
+      "prefix": "divb",
+      "tags": [
+        "block"
+      ],
+      "files": [
+        "SPEC.json",
+        "divider-block.php",
         "readme.txt",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
@@ -620,6 +1058,53 @@
       "files": [
         "SPEC.json",
         "draft-cleanup.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "employees",
+      "pluginName": "Employees",
+      "description": "Employee Custom Post Type with department and email meta, admin column, and shortcode listing.",
+      "version": "1.0.0",
+      "prefix": "empc",
+      "tags": [
+        "cpt",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "employees.php",
+        "includes/admin-columns.php",
+        "includes/meta-boxes.php",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "event-rsvp",
+      "pluginName": "Event RSVP",
+      "description": "Event Custom Post Type with RSVP functionality including date meta, shortcode, and AJAX handler.",
+      "version": "1.0.0",
+      "prefix": "ersv",
+      "tags": [
+        "cpt",
+        "shortcode",
+        "ajax"
+      ],
+      "files": [
+        "SPEC.json",
+        "event-rsvp.php",
+        "includes/ajax.php",
+        "includes/assets.php",
+        "includes/post-types.php",
+        "includes/shortcode.php",
         "readme.txt",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
@@ -672,6 +1157,24 @@
       ]
     },
     {
+      "slug": "expired-content-cleaner",
+      "pluginName": "Expired Content Cleaner",
+      "description": "Automatically moves expired published posts to draft status based on expiry date meta, records counts via WP-Cron.",
+      "version": "1.0.0",
+      "prefix": "expcl",
+      "tags": [
+        "cron"
+      ],
+      "files": [
+        "SPEC.json",
+        "expired-content-cleaner.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "external-link-icons",
       "pluginName": "External Link Icons",
       "description": "Adds rel='noopener' and visual markers to external links in post content with a settings toggle.",
@@ -711,6 +1214,24 @@
       ]
     },
     {
+      "slug": "faq-item-block",
+      "pluginName": "FAQ Item Block",
+      "description": "Dynamic server-rendered Gutenberg block for FAQ question/answer pairs.",
+      "version": "1.0.0",
+      "prefix": "faqb",
+      "tags": [
+        "block"
+      ],
+      "files": [
+        "SPEC.json",
+        "faq-item-block.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "faqs",
       "pluginName": "FAQs",
       "description": "Creates an FAQ custom post type with question/answer fields and a shortcode to display FAQs as an accordion.",
@@ -726,6 +1247,25 @@
         "includes/assets.php",
         "includes/post-types.php",
         "includes/shortcode.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "favicon-manager",
+      "pluginName": "Favicon Manager",
+      "description": "Manages site favicon via settings page with URL field and wp_head output.",
+      "version": "1.0.0",
+      "prefix": "fvman",
+      "tags": [
+        "metabox"
+      ],
+      "files": [
+        "SPEC.json",
+        "favicon-manager.php",
+        "includes/admin-page.php",
         "readme.txt",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
@@ -751,6 +1291,44 @@
       ]
     },
     {
+      "slug": "featured-post-widget",
+      "pluginName": "Featured Post Widget",
+      "description": "A classic sidebar widget displaying the title and excerpt of a selected published post with configurable title.",
+      "version": "1.0.0",
+      "prefix": "fpw1",
+      "tags": [
+        "widget"
+      ],
+      "files": [
+        "SPEC.json",
+        "featured-post-widget.php",
+        "includes/widget.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "featured-rotator",
+      "pluginName": "Featured Rotator",
+      "description": "Schedules a daily WP-Cron event to rotate the featured post ID stored as an option. Includes a [featured_post] shortcode to display the featured post title and link.",
+      "version": "1.0.0",
+      "prefix": "frrot",
+      "tags": [
+        "shortcode",
+        "cron"
+      ],
+      "files": [
+        "SPEC.json",
+        "featured-rotator.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "gallery-api",
       "pluginName": "Gallery API",
       "description": "A Photo Custom Post Type with secure caption meta and a public REST API endpoint for published photos.",
@@ -765,6 +1343,50 @@
         "gallery-api.php",
         "includes/class-galapi-post-type.php",
         "includes/class-galapi-rest-api.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "game-catalog",
+      "pluginName": "Game Catalog",
+      "description": "A custom post type for games with release year, platform, and genre taxonomies, plus a shortcode.",
+      "version": "1.0.0",
+      "prefix": "gcat",
+      "tags": [
+        "cpt",
+        "taxonomy",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "game-catalog.php",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "includes/taxonomies.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "gigs",
+      "pluginName": "Gigs",
+      "description": "A custom post type for managing gigs with venue and date meta, and a shortcode to list upcoming gigs.",
+      "version": "1.0.0",
+      "prefix": "gigc",
+      "tags": [
+        "cpt",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "gigs.php",
+        "includes/post-types.php",
+        "includes/shortcode.php",
         "readme.txt",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
@@ -855,6 +1477,67 @@
       ]
     },
     {
+      "slug": "hero-block",
+      "pluginName": "Hero Block",
+      "description": "Dynamic server-rendered Gutenberg block for hero sections with heading, subheading, and button.",
+      "version": "1.0.0",
+      "prefix": "hblock",
+      "tags": [
+        "block"
+      ],
+      "files": [
+        "SPEC.json",
+        "hero-block.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "icon-list-block",
+      "pluginName": "Icon List Block",
+      "description": "A dynamic Gutenberg block rendering a list of items with icon names and text attributes, with full output escaping and input sanitization.",
+      "version": "1.0.0",
+      "prefix": "ilblock",
+      "tags": [
+        "block"
+      ],
+      "files": [
+        "SPEC.json",
+        "icon-list-block.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "job-board",
+      "pluginName": "Job Board",
+      "description": "A job board plugin featuring a custom post type with location and salary meta, hierarchical categories, admin columns, shortcodes, and a public REST API.",
+      "version": "1.0.0",
+      "prefix": "jbrd",
+      "tags": [
+        "cpt",
+        "taxonomy",
+        "shortcode",
+        "rest"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/post-types.php",
+        "includes/rest.php",
+        "includes/shortcodes.php",
+        "includes/taxonomies.php",
+        "job-board.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "job-listings",
       "pluginName": "Job Listings",
       "description": "A Job CPT with meta for location, employment type, and salary range, admin columns, and [jobs] shortcode.",
@@ -894,6 +1577,25 @@
         "includes/shortcode.php",
         "includes/taxonomies.php",
         "knowledge-base.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "link-audit-log",
+      "pluginName": "Link Audit Log",
+      "description": "Schedule a daily WP-Cron event that counts published posts containing external links and stores the tally with a timestamp in an option (keep last 14). Register/clear on activation/deactivation. A [link_audit] shortcode shows the latest, escaped.",
+      "version": "1.0.0",
+      "prefix": "lalx",
+      "tags": [
+        "shortcode",
+        "cron"
+      ],
+      "files": [
+        "SPEC.json",
+        "link-audit-log.php",
         "readme.txt",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
@@ -982,6 +1684,44 @@
       ]
     },
     {
+      "slug": "maintenance-schedule",
+      "pluginName": "Maintenance Schedule",
+      "description": "A settings page with a scheduled-maintenance message and toggle; when on, show the escaped message to logged-out visitors. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
+      "version": "1.0.0",
+      "prefix": "mstg",
+      "tags": [
+        "metabox"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/admin-page.php",
+        "maintenance-schedule.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "mini-cta-widget",
+      "pluginName": "Mini CTA Widget",
+      "description": "A classic sidebar widget rendering a heading, message, and a single button (label + URL) from instance settings, all escaped.",
+      "version": "1.0.0",
+      "prefix": "mctw",
+      "tags": [
+        "widget"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/widget.php",
+        "mini-cta-widget.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "movie-reviews",
       "pluginName": "Movie Reviews",
       "description": "A Movie CPT with a rating meta (secure meta box) and a Genre taxonomy, plus a [movies genre=\"\"] shortcode listing published movies by genre.",
@@ -1016,6 +1756,47 @@
       "files": [
         "SPEC.json",
         "notice-block.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "orphan-media-cleaner",
+      "pluginName": "Orphan Media Cleaner",
+      "description": "Counts unattached media items weekly and stores tally in WordPress options without deletion.",
+      "version": "1.0.0",
+      "prefix": "omclean",
+      "tags": [
+        "cron"
+      ],
+      "files": [
+        "SPEC.json",
+        "orphan-media-cleaner.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "plant-guide",
+      "pluginName": "Plant Guide",
+      "description": "A plugin for managing plant species with care-level metadata, hierarchical family taxonomy, and a shortcode for displaying plant families.",
+      "version": "1.0.0",
+      "prefix": "pgui",
+      "tags": [
+        "cpt",
+        "taxonomy",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "includes/taxonomies.php",
+        "plant-guide.php",
         "readme.txt",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
@@ -1213,6 +1994,24 @@
       ]
     },
     {
+      "slug": "progress-bar-block",
+      "pluginName": "Progress Bar Block",
+      "description": "A dynamic server-rendered Gutenberg block rendering a labelled progress bar from a percent attribute (clamped 0-100), escaped. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
+      "version": "1.0.0",
+      "prefix": "pbar",
+      "tags": [
+        "block"
+      ],
+      "files": [
+        "SPEC.json",
+        "progress-bar-block.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "pull-quote-block",
       "pluginName": "Pull Quote Block",
       "description": "A dynamic server-rendered Gutenberg block for styled pull quotes with quote and citation attributes.",
@@ -1246,6 +2045,85 @@
         "includes/assets.php",
         "includes/shortcode.php",
         "quick-search.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "quote-widget",
+      "pluginName": "Quote Widget",
+      "description": "Classic sidebar widget for displaying quotes with configurable title and author, featuring full output escaping and input sanitization.",
+      "version": "1.0.0",
+      "prefix": "qwid",
+      "tags": [
+        "widget"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/widget.php",
+        "quote-widget.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "quotes-api",
+      "pluginName": "Quotes API",
+      "description": "Custom Post Type for quotes with author meta and public REST API endpoint",
+      "version": "1.0.0",
+      "prefix": "qapi",
+      "tags": [
+        "cpt",
+        "rest"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/class-qapi-post-type.php",
+        "includes/class-qapi-rest-api.php",
+        "quotes-api.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "quotes-collection",
+      "pluginName": "Quotes Collection",
+      "description": "A plugin for managing and displaying quotes with a custom post type and shortcode.",
+      "version": "1.0.0",
+      "prefix": "qcl1",
+      "tags": [
+        "cpt",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "quotes-collection.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "rating-stars-block",
+      "pluginName": "Rating Stars Block",
+      "description": "A dynamic server-rendered Gutenberg block rendering a 1-5 star rating from a value attribute (clamped).",
+      "version": "1.0.0",
+      "prefix": "rsblock",
+      "tags": [
+        "block"
+      ],
+      "files": [
+        "SPEC.json",
+        "rating-stars-block.php",
         "readme.txt",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
@@ -1287,6 +2165,25 @@
         "SPEC.json",
         "includes/admin-page.php",
         "reading-progress.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "reading-time",
+      "pluginName": "Reading Time",
+      "description": "Adds a 'X min read' estimate to single post content when enabled via a settings toggle.",
+      "version": "1.0.0",
+      "prefix": "rtmin",
+      "tags": [
+        "metabox"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/admin-page.php",
+        "reading-time.php",
         "readme.txt",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
@@ -1369,6 +2266,67 @@
         "includes/shortcode.php",
         "readme.txt",
         "recipes.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "related-links-widget",
+      "pluginName": "Related Links Widget",
+      "description": "A classic sidebar widget rendering a configurable list of label+URL link pairs from its instance settings, all escaped.",
+      "version": "1.0.0",
+      "prefix": "rlwgt",
+      "tags": [
+        "widget"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/widget.php",
+        "readme.txt",
+        "related-links-widget.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "reminder-log",
+      "pluginName": "Reminder Log",
+      "description": "Schedules daily cron to log posts scheduled for next 7 days, with shortcode display.",
+      "version": "1.0.0",
+      "prefix": "rlog",
+      "tags": [
+        "shortcode",
+        "cron"
+      ],
+      "files": [
+        "SPEC.json",
+        "readme.txt",
+        "reminder-log.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "rentals",
+      "pluginName": "Rentals",
+      "description": "A Rental CPT with price and bedrooms meta (secure meta box), an admin Price column, and a [rentals] shortcode listing published rentals, escaped.",
+      "version": "1.0.0",
+      "prefix": "rent",
+      "tags": [
+        "cpt",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/admin-columns.php",
+        "includes/meta-boxes.php",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "rentals.php",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
         "uninstall.php"
@@ -1557,6 +2515,109 @@
       ]
     },
     {
+      "slug": "social-share-buttons",
+      "pluginName": "Social Share Buttons",
+      "description": "Adds social share buttons to single posts with customizable network selection via admin settings.",
+      "version": "1.0.0",
+      "prefix": "ssbs",
+      "tags": [
+        "settings"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/admin-page.php",
+        "readme.txt",
+        "social-share-buttons.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "speakers",
+      "pluginName": "Speakers",
+      "description": "A Speaker CPT with title and twitter meta (secure meta box), an admin column, and a [speakers] shortcode.",
+      "version": "1.0.0",
+      "prefix": "spkrs",
+      "tags": [
+        "cpt",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/admin-columns.php",
+        "includes/meta-boxes.php",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "speakers.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "speakers-api",
+      "pluginName": "Speakers API",
+      "description": "Custom post type for speakers with REST API endpoint.",
+      "version": "1.0.0",
+      "prefix": "spkr",
+      "tags": [
+        "cpt",
+        "rest"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/class-spkr-post-type.php",
+        "readme.txt",
+        "speakers-api.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "sponsors",
+      "pluginName": "Sponsors",
+      "description": "A custom post type for sponsors with tier meta and a shortcode to list them.",
+      "version": "1.0.0",
+      "prefix": "spns",
+      "tags": [
+        "cpt",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "sponsors.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "sponsors-api",
+      "pluginName": "Sponsors API",
+      "description": "A Sponsor CPT with a secure website meta box and a public REST endpoint for published sponsors.",
+      "version": "1.0.0",
+      "prefix": "spns",
+      "tags": [
+        "cpt",
+        "rest"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/class-spns-post-type.php",
+        "readme.txt",
+        "sponsors-api.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "staff-directory",
       "pluginName": "Staff Directory",
       "description": "A Staff Custom Post Type with meta fields for job title and phone, secure meta box, and a [staff_list] shortcode.",
@@ -1610,6 +2671,67 @@
         "SPEC.json",
         "readme.txt",
         "stats-snapshot.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "store-products",
+      "pluginName": "Store Products",
+      "description": "A Product CPT with price and sku meta (secure meta box), an admin Price column, and a [store] shortcode listing published products.",
+      "version": "1.0.0",
+      "prefix": "strp",
+      "tags": [
+        "cpt",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/admin-columns.php",
+        "includes/meta-boxes.php",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "store-products.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "stores-api",
+      "pluginName": "Stores API",
+      "description": "A Store CPT with address and hours meta (secure meta box) and a public read-only REST endpoint (GET) returning id, title, address, and hours for published stores.",
+      "version": "1.0.0",
+      "prefix": "strs",
+      "tags": [
+        "cpt",
+        "rest"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/class-strs-post-type.php",
+        "includes/class-strs-rest-api.php",
+        "readme.txt",
+        "stores-api.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "tag-list-widget",
+      "pluginName": "Tag List Widget",
+      "description": "A classic sidebar widget listing the N most-used post tags as escaped links, with a configurable count and title. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
+      "version": "1.0.0",
+      "prefix": "tlw",
+      "tags": [],
+      "files": [
+        "SPEC.json",
+        "includes/widget.php",
+        "readme.txt",
+        "tag-list-widget.php",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
         "uninstall.php"
@@ -1725,6 +2847,24 @@
       ]
     },
     {
+      "slug": "timeline-block",
+      "pluginName": "Timeline Block",
+      "description": "A dynamic server-rendered Gutenberg block rendering a single timeline entry with date, title, and description attributes, escaped.",
+      "version": "1.0.0",
+      "prefix": "tlmb",
+      "tags": [
+        "block"
+      ],
+      "files": [
+        "SPEC.json",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "timeline-block.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "transient-cleanup",
       "pluginName": "Transient Cleanup",
       "description": "Automatically cleans up expired cache entries stored as options with a scheduled daily task.",
@@ -1766,6 +2906,28 @@
       ]
     },
     {
+      "slug": "vehicles",
+      "pluginName": "Vehicles",
+      "description": "A Vehicle CPT with make, model, and year meta (secure meta box) and a [vehicles] shortcode listing published vehicles.",
+      "version": "1.0.0",
+      "prefix": "vclt",
+      "tags": [
+        "cpt",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/meta-boxes.php",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php",
+        "vehicles.php"
+      ]
+    },
+    {
       "slug": "vote-poll",
       "pluginName": "Vote Poll",
       "description": "A shortcode for yes/no polls with AJAX voting, storing counts in options.",
@@ -1804,6 +2966,70 @@
         "tests/test-smoke.php",
         "uninstall.php",
         "weekly-digest.php"
+      ]
+    },
+    {
+      "slug": "wine-catalog",
+      "pluginName": "Wine Catalog",
+      "description": "A Wine CPT with a vintage meta (secure meta box), a hierarchical Region taxonomy and a Varietal taxonomy, and a [wines region=\"\" varietal=\"\"] shortcode filtering published wines, escaped. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check. Remove posts and terms on uninstall.",
+      "version": "1.0.0",
+      "prefix": "winec",
+      "tags": [
+        "cpt",
+        "taxonomy",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "includes/taxonomies.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php",
+        "wine-catalog.php"
+      ]
+    },
+    {
+      "slug": "workshop-cpt",
+      "pluginName": "Workshop CPT Manager",
+      "description": "A plugin for managing workshops as a custom post type with date and seats meta.",
+      "version": "1.0.0",
+      "prefix": "wcpm",
+      "tags": [
+        "cpt",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php",
+        "workshop-cpt.php"
+      ]
+    },
+    {
+      "slug": "workshops-api",
+      "pluginName": "Workshops API",
+      "description": "Manages workshops as a custom post type with secure date meta and public REST API access.",
+      "version": "1.0.0",
+      "prefix": "wapi",
+      "tags": [
+        "cpt",
+        "rest"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/class-wapi-post-type.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php",
+        "workshops-api.php"
       ]
     }
   ]

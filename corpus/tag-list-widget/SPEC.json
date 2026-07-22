@@ -1,0 +1,24 @@
+{
+  "slug": "tag-list-widget",
+  "pluginName": "Tag List Widget",
+  "description": "A classic sidebar widget listing the N most-used post tags as escaped links, with a configurable count and title. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
+  "version": "1.0.0",
+  "prefix": "tlw",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "class_exists('Tag_List_Widget')"
+  ]
+}

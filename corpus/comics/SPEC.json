@@ -1,0 +1,34 @@
+{
+  "slug": "comics",
+  "pluginName": "Comics",
+  "description": "Manages comics with custom post type, issue number meta, publisher and series taxonomies, and a shortcode.",
+  "version": "1.0.0",
+  "prefix": "comics",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "comic"
+  ],
+  "taxonomies": [
+    "publisher",
+    "series"
+  ],
+  "adminPages": [],
+  "shortcodes": [
+    "comics_series"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "WordPress meta API (post meta and taxonomy terms)",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "post_type_exists('comic')",
+    "taxonomy_exists('publisher')",
+    "taxonomy_exists('series')",
+    "shortcode_exists('comics_series')"
+  ]
+}

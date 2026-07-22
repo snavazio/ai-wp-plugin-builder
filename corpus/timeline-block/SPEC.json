@@ -1,0 +1,29 @@
+{
+  "slug": "timeline-block",
+  "pluginName": "Timeline Block",
+  "description": "A dynamic server-rendered Gutenberg block rendering a single timeline entry with date, title, and description attributes, escaped.",
+  "version": "1.0.0",
+  "prefix": "tlmb",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [
+    "timeline-block"
+  ],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "postmeta",
+  "securityRequirements": [
+    "wp_verify_nonce( $nonce, 'timeline_block_nonce' ) === true",
+    "current_user_can( 'edit_posts' )"
+  ],
+  "smokeAssertions": [
+    "get_block_type( 'timeline-block' ) !== false"
+  ]
+}

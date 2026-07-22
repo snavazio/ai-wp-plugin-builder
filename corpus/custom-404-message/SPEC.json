@@ -1,0 +1,32 @@
+{
+  "slug": "custom-404-message",
+  "pluginName": "Custom 404 Message",
+  "description": "A settings page with a custom 404 message (basic HTML allowed, sanitized); render the escaped message on 404 pages via the template flow. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
+  "version": "1.0.0",
+  "prefix": "c404m",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [
+    "404-settings"
+  ],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "options_api",
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['nonce'], 'c404m_nonce' )",
+    "current_user_can( 'manage_options' )"
+  ],
+  "smokeAssertions": [
+    "has_action( 'admin_menu', 'c404m_add_404_settings' )",
+    "has_filter( 'wp', 'c404m_render_404' )"
+  ]
+}

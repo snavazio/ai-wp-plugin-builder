@@ -1,0 +1,34 @@
+{
+  "slug": "job-board",
+  "pluginName": "Job Board",
+  "description": "A job board plugin featuring a custom post type with location and salary meta, hierarchical categories, admin columns, shortcodes, and a public REST API.",
+  "version": "1.0.0",
+  "prefix": "jbrd",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "job"
+  ],
+  "taxonomies": [
+    "job_category"
+  ],
+  "adminPages": [],
+  "shortcodes": [
+    "jobs"
+  ],
+  "blocks": [],
+  "restEndpoints": [
+    "jobs"
+  ],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "post_meta",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "post_type_exists('job')",
+    "taxonomy_exists('job_category')",
+    "shortcode_exists('jobs')"
+  ]
+}

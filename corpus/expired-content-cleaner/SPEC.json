@@ -1,0 +1,30 @@
+{
+  "slug": "expired-content-cleaner",
+  "pluginName": "Expired Content Cleaner",
+  "description": "Automatically moves expired published posts to draft status based on expiry date meta, records counts via WP-Cron.",
+  "version": "1.0.0",
+  "prefix": "expcl",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [
+    "expired_content_cleaner_cron"
+  ],
+  "widgets": [],
+  "dataStorage": "option",
+  "securityRequirements": [
+    "check_admin_referer('expcl_nonce_action', 'expcl_nonce')",
+    "current_user_can('manage_options')"
+  ],
+  "smokeAssertions": [
+    "wp_get_schedule('expired_content_cleaner_cron') !== false",
+    "get_option('expired_content_cleaner_count') !== false"
+  ]
+}

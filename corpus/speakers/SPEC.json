@@ -1,0 +1,32 @@
+{
+  "slug": "speakers",
+  "pluginName": "Speakers",
+  "description": "A Speaker CPT with title and twitter meta (secure meta box), an admin column, and a [speakers] shortcode.",
+  "version": "1.0.0",
+  "prefix": "spkrs",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "speaker"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "speakers"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "meta_box",
+  "securityRequirements": [
+    "nonce",
+    "capability check"
+  ],
+  "smokeAssertions": [
+    "post_type_exists('speaker')",
+    "shortcode_exists('speakers')"
+  ]
+}

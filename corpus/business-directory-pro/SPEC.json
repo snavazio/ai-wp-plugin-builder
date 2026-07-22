@@ -1,0 +1,41 @@
+{
+  "slug": "business-directory-pro",
+  "pluginName": "Business Directory Pro",
+  "description": "A Listing CPT with phone and website meta (secure meta box), a hierarchical Category taxonomy and a Region taxonomy, an admin Category column, a [listings category=\"\" region=\"\"] shortcode, and a public read-only REST endpoint (GET) returning published listings.",
+  "version": "1.0.0",
+  "prefix": "bdp",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "listing"
+  ],
+  "taxonomies": [
+    "category",
+    "region"
+  ],
+  "adminPages": [],
+  "shortcodes": [
+    "listings"
+  ],
+  "blocks": [],
+  "restEndpoints": [
+    "listings"
+  ],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "post_type, taxonomy",
+  "securityRequirements": [
+    "esc_html(...)",
+    "sanitize_text_field(...)",
+    "wp_verify_nonce(...)",
+    "current_user_can(...)"
+  ],
+  "smokeAssertions": [
+    "post_type_exists('listing')",
+    "taxonomy_exists('category')",
+    "taxonomy_exists('region')",
+    "shortcode_exists('listings')"
+  ]
+}

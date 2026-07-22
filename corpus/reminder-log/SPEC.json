@@ -1,0 +1,33 @@
+{
+  "slug": "reminder-log",
+  "pluginName": "Reminder Log",
+  "description": "Schedules daily cron to log posts scheduled for next 7 days, with shortcode display.",
+  "version": "1.0.0",
+  "prefix": "rlog",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "reminder_log"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [
+    "rl_daily_log"
+  ],
+  "widgets": [],
+  "dataStorage": "option",
+  "securityRequirements": [
+    "wp_verify_nonce( ... )",
+    "current_user_can( ... )"
+  ],
+  "smokeAssertions": [
+    "shortcode_exists('reminder_log')"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "slug": "faq-item-block",
+  "pluginName": "FAQ Item Block",
+  "description": "Dynamic server-rendered Gutenberg block for FAQ question/answer pairs.",
+  "version": "1.0.0",
+  "prefix": "faqb",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [
+    "faq-item"
+  ],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "",
+  "securityRequirements": [],
+  "smokeAssertions": []
+}

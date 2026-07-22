@@ -1,0 +1,29 @@
+{
+  "slug": "ajax-comment-vote",
+  "pluginName": "AJAX Comment Vote",
+  "description": "Adds an upvote button to comments with AJAX voting, incrementing comment meta counts securely.",
+  "version": "1.0.0",
+  "prefix": "acv1",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [
+    "acv1_vote"
+  ],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "comment_meta",
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['nonce'], 'acv_vote_nonce' )",
+    "current_user_can( 'edit_posts' )"
+  ],
+  "smokeAssertions": [
+    "has_action('wp_ajax_acv1_vote')"
+  ]
+}

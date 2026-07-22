@@ -1,0 +1,28 @@
+{
+  "slug": "social-share-buttons",
+  "pluginName": "Social Share Buttons",
+  "description": "Adds social share buttons to single posts with customizable network selection via admin settings.",
+  "version": "1.0.0",
+  "prefix": "ssbs",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [
+    {
+      "type": "settings"
+    }
+  ],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": [],
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "has_filter('the_content', 'ssbs_append_share_links')"
+  ]
+}

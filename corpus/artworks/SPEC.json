@@ -1,0 +1,36 @@
+{
+  "slug": "artworks",
+  "pluginName": "Artworks",
+  "description": "A plugin for managing artworks with artist and medium meta.",
+  "version": "1.0.0",
+  "prefix": "artw",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    {
+      "name": "artw_artwork",
+      "label": "Artworks",
+      "description": "Artworks CPT"
+    }
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    {
+      "name": "artw_artworks",
+      "description": "Lists published artworks"
+    }
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "Custom meta fields for artist and medium on the Artwork post type.",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "post_type_exists('artw_artwork')",
+    "shortcode_exists('artw_artworks')"
+  ]
+}

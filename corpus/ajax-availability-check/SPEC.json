@@ -1,0 +1,28 @@
+{
+  "slug": "ajax-availability-check",
+  "pluginName": "AJAX Availability Check",
+  "description": "Provides an [availability] shortcode that checks date availability via AJAX against stored booked dates, allowing logged-out users.",
+  "version": "1.0.0",
+  "prefix": "avch",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "availability"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [
+    "availability_check"
+  ],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "options",
+  "securityRequirements": [
+    "shortcode_exists('availability')"
+  ],
+  "smokeAssertions": []
+}

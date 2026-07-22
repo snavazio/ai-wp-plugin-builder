@@ -1,0 +1,28 @@
+{
+  "slug": "speakers-api",
+  "pluginName": "Speakers API",
+  "description": "Custom post type for speakers with REST API endpoint.",
+  "version": "1.0.0",
+  "prefix": "spkr",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "speaker"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [
+    "wp/v2/speakers"
+  ],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "Custom meta field 'role' for speaker CPT",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "post_type_exists('speaker')"
+  ]
+}

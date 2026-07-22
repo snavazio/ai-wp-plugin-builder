@@ -1,0 +1,32 @@
+{
+  "slug": "workshop-cpt",
+  "pluginName": "Workshop CPT Manager",
+  "description": "A plugin for managing workshops as a custom post type with date and seats meta.",
+  "version": "1.0.0",
+  "prefix": "wcpm",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "workshop"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "workshops"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "Stores workshop date and seats as post meta.",
+  "securityRequirements": [
+    "shortcode_exists('workshops')",
+    "post_type_exists('workshop')"
+  ],
+  "smokeAssertions": [
+    "shortcode_exists('workshops')",
+    "post_type_exists('workshop')"
+  ]
+}

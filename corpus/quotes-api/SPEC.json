@@ -1,0 +1,35 @@
+{
+  "slug": "quotes-api",
+  "pluginName": "Quotes API",
+  "description": "Custom Post Type for quotes with author meta and public REST API endpoint",
+  "version": "1.0.0",
+  "prefix": "qapi",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "quote"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [
+    {
+      "method": "GET",
+      "path": "/wp/v2/quotes"
+    }
+  ],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "author_meta",
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['quote_meta_nonce'], 'quote_meta_nonce' )",
+    "current_user_can( 'edit_post', $post_id )"
+  ],
+  "smokeAssertions": [
+    "post_type_exists( 'quote' )",
+    "rest_get_server()->get_endpoint( '/wp/v2/quotes' )"
+  ]
+}

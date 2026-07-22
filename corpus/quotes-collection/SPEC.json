@@ -1,0 +1,29 @@
+{
+  "slug": "quotes-collection",
+  "pluginName": "Quotes Collection",
+  "description": "A plugin for managing and displaying quotes with a custom post type and shortcode.",
+  "version": "1.0.0",
+  "prefix": "qcl1",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "quote"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "random_quote"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "post-meta",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "post_type_exists('quote')",
+    "shortcode_exists('random_quote')"
+  ]
+}

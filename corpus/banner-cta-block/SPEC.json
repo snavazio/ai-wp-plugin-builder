@@ -1,0 +1,26 @@
+{
+  "slug": "banner-cta-block",
+  "pluginName": "Banner CTA Block",
+  "description": "A dynamic server-rendered Gutenberg block for full-width banners with heading and button.",
+  "version": "1.0.0",
+  "prefix": "bctab",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [
+    "banner-cta"
+  ],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": [],
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "wp_get_block_type('banner-cta') !== false"
+  ]
+}

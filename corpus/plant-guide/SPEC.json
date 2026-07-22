@@ -1,0 +1,49 @@
+{
+  "slug": "plant-guide",
+  "pluginName": "Plant Guide",
+  "description": "A plugin for managing plant species with care-level metadata, hierarchical family taxonomy, and a shortcode for displaying plant families.",
+  "version": "1.0.0",
+  "prefix": "pgui",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    {
+      "name": "plant"
+    }
+  ],
+  "taxonomies": [
+    {
+      "name": "family",
+      "hierarchical": true,
+      "post_types": [
+        "plant"
+      ]
+    }
+  ],
+  "adminPages": [],
+  "shortcodes": [
+    {
+      "name": "plants",
+      "attributes": [
+        "family"
+      ]
+    }
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "post_meta",
+  "securityRequirements": [
+    "shortcode_exists('plants')",
+    "post_type_exists('plant')",
+    "taxonomy_exists('family')"
+  ],
+  "smokeAssertions": [
+    "shortcode_exists('plants')",
+    "post_type_exists('plant')",
+    "taxonomy_exists('family')"
+  ]
+}
