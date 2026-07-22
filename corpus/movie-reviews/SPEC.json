@@ -1,0 +1,32 @@
+{
+  "slug": "movie-reviews",
+  "pluginName": "Movie Reviews",
+  "description": "A Movie CPT with a rating meta (secure meta box) and a Genre taxonomy, plus a [movies genre=\"\"] shortcode listing published movies by genre.",
+  "version": "1.0.0",
+  "prefix": "mrev",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "movie"
+  ],
+  "taxonomies": [
+    "genre"
+  ],
+  "adminPages": [],
+  "shortcodes": [
+    "movies"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "meta",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "post_type_exists('movie')",
+    "taxonomy_exists('genre')",
+    "shortcode_exists('movies')"
+  ]
+}

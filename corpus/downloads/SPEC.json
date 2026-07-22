@@ -1,0 +1,29 @@
+{
+  "slug": "downloads",
+  "pluginName": "Downloads",
+  "description": "A Download CPT with a file-URL meta and a download-count meta (secure meta box) and a [downloads] shortcode listing published downloads as escaped links.",
+  "version": "1.0.0",
+  "prefix": "dlm1",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "download"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "downloads"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "Post meta for download CPT (file_url, download_count)",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "post_type_exists('download')",
+    "shortcode_exists('downloads')"
+  ]
+}

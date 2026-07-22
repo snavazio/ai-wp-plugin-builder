@@ -1,0 +1,26 @@
+{
+  "slug": "custom-admin-footer",
+  "pluginName": "Custom Admin Footer",
+  "description": "A plugin to replace the WordPress admin footer text with a customizable value.",
+  "version": "1.0.0",
+  "prefix": "caf1",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [
+    "settings"
+  ],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "has_filter('admin_footer_text', 'caf1_footer_text')"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "slug": "ajax-load-comments",
+  "pluginName": "AJAX Load Comments",
+  "description": "Fetches next page of approved comments via AJAX using [load_comments] shortcode, supporting logged-out users.",
+  "version": "1.0.0",
+  "prefix": "alcp",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "load_comments"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [
+    "load_comments"
+  ],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "wp_comments",
+  "securityRequirements": [
+    "shortcode_exists('load_comments')"
+  ],
+  "smokeAssertions": []
+}

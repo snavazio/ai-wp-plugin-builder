@@ -1,0 +1,31 @@
+{
+  "slug": "author-bio-widget",
+  "pluginName": "Author Bio Widget",
+  "description": "Displays the post author's name and description in the sidebar on single posts with a customizable heading.",
+  "version": "1.0.0",
+  "prefix": "abio",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "edit_theme_options"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [
+    "ABIO_Author_Bio_Widget"
+  ],
+  "dataStorage": "wp_options",
+  "securityRequirements": [
+    "wp_verify_nonce( $nonce, 'abio_widget_nonce' )",
+    "current_user_can( 'edit_theme_options' )"
+  ],
+  "smokeAssertions": [
+    "class_exists( 'ABIO_Author_Bio_Widget' )"
+  ]
+}

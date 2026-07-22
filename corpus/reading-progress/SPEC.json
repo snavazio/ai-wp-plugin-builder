@@ -1,0 +1,28 @@
+{
+  "slug": "reading-progress",
+  "pluginName": "Reading Progress",
+  "description": "A settings page with an enable toggle and bar color; when enabled, render an escaped reading-progress bar on single posts.",
+  "version": "1.0.0",
+  "prefix": "rpbar",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [
+    "reading-progress-settings"
+  ],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "options",
+  "securityRequirements": [
+    "wp_verify_nonce($_POST['rpbar_nonce'], 'rpbar_settings') && current_user_can('manage_options')"
+  ],
+  "smokeAssertions": []
+}

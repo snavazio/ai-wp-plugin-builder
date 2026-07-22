@@ -1,0 +1,30 @@
+{
+  "slug": "recent-products-widget",
+  "pluginName": "Recent Products Widget",
+  "description": "A sidebar widget listing the N most recent published posts of a 'product' post type if present (else posts), with escaped titles and configurable count.",
+  "version": "1.0.0",
+  "prefix": "rpwgt",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [
+    "Recent_Products_Widget"
+  ],
+  "dataStorage": "",
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['nonce'], 'rpw_widget_nonce' )",
+    "current_user_can( 'edit_theme_options' )"
+  ],
+  "smokeAssertions": [
+    "post_type_exists( 'product' )",
+    "class_exists( 'Recent_Products_Widget' )"
+  ]
+}

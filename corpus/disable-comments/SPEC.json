@@ -1,0 +1,29 @@
+{
+  "slug": "disable-comments",
+  "pluginName": "Disable Comments",
+  "description": "A settings page with a toggle to disable comments site-wide. When enabled, closes comments on all post types and hides existing comments.",
+  "version": "1.0.0",
+  "prefix": "dcmn",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [
+    "disable-comments-settings"
+  ],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "options_api",
+  "securityRequirements": [
+    "wp_verify_nonce($_POST['nonce'], 'disable_comments_nonce')",
+    "current_user_can('manage_options')"
+  ],
+  "smokeAssertions": []
+}

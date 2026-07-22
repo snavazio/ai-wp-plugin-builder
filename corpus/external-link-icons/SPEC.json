@@ -1,0 +1,32 @@
+{
+  "slug": "external-link-icons",
+  "pluginName": "External Link Icons",
+  "description": "Adds rel='noopener' and visual markers to external links in post content with a settings toggle.",
+  "version": "1.0.0",
+  "prefix": "elink",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [
+    "external-link-icons-settings"
+  ],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "options",
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['_wpnonce'], 'external_link_icons_nonce' )",
+    "current_user_can( 'manage_options' )"
+  ],
+  "smokeAssertions": [
+    "shortcode_exists( 'external_link_icons' )",
+    "post_type_exists( 'external_link_icons' )"
+  ]
+}

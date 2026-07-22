@@ -1,0 +1,28 @@
+{
+  "slug": "faq-api",
+  "pluginName": "FAQ API",
+  "description": "Provides a custom post type for FAQs with a public REST API endpoint.",
+  "version": "1.0.0",
+  "prefix": "faqapi",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "faq"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [
+    "/wp/v2/faqs"
+  ],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "wp_posts",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "post_type_exists('faq')"
+  ]
+}

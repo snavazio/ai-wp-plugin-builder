@@ -1,0 +1,35 @@
+{
+  "slug": "help-desk",
+  "pluginName": "Help Desk",
+  "description": "A ticketing system with hierarchical status tracking, admin columns, and REST API endpoints.",
+  "version": "1.0.0",
+  "prefix": "help",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "help_ticket"
+  ],
+  "taxonomies": [
+    "help_status"
+  ],
+  "adminPages": [],
+  "shortcodes": [
+    "help_tickets"
+  ],
+  "blocks": [],
+  "restEndpoints": [
+    "help_tickets"
+  ],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "post_types_and_taxonomies",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "post_type_exists('help_ticket')",
+    "taxonomy_exists('help_status')",
+    "shortcode_exists('help_tickets')",
+    "rest_get_server()->get_endpoint('help_tickets') !== false"
+  ]
+}

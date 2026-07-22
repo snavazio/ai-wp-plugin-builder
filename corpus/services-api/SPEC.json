@@ -1,0 +1,28 @@
+{
+  "slug": "services-api",
+  "pluginName": "Services API",
+  "description": "Custom post type for services with price meta and public REST API endpoint.",
+  "version": "1.0.0",
+  "prefix": "srvapi",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "service"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [
+    "services"
+  ],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "meta",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "post_type_exists('service')"
+  ]
+}

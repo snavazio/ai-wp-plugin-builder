@@ -1,0 +1,46 @@
+{
+  "slug": "services",
+  "pluginName": "Services",
+  "description": "A plugin for managing services with a custom post type, price and icon meta, and a shortcode to list services.",
+  "version": "1.0.0",
+  "prefix": "srvs",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    {
+      "name": "service",
+      "labels": {
+        "name": "Services",
+        "singular_name": "Service"
+      },
+      "supports": [
+        "title",
+        "editor",
+        "thumbnail"
+      ],
+      "menu_position": 5,
+      "has_archive": true,
+      "public": true,
+      "show_in_rest": true
+    }
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    {
+      "name": "services"
+    }
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "Custom post type meta (price, icon) stored via WordPress meta API.",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "shortcode_exists('services')",
+    "post_type_exists('service')"
+  ]
+}

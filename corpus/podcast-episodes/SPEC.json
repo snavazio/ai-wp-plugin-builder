@@ -1,0 +1,32 @@
+{
+  "slug": "podcast-episodes",
+  "pluginName": "Podcast Episodes",
+  "description": "Manage podcast episodes with audio URL, duration meta, and season taxonomy.",
+  "version": "1.0.0",
+  "prefix": "podc",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    "episode"
+  ],
+  "taxonomies": [
+    "season"
+  ],
+  "adminPages": [],
+  "shortcodes": [
+    "episodes"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "meta_boxes",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "post_type_exists('episode')",
+    "taxonomy_exists('season')",
+    "shortcode_exists('episodes')"
+  ]
+}

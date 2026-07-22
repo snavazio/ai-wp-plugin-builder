@@ -1,6 +1,24 @@
 {
   "entries": [
     {
+      "slug": "accordion-block",
+      "pluginName": "Accordion Block",
+      "description": "A dynamic server-rendered Gutenberg block rendering a single accordion item with a title attribute and content attribute, escaped, that expands/collapses.",
+      "version": "1.0.0",
+      "prefix": "accb",
+      "tags": [
+        "block"
+      ],
+      "files": [
+        "SPEC.json",
+        "accordion-block.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "admin-reminder",
       "pluginName": "Admin Reminder",
       "description": "A settings page with a dismissible admin notice for editors.",
@@ -20,6 +38,52 @@
       ]
     },
     {
+      "slug": "ajax-contact-form",
+      "pluginName": "AJAX Contact Form",
+      "description": "A contact form shortcode with AJAX submission, storing submissions as private CPT",
+      "version": "1.0.0",
+      "prefix": "acff",
+      "tags": [
+        "cpt",
+        "shortcode",
+        "ajax"
+      ],
+      "files": [
+        "SPEC.json",
+        "ajax-contact-form.php",
+        "includes/ajax.php",
+        "includes/assets.php",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "ajax-load-comments",
+      "pluginName": "AJAX Load Comments",
+      "description": "Fetches next page of approved comments via AJAX using [load_comments] shortcode, supporting logged-out users.",
+      "version": "1.0.0",
+      "prefix": "alcp",
+      "tags": [
+        "shortcode",
+        "ajax"
+      ],
+      "files": [
+        "SPEC.json",
+        "ajax-load-comments.php",
+        "includes/ajax.php",
+        "includes/assets.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "ajax-post-filter",
       "pluginName": "AJAX Post Filter",
       "description": "A shortcode with category buttons that fetches published posts via AJAX, allowing logged-out users with proper nonce and capability checks.",
@@ -32,6 +96,28 @@
       "files": [
         "SPEC.json",
         "ajax-post-filter.php",
+        "includes/ajax.php",
+        "includes/assets.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "ajax-star-rating",
+      "pluginName": "AJAX Star Rating",
+      "description": "A [star_rating] shortcode showing 1-5 stars for the current post. Submitting a rating via AJAX (logged-out allowed) updates a running average in post meta.",
+      "version": "1.0.0",
+      "prefix": "arsr",
+      "tags": [
+        "shortcode",
+        "ajax"
+      ],
+      "files": [
+        "SPEC.json",
+        "ajax-star-rating.php",
         "includes/ajax.php",
         "includes/assets.php",
         "includes/shortcode.php",
@@ -74,6 +160,25 @@
         "announcements-api.php",
         "includes/class-annapi-post-type.php",
         "includes/class-annapi-rest-api.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "author-bio-widget",
+      "pluginName": "Author Bio Widget",
+      "description": "Displays the post author's name and description in the sidebar on single posts with a customizable heading.",
+      "version": "1.0.0",
+      "prefix": "abio",
+      "tags": [
+        "widget"
+      ],
+      "files": [
+        "SPEC.json",
+        "author-bio-widget.php",
+        "includes/widget.php",
         "readme.txt",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
@@ -287,6 +392,71 @@
       ]
     },
     {
+      "slug": "countdown-widget",
+      "pluginName": "Countdown Widget",
+      "description": "A classic sidebar widget with a target-date instance setting (sanitized) that renders the number of days remaining, escaped, with a configurable title. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
+      "version": "1.0.0",
+      "prefix": "cdwgt",
+      "tags": [
+        "widget"
+      ],
+      "files": [
+        "SPEC.json",
+        "countdown-widget.php",
+        "includes/widget.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "coupons",
+      "pluginName": "Coupons",
+      "description": "A custom post type for managing coupons with code and expiry date, featuring an admin column and shortcode.",
+      "version": "1.0.0",
+      "prefix": "cpns",
+      "tags": [
+        "cpt",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "coupons.php",
+        "includes/admin-columns.php",
+        "includes/meta-boxes.php",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "courses",
+      "pluginName": "Courses",
+      "description": "A plugin for managing courses with hierarchical subject and level taxonomies.",
+      "version": "1.0.0",
+      "prefix": "crs1",
+      "tags": [
+        "cpt",
+        "taxonomy",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "courses.php",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "includes/taxonomies.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "cta-button",
       "pluginName": "CTA Button",
       "description": "A shortcode for rendering a styled call-to-action button with sanitized URL and escaped text.",
@@ -316,6 +486,25 @@
       "files": [
         "SPEC.json",
         "current-year.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "custom-admin-footer",
+      "pluginName": "Custom Admin Footer",
+      "description": "A plugin to replace the WordPress admin footer text with a customizable value.",
+      "version": "1.0.0",
+      "prefix": "caf1",
+      "tags": [
+        "metabox"
+      ],
+      "files": [
+        "SPEC.json",
+        "custom-admin-footer.php",
+        "includes/admin-page.php",
         "readme.txt",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
@@ -379,6 +568,47 @@
       ]
     },
     {
+      "slug": "disable-comments",
+      "pluginName": "Disable Comments",
+      "description": "A settings page with a toggle to disable comments site-wide. When enabled, closes comments on all post types and hides existing comments.",
+      "version": "1.0.0",
+      "prefix": "dcmn",
+      "tags": [
+        "metabox"
+      ],
+      "files": [
+        "SPEC.json",
+        "disable-comments.php",
+        "includes/admin-page.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "downloads",
+      "pluginName": "Downloads",
+      "description": "A Download CPT with a file-URL meta and a download-count meta (secure meta box) and a [downloads] shortcode listing published downloads as escaped links.",
+      "version": "1.0.0",
+      "prefix": "dlm1",
+      "tags": [
+        "cpt",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "downloads.php",
+        "includes/meta-boxes.php",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "draft-cleanup",
       "pluginName": "Draft Cleanup",
       "description": "Automatically trashes auto-draft posts older than 7 days via weekly cron, records counts in options.",
@@ -390,6 +620,29 @@
       "files": [
         "SPEC.json",
         "draft-cleanup.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "events-calendar",
+      "pluginName": "Events Calendar",
+      "description": "Event CPT with start-date and location meta, admin Start Date column, and [events] shortcode for upcoming events. All output escaped, input sanitized, with nonce and capability checks.",
+      "version": "1.0.0",
+      "prefix": "evcal",
+      "tags": [
+        "cpt",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "events-calendar.php",
+        "includes/admin-columns.php",
+        "includes/meta-boxes.php",
+        "includes/post-types.php",
+        "includes/shortcode.php",
         "readme.txt",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
@@ -419,6 +672,45 @@
       ]
     },
     {
+      "slug": "external-link-icons",
+      "pluginName": "External Link Icons",
+      "description": "Adds rel='noopener' and visual markers to external links in post content with a settings toggle.",
+      "version": "1.0.0",
+      "prefix": "elink",
+      "tags": [
+        "metabox"
+      ],
+      "files": [
+        "SPEC.json",
+        "external-link-icons.php",
+        "includes/admin-page.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "faq-api",
+      "pluginName": "FAQ API",
+      "description": "Provides a custom post type for FAQs with a public REST API endpoint.",
+      "version": "1.0.0",
+      "prefix": "faqapi",
+      "tags": [
+        "cpt",
+        "rest"
+      ],
+      "files": [
+        "SPEC.json",
+        "faq-api.php",
+        "includes/class-faqapi-post-type.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "faqs",
       "pluginName": "FAQs",
       "description": "Creates an FAQ custom post type with question/answer fields and a shortcode to display FAQs as an accordion.",
@@ -441,6 +733,66 @@
       ]
     },
     {
+      "slug": "feature-box-block",
+      "pluginName": "Feature Box Block",
+      "description": "A dynamic server-rendered Gutenberg block rendering a feature box with an icon name, heading, and description attribute, all escaped. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
+      "version": "1.0.0",
+      "prefix": "fbox",
+      "tags": [
+        "block"
+      ],
+      "files": [
+        "SPEC.json",
+        "feature-box-block.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "gallery-api",
+      "pluginName": "Gallery API",
+      "description": "A Photo Custom Post Type with secure caption meta and a public REST API endpoint for published photos.",
+      "version": "1.0.0",
+      "prefix": "galapi",
+      "tags": [
+        "cpt",
+        "rest"
+      ],
+      "files": [
+        "SPEC.json",
+        "gallery-api.php",
+        "includes/class-galapi-post-type.php",
+        "includes/class-galapi-rest-api.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "glossary-terms",
+      "pluginName": "Glossary Terms",
+      "description": "A custom post type for glossary terms with a shortcode to display them alphabetically.",
+      "version": "1.0.0",
+      "prefix": "gterm",
+      "tags": [
+        "cpt",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "glossary-terms.php",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "greeting-box",
       "pluginName": "Greeting Box",
       "description": "A very small plugin that provides a single shortcode [greeting_box] for the front end.",
@@ -452,6 +804,50 @@
       "files": [
         "SPEC.json",
         "greeting-box.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "healthcheck-log",
+      "pluginName": "Healthcheck Log",
+      "description": "Schedule a daily WP-Cron event that records a heartbeat timestamp and the current published-post count into an option (keep the last 14). Register/clear on activation/deactivation. A [healthcheck] shortcode shows the latest entry, escaped. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
+      "version": "1.0.0",
+      "prefix": "hlck",
+      "tags": [
+        "shortcode",
+        "cron"
+      ],
+      "files": [
+        "SPEC.json",
+        "healthcheck-log.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "help-desk",
+      "pluginName": "Help Desk",
+      "description": "A ticketing system with hierarchical status tracking, admin columns, and REST API endpoints.",
+      "version": "1.0.0",
+      "prefix": "help",
+      "tags": [
+        "cpt",
+        "taxonomy",
+        "shortcode",
+        "rest"
+      ],
+      "files": [
+        "SPEC.json",
+        "help-desk.php",
+        "includes/post-types.php",
+        "includes/rest.php",
+        "includes/shortcodes.php",
+        "includes/taxonomies.php",
         "readme.txt",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
@@ -586,6 +982,29 @@
       ]
     },
     {
+      "slug": "movie-reviews",
+      "pluginName": "Movie Reviews",
+      "description": "A Movie CPT with a rating meta (secure meta box) and a Genre taxonomy, plus a [movies genre=\"\"] shortcode listing published movies by genre.",
+      "version": "1.0.0",
+      "prefix": "mrev",
+      "tags": [
+        "cpt",
+        "taxonomy",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "includes/taxonomies.php",
+        "movie-reviews.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "notice-block",
       "pluginName": "Notice Block",
       "description": "A dynamic server-rendered Gutenberg block that outputs an info/warning notice with a type attribute and message, escaped. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
@@ -597,6 +1016,29 @@
       "files": [
         "SPEC.json",
         "notice-block.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "podcast-episodes",
+      "pluginName": "Podcast Episodes",
+      "description": "Manage podcast episodes with audio URL, duration meta, and season taxonomy.",
+      "version": "1.0.0",
+      "prefix": "podc",
+      "tags": [
+        "cpt",
+        "taxonomy",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "includes/taxonomies.php",
+        "podcast-episodes.php",
         "readme.txt",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
@@ -771,6 +1213,24 @@
       ]
     },
     {
+      "slug": "pull-quote-block",
+      "pluginName": "Pull Quote Block",
+      "description": "A dynamic server-rendered Gutenberg block for styled pull quotes with quote and citation attributes.",
+      "version": "1.0.0",
+      "prefix": "pqbl",
+      "tags": [
+        "block"
+      ],
+      "files": [
+        "SPEC.json",
+        "pull-quote-block.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "quick-search",
       "pluginName": "Quick Search",
       "description": "Adds a [quick_search] shortcode that provides title suggestions via AJAX for published posts.",
@@ -808,6 +1268,25 @@
         "includes/assets.php",
         "includes/shortcode.php",
         "reaction-buttons.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "reading-progress",
+      "pluginName": "Reading Progress",
+      "description": "A settings page with an enable toggle and bar color; when enabled, render an escaped reading-progress bar on single posts.",
+      "version": "1.0.0",
+      "prefix": "rpbar",
+      "tags": [
+        "metabox"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/admin-page.php",
+        "reading-progress.php",
         "readme.txt",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
@@ -855,6 +1334,25 @@
       ]
     },
     {
+      "slug": "recent-products-widget",
+      "pluginName": "Recent Products Widget",
+      "description": "A sidebar widget listing the N most recent published posts of a 'product' post type if present (else posts), with escaped titles and configurable count.",
+      "version": "1.0.0",
+      "prefix": "rpwgt",
+      "tags": [
+        "widget"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/widget.php",
+        "readme.txt",
+        "recent-products-widget.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "recipes",
       "pluginName": "Recipes",
       "description": "A Recipe Custom Post Type with meta fields for prep time and servings, secure meta box, and recipe_card shortcode.",
@@ -893,6 +1391,24 @@
         "includes/shortcode.php",
         "readme.txt",
         "restaurant-menu.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "revision-cleaner",
+      "pluginName": "Revision Cleaner",
+      "description": "Automates deletion of old post revisions with configurable retention (keeps 5 most recent per post, deletes older than 60 days). Records deleted count in option.",
+      "version": "1.0.0",
+      "prefix": "revcln",
+      "tags": [
+        "cron"
+      ],
+      "files": [
+        "SPEC.json",
+        "readme.txt",
+        "revision-cleaner.php",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
         "uninstall.php"
@@ -949,6 +1465,48 @@
         "includes/admin-page.php",
         "readme.txt",
         "seo-defaults.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "services",
+      "pluginName": "Services",
+      "description": "A plugin for managing services with a custom post type, price and icon meta, and a shortcode to list services.",
+      "version": "1.0.0",
+      "prefix": "srvs",
+      "tags": [
+        "cpt",
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/post-types.php",
+        "includes/shortcode.php",
+        "readme.txt",
+        "services.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "services-api",
+      "pluginName": "Services API",
+      "description": "Custom post type for services with price meta and public REST API endpoint.",
+      "version": "1.0.0",
+      "prefix": "srvapi",
+      "tags": [
+        "cpt",
+        "rest"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/class-srvapi-post-type.php",
+        "includes/class-srvapi-rest-api.php",
+        "readme.txt",
+        "services-api.php",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
         "uninstall.php"
@@ -1015,6 +1573,24 @@
         "includes/shortcode.php",
         "readme.txt",
         "staff-directory.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "stat-counter-block",
+      "pluginName": "Stat Counter Block",
+      "description": "A dynamic server-rendered Gutenberg block displaying a statistic with a label.",
+      "version": "1.0.0",
+      "prefix": "scblock",
+      "tags": [
+        "block"
+      ],
+      "files": [
+        "SPEC.json",
+        "readme.txt",
+        "stat-counter-block.php",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
         "uninstall.php"
@@ -1209,6 +1785,25 @@
         "tests/test-smoke.php",
         "uninstall.php",
         "vote-poll.php"
+      ]
+    },
+    {
+      "slug": "weekly-digest",
+      "pluginName": "Weekly Digest",
+      "description": "Schedules a weekly cron event to count posts published in the last 7 days and displays the count via a shortcode.",
+      "version": "1.0.0",
+      "prefix": "wkdig",
+      "tags": [
+        "shortcode",
+        "cron"
+      ],
+      "files": [
+        "SPEC.json",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php",
+        "weekly-digest.php"
       ]
     }
   ]

@@ -1,0 +1,32 @@
+{
+  "slug": "weekly-digest",
+  "pluginName": "Weekly Digest",
+  "description": "Schedules a weekly cron event to count posts published in the last 7 days and displays the count via a shortcode.",
+  "version": "1.0.0",
+  "prefix": "wkdig",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "weekly_digest"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [
+    "wkdig_weekly_digest"
+  ],
+  "widgets": [],
+  "dataStorage": "options",
+  "securityRequirements": [
+    "shortcode_exists('weekly_digest')"
+  ],
+  "smokeAssertions": [
+    "shortcode_exists('weekly_digest')"
+  ]
+}

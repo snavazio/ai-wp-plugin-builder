@@ -1,0 +1,31 @@
+{
+  "slug": "coupons",
+  "pluginName": "Coupons",
+  "description": "A custom post type for managing coupons with code and expiry date, featuring an admin column and shortcode.",
+  "version": "1.0.0",
+  "prefix": "cpns",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [
+    "coupon"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "coupons"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "meta",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "post_type_exists('coupon')",
+    "shortcode_exists('coupons')"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "slug": "countdown-widget",
+  "pluginName": "Countdown Widget",
+  "description": "A classic sidebar widget with a target-date instance setting (sanitized) that renders the number of days remaining, escaped, with a configurable title. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
+  "version": "1.0.0",
+  "prefix": "cdwgt",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [
+    "CDWGT_Widget"
+  ],
+  "dataStorage": "options",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "class_exists('CDWGT_Widget')"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "slug": "pull-quote-block",
+  "pluginName": "Pull Quote Block",
+  "description": "A dynamic server-rendered Gutenberg block for styled pull quotes with quote and citation attributes.",
+  "version": "1.0.0",
+  "prefix": "pqbl",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [
+    "pull-quote"
+  ],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": [],
+  "securityRequirements": [],
+  "smokeAssertions": []
+}

@@ -1,0 +1,32 @@
+{
+  "slug": "revision-cleaner",
+  "pluginName": "Revision Cleaner",
+  "description": "Automates deletion of old post revisions with configurable retention (keeps 5 most recent per post, deletes older than 60 days). Records deleted count in option.",
+  "version": "1.0.0",
+  "prefix": "revcln",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [
+    "revision_cleaner_weekly_cron"
+  ],
+  "widgets": [],
+  "dataStorage": "options",
+  "securityRequirements": [
+    "nonce verification",
+    "capability checks",
+    "input sanitization",
+    "output escaping"
+  ],
+  "smokeAssertions": [
+    "wp_get_schedule('revcln_revision_cleaner_weekly_cron') !== false",
+    "get_option('revcln_deleted_count') !== false"
+  ]
+}

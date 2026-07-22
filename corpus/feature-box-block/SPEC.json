@@ -1,0 +1,26 @@
+{
+  "slug": "feature-box-block",
+  "pluginName": "Feature Box Block",
+  "description": "A dynamic server-rendered Gutenberg block rendering a feature box with an icon name, heading, and description attribute, all escaped. Escape all output, sanitize all input, and pair every state-changing action with a nonce AND a capability check.",
+  "version": "1.0.0",
+  "prefix": "fbox",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "edit_posts"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [
+    "fbox/feature-box"
+  ],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "options",
+  "securityRequirements": [],
+  "smokeAssertions": []
+}

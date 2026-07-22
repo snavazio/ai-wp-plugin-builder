@@ -1,0 +1,69 @@
+{
+  "slug": "courses",
+  "pluginName": "Courses",
+  "description": "A plugin for managing courses with hierarchical subject and level taxonomies.",
+  "version": "1.0.0",
+  "prefix": "crs1",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [
+    {
+      "name": "course",
+      "label": "Courses",
+      "description": "A course in the course system",
+      "hierarchical": false,
+      "supports": [
+        "title",
+        "editor",
+        "thumbnail",
+        "excerpt",
+        "comments"
+      ],
+      "menu_position": 5,
+      "show_in_rest": true
+    }
+  ],
+  "taxonomies": [
+    {
+      "name": "subject",
+      "label": "Subjects",
+      "description": "Subject categories for courses",
+      "hierarchical": true
+    },
+    {
+      "name": "level",
+      "label": "Levels",
+      "description": "Course levels",
+      "hierarchical": false
+    }
+  ],
+  "adminPages": [],
+  "shortcodes": [
+    {
+      "name": "courses",
+      "attributes": {
+        "subject": "string",
+        "level": "string"
+      },
+      "description": "Filters published courses by subject and level"
+    }
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "none",
+  "securityRequirements": [
+    "Escape all output",
+    "Sanitize all input",
+    "Nonce and capability check for every state-changing action"
+  ],
+  "smokeAssertions": [
+    "post_type_exists('course')",
+    "taxonomy_exists('subject')",
+    "taxonomy_exists('level')",
+    "shortcode_exists('courses')"
+  ]
+}

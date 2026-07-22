@@ -1,0 +1,34 @@
+{
+  "slug": "glossary-terms",
+  "pluginName": "Glossary Terms",
+  "description": "A custom post type for glossary terms with a shortcode to display them alphabetically.",
+  "version": "1.0.0",
+  "prefix": "gterm",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [
+    "gterm_glossary_term"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "glossary"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "post_type",
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['nonce'], 'gterm_nonce' )",
+    "current_user_can( 'manage_options' )"
+  ],
+  "smokeAssertions": [
+    "post_type_exists('gterm_glossary_term')",
+    "shortcode_exists('glossary')"
+  ]
+}

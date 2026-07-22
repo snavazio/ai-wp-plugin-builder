@@ -1,0 +1,28 @@
+{
+  "slug": "accordion-block",
+  "pluginName": "Accordion Block",
+  "description": "A dynamic server-rendered Gutenberg block rendering a single accordion item with a title attribute and content attribute, escaped, that expands/collapses.",
+  "version": "1.0.0",
+  "prefix": "accb",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [
+    "accordion-block"
+  ],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": [],
+  "securityRequirements": [
+    "wp_verify_nonce( $_POST['nonce'], 'accordion_action' ) && current_user_can( 'edit_posts' )"
+  ],
+  "smokeAssertions": [
+    "block_exists('accordion-block')"
+  ]
+}

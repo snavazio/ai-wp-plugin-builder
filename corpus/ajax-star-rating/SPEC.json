@@ -1,0 +1,32 @@
+{
+  "slug": "ajax-star-rating",
+  "pluginName": "AJAX Star Rating",
+  "description": "A [star_rating] shortcode showing 1-5 stars for the current post. Submitting a rating via AJAX (logged-out allowed) updates a running average in post meta.",
+  "version": "1.0.0",
+  "prefix": "arsr",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "star_rating"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [
+    "star_rating_submit"
+  ],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "post_meta",
+  "securityRequirements": [
+    "shortcode_exists('star_rating')",
+    "has_action('wp_ajax_nopriv_star_rating_submit')"
+  ],
+  "smokeAssertions": [
+    "shortcode_exists('star_rating')",
+    "has_action('wp_ajax_nopriv_star_rating_submit')"
+  ]
+}
