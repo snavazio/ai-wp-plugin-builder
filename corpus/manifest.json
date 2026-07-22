@@ -527,6 +527,27 @@
       ]
     },
     {
+      "slug": "locations-api",
+      "pluginName": "Locations API",
+      "description": "A Location CPT with latitude and longitude meta (secure meta box, sanitized) and a public read-only REST endpoint (GET) returning id, title, lat, and lng for published locations.",
+      "version": "1.0.0",
+      "prefix": "locapi",
+      "tags": [
+        "cpt",
+        "rest"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/class-locapi-post-type.php",
+        "includes/class-locapi-rest-api.php",
+        "locations-api.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "login-logo",
       "pluginName": "Login Logo",
       "description": "Adds a settings page to replace the WordPress login logo with a custom image URL.",
@@ -994,6 +1015,25 @@
         "includes/shortcode.php",
         "readme.txt",
         "staff-directory.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "stats-snapshot",
+      "pluginName": "Stats Snapshot",
+      "description": "Stores daily snapshots of published post and comment counts, accessible via shortcode.",
+      "version": "1.0.0",
+      "prefix": "stats",
+      "tags": [
+        "shortcode",
+        "cron"
+      ],
+      "files": [
+        "SPEC.json",
+        "readme.txt",
+        "stats-snapshot.php",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
         "uninstall.php"

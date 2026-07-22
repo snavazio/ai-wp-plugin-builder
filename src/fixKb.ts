@@ -71,6 +71,21 @@ const RULES: FixRule[] = [
     fix: 'Make the plugin header Version, the readme.txt "Stable tag", and every *_VERSION constant identical.',
   },
   {
+    match: /Call to undefined function/i,
+    fix:
+      'You called a function that does not exist. Use ONLY real WordPress functions. To assert a REST route ' +
+      'in a smoke test, use assertNotFalse( has_action( \'rest_api_init\' ) ) or check rest_get_server()->get_routes(). ' +
+      'To assert a block, use WP_Block_Type_Registry::get_instance()->is_registered( \'namespace/block\' ). ' +
+      'Never invent function names like rest_api_endpoint_exists() or wp_get_registered_block_type().',
+  },
+  {
+    match: /Failed opening required|require\(\).*[Nn]o such file|failed to open stream/i,
+    fix:
+      'A require/include points to a file you did not output. Emit EVERY file referenced by require/include ' +
+      'as its own ===FILE:path=== block with the exact matching path and filename, or remove the require. ' +
+      'Double-check the include filenames in the main plugin file match the files you actually output.',
+  },
+  {
     match: /PHPUnit failed|Tests:.*Failures|Failed asserting|assertTrue|assertSame/i,
     fix:
       'PHPUnit assertTrue() is STRICT: assertTrue(10) FAILS because 10 !== true. has_action()/has_filter() ' +

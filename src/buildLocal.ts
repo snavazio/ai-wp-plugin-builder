@@ -213,8 +213,11 @@ PHP. Follow these hard rules exactly:\n\n${rules}\n\n${PROTOCOL}`;
   while (!pipe.passed && iterations < MAX_FIX_ITERATIONS) {
     iterations++;
     const failing = pipe.results.filter((r) => !r.passed && !r.skipped);
-    const digest = failing.map((r) => `### ${r.label}\n` + r.errors.slice(0, 12).map((e) => `- ${e}`).join('\n')).join('\n');
-    const allErrors = failing.flatMap((r) => r.errors);
+    // Include r.notes: gates like phpunit put the real detail (assertion/fatal text) there, not in errors.
+    const digest = failing
+      .map((r) => `### ${r.label}\n` + r.errors.slice(0, 12).map((e) => `- ${e}`).join('\n') + (r.notes.length ? '\n' + r.notes.join('\n') : ''))
+      .join('\n');
+    const allErrors = failing.flatMap((r) => [...r.errors, ...r.notes]);
     const canonicalFixes = formatFixes(allErrors);
     const fixQuery = 'fix ' + failing.map((r) => r.label).join(' ') + ' ' + failing.flatMap((r) => r.errors.slice(0, 3)).join(' ');
     const fixCtx = (canonicalFixes ? canonicalFixes + '\n\n' : '') + formatContext(await retrieve(idx, cfg, fixQuery, 4));

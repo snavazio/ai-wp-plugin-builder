@@ -1,0 +1,34 @@
+{
+  "slug": "stats-snapshot",
+  "pluginName": "Stats Snapshot",
+  "description": "Stores daily snapshots of published post and comment counts, accessible via shortcode.",
+  "version": "1.0.0",
+  "prefix": "stats",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "stats_snapshot"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [
+    "stats_snapshot_daily"
+  ],
+  "widgets": [],
+  "dataStorage": "WordPress options (option name: 'stats_snapshot_data', storing array of 30 latest snapshots)",
+  "securityRequirements": [
+    "Escape all output",
+    "Sanitize all input",
+    "Nonce and capability check for state-changing actions"
+  ],
+  "smokeAssertions": [
+    "shortcode_exists('stats_snapshot')"
+  ]
+}

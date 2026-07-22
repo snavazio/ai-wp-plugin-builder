@@ -1,0 +1,33 @@
+{
+  "slug": "locations-api",
+  "pluginName": "Locations API",
+  "description": "A Location CPT with latitude and longitude meta (secure meta box, sanitized) and a public read-only REST endpoint (GET) returning id, title, lat, and lng for published locations.",
+  "version": "1.0.0",
+  "prefix": "locapi",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "edit_posts"
+  ],
+  "postTypes": [
+    "location"
+  ],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [
+    "locations"
+  ],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": [
+    "locapi_lat",
+    "locapi_lng"
+  ],
+  "securityRequirements": [
+    "post_type_exists('location')"
+  ],
+  "smokeAssertions": []
+}
