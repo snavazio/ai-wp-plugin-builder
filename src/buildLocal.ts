@@ -20,6 +20,7 @@ import { exec, findPhpFiles } from './util/exec.js';
 import { ollamaConfig, ollamaHealth, ollamaChat, type OllamaConfig, type ChatMessage } from './engines/ollama.js';
 import { loadOrBuildIndex, retrieve, formatContext, type RagIndex } from './rag.js';
 import { parseFiles, extractJson, writeGeneratedFiles } from './fileProtocol.js';
+import { emitResult } from './resultFile.js';
 import { selectExemplars, formatExemplars } from './exemplarRag.js';
 import { formatFixes } from './fixKb.js';
 import { addToCorpus, readManifest, seedCorpus } from './corpus.js';
@@ -279,6 +280,7 @@ PHP. Follow these hard rules exactly:\n\n${rules}\n\n${PROTOCOL}`;
   ];
   await mkdir(join(repoRoot, 'dist'), { recursive: true });
   await writeFile(join(repoRoot, 'dist', `${spec.slug}-local-report.md`), reportLines.join('\n') + '\n', 'utf8');
+  await emitResult({ ok: pipe.passed, engine: 'local', slug: spec.slug, pluginName: spec.pluginName, version: spec.version, zip: zipPath, report: join(repoRoot, 'dist', `${spec.slug}-local-report.md`), iterations, error: pipe.passed ? undefined : 'did not pass all gates' });
 
   console.log('\n' + '='.repeat(64));
   console.log(`${pipe.passed ? '✔' : '✖'} LOCAL BUILD: ${spec.pluginName} (${cfg.model})`);

@@ -1,0 +1,16 @@
+.aiwpb-wrap .aiwpb-form { max-width: 900px; margin-top: 12px; }
+.aiwpb-controls { display: flex; align-items: center; gap: 10px; margin: 12px 0; }
+.aiwpb-controls .spinner { float: none; margin: 0; }
+.aiwpb-status, .aiwpb-result { max-width: 900px; margin-top: 20px; }
+.aiwpb-log {
+	background: #1e1e1e; color: #e6e6e6; padding: 12px; border-radius: 4px;
+	max-height: 360px; overflow: auto; font-size: 12px; line-height: 1.5; white-space: pre-wrap;
+}
+.aiwpb-badge {
+	display: inline-block; font-size: 12px; padding: 2px 10px; border-radius: 10px;
+	background: #ddd; color: #333; vertical-align: middle; text-transform: capitalize;
+}
+.aiwpb-badge--running, .aiwpb-badge--queued { background: #f0b849; color: #4a3200; }
+.aiwpb-badge--done { background: #46b450; color: #fff; }
+.aiwpb-badge--error { background: #dc3232; color: #fff; }
+.aiwpb-result .button { margin-right: 8px; }

@@ -33,3 +33,6 @@ Thumbs.db
 
 # PHPUnit result cache (never ship or commit)
 .phpunit.result.cache
+
+# Builder service job workdir
+/.builder-jobs/

@@ -80,6 +80,11 @@ async function cmdBuildLocal(args: string[]): Promise<number> {
   return runBuildLocal(args, { repoRoot: REPO_ROOT, harnessDir: HARNESS_DIR });
 }
 
+async function cmdServe(args: string[]): Promise<number> {
+  const { runServer } = await import('./server.js');
+  return runServer(args, { repoRoot: REPO_ROOT, harnessDir: HARNESS_DIR });
+}
+
 async function cmdCorpus(): Promise<number> {
   const { seedCorpus, readManifest } = await import('./corpus.js');
   await seedCorpus(REPO_ROOT, (m) => console.log(m));
@@ -123,6 +128,9 @@ async function main(): Promise<void> {
       break;
     case 'corpus':
       code = await cmdCorpus();
+      break;
+    case 'serve':
+      code = await cmdServe(rest);
       break;
     default:
       console.error(

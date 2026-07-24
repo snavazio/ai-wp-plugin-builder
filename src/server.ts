@@ -1,0 +1,192 @@
+/**
+ * Builder service — wraps the CLI generator as a small authenticated HTTP API so the companion
+ * WordPress plugin (or any client) can submit a spec and receive a verified .zip.
+ *
+ *   AIWPB_API_KEY=<secret> npm run serve            # default port 8787
+ *   AIWPB_PORT=9000 npm run serve
+ *
+ * Endpoints (all under /api, key required via X-API-Key except /api/health):
+ *   GET  /api/health                 -> { ok, service, engines }
+ *   POST /api/build   {spec, engine} -> { jobId }         (engine: "claude" | "local")
+ *   GET  /api/jobs/:id               -> { id, status, engine, log[], artifact? }
+ *   GET  /api/jobs/:id/zip           -> streams the built .zip
+ *
+ * Builds are SERIALIZED (one at a time) because they share the wp-env sandbox + repo-root .wp-env.json.
+ */
+import http from 'node:http';
+import { randomUUID, randomBytes } from 'node:crypto';
+import { spawn } from 'node:child_process';
+import { mkdir, writeFile, readFile, access } from 'node:fs/promises';
+import { createReadStream } from 'node:fs';
+import { join, basename } from 'node:path';
+import type { BuildResult } from './resultFile.js';
+
+interface ServeEnv {
+  repoRoot: string;
+  harnessDir: string;
+}
+
+type JobStatus = 'queued' | 'running' | 'done' | 'error';
+
+interface Job {
+  id: string;
+  engine: 'claude' | 'local';
+  status: JobStatus;
+  createdAt: number;
+  log: string[];
+  artifact?: BuildResult;
+  error?: string;
+}
+
+const MAX_LOG_LINES = 800;
+
+export async function runServer(_args: string[], env: ServeEnv): Promise<number> {
+  const port = Number(process.env.AIWPB_PORT || 8787);
+  const apiKey = process.env.AIWPB_API_KEY || randomBytes(24).toString('hex');
+  const generatedKey = !process.env.AIWPB_API_KEY;
+  const jobsRoot = join(env.repoRoot, '.builder-jobs');
+  await mkdir(jobsRoot, { recursive: true });
+
+  const jobs = new Map<string, Job>();
+  let chain: Promise<void> = Promise.resolve(); // serialize builds
+
+  function enqueue(job: Job, specText: string, model?: string): void {
+    jobs.set(job.id, job);
+    chain = chain.then(() => runJob(env, jobsRoot, job, specText, model));
+  }
+
+  const server = http.createServer(async (req, res) => {
+    const url = new URL(req.url || '/', `http://localhost`);
+    const path = url.pathname;
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-API-Key');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    if (req.method === 'OPTIONS') return end(res, 204, '');
+
+    if (path === '/api/health') {
+      return json(res, 200, { ok: true, service: 'ai-wp-plugin-builder', engines: ['claude', 'local'] });
+    }
+
+    // Auth for everything else.
+    if (req.headers['x-api-key'] !== apiKey) {
+      return json(res, 401, { error: 'Invalid or missing X-API-Key.' });
+    }
+
+    if (path === '/api/build' && req.method === 'POST') {
+      const body = await readBody(req).catch(() => null);
+      const spec = typeof body?.spec === 'string' ? body.spec.trim() : '';
+      const engine: 'claude' | 'local' = body?.engine === 'local' ? 'local' : 'claude';
+      const model = typeof body?.model === 'string' ? body.model : undefined;
+      if (!spec) return json(res, 400, { error: 'Body must include a non-empty "spec" string.' });
+      if (spec.length > 20000) return json(res, 400, { error: 'Spec too large (max 20k chars).' });
+      const job: Job = { id: randomUUID(), engine, status: 'queued', createdAt: Date.now(), log: [] };
+      enqueue(job, spec, model);
+      return json(res, 202, { jobId: job.id, status: job.status });
+    }
+
+    const jobMatch = path.match(/^\/api\/jobs\/([0-9a-f-]{36})(\/zip)?$/i);
+    if (jobMatch && req.method === 'GET') {
+      const job = jobs.get(jobMatch[1]);
+      if (!job) return json(res, 404, { error: 'Job not found.' });
+      if (jobMatch[2] === '/zip') {
+        const zip = job.artifact?.zip;
+        if (!zip || !(await exists(zip))) return json(res, 409, { error: 'No .zip available for this job.' });
+        res.setHeader('Content-Type', 'application/zip');
+        res.setHeader('Content-Disposition', `attachment; filename="${basename(zip)}"`);
+        createReadStream(zip).pipe(res);
+        return;
+      }
+      return json(res, 200, {
+        id: job.id,
+        status: job.status,
+        engine: job.engine,
+        createdAt: job.createdAt,
+        log: job.log.slice(-MAX_LOG_LINES),
+        artifact: job.artifact,
+        error: job.error,
+      });
+    }
+
+    return json(res, 404, { error: 'Not found.' });
+  });
+
+  return new Promise((resolve) => {
+    server.listen(port, () => {
+      console.log(`\n▶ AI WP Plugin Builder service listening on http://0.0.0.0:${port}`);
+      if (generatedKey) console.log(`  API key (generated): ${apiKey}\n  Set AIWPB_API_KEY to pin it.`);
+      console.log('  Endpoints: GET /api/health · POST /api/build · GET /api/jobs/:id[/zip]');
+    });
+    server.on('error', (e) => {
+      console.error('Server error:', e);
+      resolve(1);
+    });
+  });
+}
+
+async function runJob(env: ServeEnv, jobsRoot: string, job: Job, specText: string, model?: string): Promise<void> {
+  job.status = 'running';
+  const dir = join(jobsRoot, job.id);
+  await mkdir(dir, { recursive: true });
+  const specFile = join(dir, 'spec.md');
+  const resultFile = join(dir, 'result.json');
+  await writeFile(specFile, specText, 'utf8');
+
+  const cmd = job.engine === 'local' ? 'build-local' : 'build';
+  const childEnv: NodeJS.ProcessEnv = { ...process.env, AIWPB_RESULT_FILE: resultFile };
+  if (model) childEnv.OLLAMA_MODEL = model;
+
+  const pushLog = (chunk: Buffer) => {
+    for (const line of chunk.toString().split('\n')) {
+      if (line.trim()) job.log.push(line.replace(/\x1b\[[0-9;]*m/g, ''));
+    }
+    if (job.log.length > MAX_LOG_LINES * 2) job.log = job.log.slice(-MAX_LOG_LINES);
+  };
+
+  await new Promise<void>((resolve) => {
+    const child = spawn('npx', ['tsx', 'src/run.ts', cmd, specFile], { cwd: env.repoRoot, env: childEnv });
+    child.stdout.on('data', pushLog);
+    child.stderr.on('data', pushLog);
+    child.on('close', async (code) => {
+      try {
+        const result = JSON.parse(await readFile(resultFile, 'utf8')) as BuildResult;
+        job.artifact = result;
+        job.status = result.ok ? 'done' : 'error';
+        if (!result.ok) job.error = result.error || 'Build did not pass all gates.';
+      } catch {
+        job.status = 'error';
+        job.error = `Build process exited with code ${code} and produced no result.`;
+      }
+      resolve();
+    });
+    child.on('error', (e) => {
+      job.status = 'error';
+      job.error = `Failed to start build process: ${String(e)}`;
+      resolve();
+    });
+  });
+}
+
+// --- tiny http helpers ---
+function end(res: http.ServerResponse, code: number, body: string): void {
+  res.statusCode = code;
+  res.end(body);
+}
+function json(res: http.ServerResponse, code: number, obj: unknown): void {
+  res.statusCode = code;
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify(obj));
+}
+async function readBody(req: http.IncomingMessage): Promise<Record<string, unknown>> {
+  const chunks: Buffer[] = [];
+  for await (const c of req) chunks.push(c as Buffer);
+  const raw = Buffer.concat(chunks).toString('utf8');
+  return raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+}
+async function exists(p: string): Promise<boolean> {
+  try {
+    await access(p);
+    return true;
+  } catch {
+    return false;
+  }
+}

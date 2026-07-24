@@ -1,0 +1,6 @@
+/.git
+/.distignore
+/tests
+/phpunit.xml.dist
+/node_modules
+/.phpunit.result.cache

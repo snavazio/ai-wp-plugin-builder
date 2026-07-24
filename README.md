@@ -118,6 +118,30 @@ npm run corpus        # (re)seed corpus/ from examples/ and list what's indexed
 A canonical **fix knowledge-base** (`src/fixKb.ts`) also maps recurring gate errors (escaping, nonce,
 inline-comment punctuation, i18n placeholders, …) to precise fixes, injected on fix turns.
 
+## WordPress admin plugin + builder service (generate from inside WP)
+
+Prefer a UI over the CLI? There's a companion **WordPress plugin** (`wp-plugin/ai-plugin-builder/`) with an
+admin screen where you type a spec, pick an engine, watch live progress, and **download** or **one-click
+install** the verified `.zip`. Because generation + the 8-gate harness need Node/Docker/PHP-tooling that
+can't run inside a WordPress request, it's a two-part design:
+
+```
+WordPress site (AI Plugin Builder plugin)  ──HTTP──►  builder service (this tool: npm run serve)
+  admin screen · live progress · download/install       runs build/build-local + the 8 gates, returns the .zip
+```
+
+1. **Run the service** on a machine with Docker + Node + PHP (this box or an Olares node):
+   ```bash
+   AIWPB_API_KEY=<your-secret> npm run serve      # listens on :8787 (AIWPB_PORT to change)
+   ```
+   Endpoints: `GET /api/health` · `POST /api/build {spec,engine}` · `GET /api/jobs/:id[/zip]` (key via `X-API-Key`).
+2. **Install the WP plugin** (`wp-plugin/ai-plugin-builder/`) on any WordPress site and activate it.
+3. **Configure it:** AI Plugin Builder → Settings → enter the service URL + the same API key + default engine.
+4. **Use it:** AI Plugin Builder → type a spec → Generate → Download or Install.
+
+The API key stays server-side (the plugin proxies the service in PHP; it never reaches the browser). The
+admin plugin itself passes all 8 of this tool's gates (it's dogfooded).
+
 ## The gates (cheap → expensive, fail early)
 
 | # | Gate | Needs Docker | What it enforces |

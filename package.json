@@ -19,7 +19,8 @@
     "wp-env:start": "wp-env start",
     "wp-env:stop": "wp-env stop",
     "wp-env:destroy": "wp-env destroy",
-    "corpus": "tsx src/run.ts corpus"
+    "corpus": "tsx src/run.ts corpus",
+    "serve": "tsx src/run.ts serve"
   },
   "bin": {
     "aiwpb": "src/run.ts"

@@ -1,0 +1,26 @@
+{
+  "slug": "tiny-hello",
+  "pluginName": "Tiny Hello",
+  "description": "A shortcode that outputs an escaped hello with a name attribute.",
+  "version": "1.0.0",
+  "prefix": "thl",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "tiny_hello"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "shortcode_exists('tiny_hello')"
+  ]
+}

@@ -12,3 +12,6 @@ parameters:
     # Generated plugins may reference optional WP APIs; keep noise down without hiding real bugs.
     ignoreErrors:
         - '#Constant (ABSPATH|WPINC|WP_UNINSTALL_PLUGIN) not found#'
+        # A plugin's own path/url/file constants are define()'d at runtime with dynamic values
+        # (plugin_dir_url/plugin_dir_path/__FILE__); phpstan can't resolve them across files.
+        - '#Constant [A-Z][A-Z0-9_]*_(URL|PATH|DIR|FILE|BASENAME) not found#'

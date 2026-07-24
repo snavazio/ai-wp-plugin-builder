@@ -1,0 +1,26 @@
+{
+  "slug": "hello-bar",
+  "pluginName": "Hello Bar",
+  "description": "A plugin with a [hello_bar] shortcode that outputs an escaped greeting bar with a configurable name attribute (default World).",
+  "version": "1.0.0",
+  "prefix": "hbar",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "hello_bar"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "shortcode_exists('hello_bar')"
+  ]
+}
