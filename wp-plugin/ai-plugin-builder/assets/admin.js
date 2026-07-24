@@ -138,8 +138,9 @@
 		el( 'aiwpb-install-result' ).innerHTML = escapeHtml( 'Installing…' );
 		api( '/install', { method: 'POST', body: JSON.stringify( { jobId: currentJob } ) } )
 			.then( function ( r ) {
+				var cls = r.activated ? 'notice-success' : 'notice-warning';
 				el( 'aiwpb-install-result' ).innerHTML =
-					'<div class="notice notice-success" style="padding:8px 12px;">' + escapeHtml( r.message || 'Installed.' ) + '</div>';
+					'<div class="notice ' + cls + '" style="padding:8px 12px;">' + escapeHtml( r.message || 'Installed.' ) + '</div>';
 			} )
 			.catch( function ( err ) {
 				el( 'aiwpb-install-result' ).innerHTML =

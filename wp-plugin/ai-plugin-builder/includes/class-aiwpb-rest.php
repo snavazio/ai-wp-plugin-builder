@@ -169,11 +169,33 @@ class Aiwpb_Rest {
 			);
 		}
 
+		// Auto-activate the freshly installed plugin. Activation hooks run; report if the plugin fatals.
+		$plugin_file    = $upgrader->plugin_info();
+		$activated      = false;
+		$activate_error = '';
+		if ( $plugin_file ) {
+			$activation = activate_plugin( $plugin_file );
+			if ( is_wp_error( $activation ) ) {
+				$activate_error = $activation->get_error_message();
+			} else {
+				$activated = true;
+			}
+		}
+
+		$message = $activated
+			? __( 'Plugin installed and activated.', 'ai-plugin-builder' )
+			: sprintf(
+				/* translators: %s: activation error message */
+				__( 'Plugin installed, but activation failed: %s', 'ai-plugin-builder' ),
+				'' !== $activate_error ? $activate_error : __( 'unknown error', 'ai-plugin-builder' )
+			);
+
 		return rest_ensure_response(
 			array(
 				'installed' => true,
-				'plugin'    => $upgrader->plugin_info(),
-				'message'   => __( 'Plugin installed. Activate it from the Plugins screen.', 'ai-plugin-builder' ),
+				'activated' => $activated,
+				'plugin'    => $plugin_file,
+				'message'   => $message,
 			)
 		);
 	}

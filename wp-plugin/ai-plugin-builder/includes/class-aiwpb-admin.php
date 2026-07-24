@@ -120,7 +120,7 @@ class Aiwpb_Admin {
 					<p id="aiwpb-result-summary"></p>
 					<p>
 						<a id="aiwpb-download" class="button" href="#" download><?php echo esc_html__( 'Download .zip', 'ai-plugin-builder' ); ?></a>
-						<button id="aiwpb-install" class="button button-primary"><?php echo esc_html__( 'Install on this site', 'ai-plugin-builder' ); ?></button>
+						<button id="aiwpb-install" class="button button-primary"><?php echo esc_html__( 'Install & activate', 'ai-plugin-builder' ); ?></button>
 					</p>
 					<div id="aiwpb-install-result"></div>
 				</div>
