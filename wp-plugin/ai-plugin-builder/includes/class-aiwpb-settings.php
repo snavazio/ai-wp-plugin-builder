@@ -114,6 +114,12 @@ class Aiwpb_Settings {
 							<input name="aiwpb_backend_url" id="aiwpb_backend_url" type="url" class="regular-text" placeholder="http://localhost:8787"
 								value="<?php echo esc_attr( get_option( 'aiwpb_backend_url', '' ) ); ?>" />
 							<p class="description"><?php echo esc_html__( 'Base URL of the AI WP Plugin Builder service (the machine running `npm run serve`).', 'ai-plugin-builder' ); ?></p>
+							<div class="aiwpb-service-help" style="margin-top:10px;padding:10px 12px;background:#fcf9e8;border-left:4px solid #dba617;max-width:640px;">
+								<strong><?php echo esc_html__( 'Starting / restarting the builder service', 'ai-plugin-builder' ); ?></strong>
+								<p style="margin:6px 0;"><?php echo esc_html__( 'If Generate fails to connect, the service is not running. From the AI WP Plugin Builder project directory (on the machine with Docker + Node), run:', 'ai-plugin-builder' ); ?></p>
+								<p style="margin:6px 0;"><code><?php echo esc_html( 'AIWPB_API_KEY=' . ( get_option( 'aiwpb_api_key', '' ) !== '' ? get_option( 'aiwpb_api_key', '' ) : 'your-key' ) . ' npm run serve' ); ?></code></p>
+								<p style="margin:6px 0 0;"><?php echo esc_html__( 'To enable the Claude engine, also set ANTHROPIC_API_KEY in that shell before running it. The local (Ollama) engine needs no key.', 'ai-plugin-builder' ); ?></p>
+							</div>
 						</td>
 					</tr>
 					<tr>
