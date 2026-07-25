@@ -614,6 +614,24 @@
       ]
     },
     {
+      "slug": "color-note",
+      "pluginName": "Color Note",
+      "description": "Adds a [color_note] shortcode for creating colored note boxes.",
+      "version": "1.0.0",
+      "prefix": "cnote",
+      "tags": [
+        "shortcode"
+      ],
+      "files": [
+        "SPEC.json",
+        "color-note.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "comics",
       "pluginName": "Comics",
       "description": "Manages comics with custom post type, issue number meta, publisher and series taxonomies, and a shortcode.",

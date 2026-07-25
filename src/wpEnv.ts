@@ -12,7 +12,7 @@
  * test config are reachable from inside the tests container.
  */
 import { writeFile, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, isAbsolute } from 'node:path';
 import { exec, type ExecResult } from './util/exec.js';
 
 const WP_ENV_BIN = 'node_modules/.bin/wp-env';
@@ -33,11 +33,21 @@ export class WpEnv {
 
   /** Write the generated .wp-env.json at repo root mapping this plugin + the harness dir. */
   async writeConfig(): Promise<void> {
+    // Single-box demo convenience: keep a "host" plugin (the AI Plugin Builder admin UI) mounted +
+    // active across every build so a live Generate from that same wp-env doesn't drop it. Opt-in via
+    // AIWPB_HOST_PLUGIN (comma-separated repo-relative or absolute paths). Off by default → no change.
+    const hostPlugins = (process.env.AIWPB_HOST_PLUGIN || '')
+      .split(',')
+      .map((p) => p.trim())
+      .filter(Boolean)
+      .map((p) => (isAbsolute(p) ? p : join(this.repoRoot, p)))
+      .filter((p) => p !== this.pluginDir);
+
     const config = {
       $schema: 'https://schemas.wp.org/trunk/wp-env.json',
       core: null,
       phpVersion: '8.1',
-      plugins: [this.pluginDir],
+      plugins: [this.pluginDir, ...hostPlugins],
       mappings: {
         [HARNESS_MOUNT]: this.harnessDir,
       },

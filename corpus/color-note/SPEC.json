@@ -1,0 +1,26 @@
+{
+  "slug": "color-note",
+  "pluginName": "Color Note",
+  "description": "Adds a [color_note] shortcode for creating colored note boxes.",
+  "version": "1.0.0",
+  "prefix": "cnote",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [
+    "color_note"
+  ],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "",
+  "securityRequirements": [],
+  "smokeAssertions": [
+    "shortcode_exists('color_note')"
+  ]
+}

@@ -4,6 +4,8 @@
 	var cfg = window.AIWPB || {};
 	var currentJob = null;
 	var pollTimer = null;
+	var pollErrors = 0;
+	var MAX_POLL_ERRORS = 12; // tolerate transient WP downtime while the builder reconfigures its sandbox
 
 	function el( id ) {
 		return document.getElementById( id );
@@ -71,6 +73,7 @@
 			el( 'aiwpb-config-warning' ).style.display = 'block';
 			return;
 		}
+		pollErrors = 0;
 		setBusy( true );
 		el( 'aiwpb-status' ).style.display = 'block';
 		el( 'aiwpb-result' ).style.display = 'none';
@@ -101,6 +104,7 @@
 		}
 		api( '/jobs/' + currentJob, { method: 'GET' } )
 			.then( function ( job ) {
+				pollErrors = 0;
 				setState( job.status );
 				renderLog( job.log );
 				if ( 'done' === job.status ) {
@@ -114,6 +118,13 @@
 				}
 			} )
 			.catch( function ( err ) {
+				// The build may briefly restart WordPress while it reconfigures its sandbox; keep retrying.
+				pollErrors++;
+				if ( pollErrors <= MAX_POLL_ERRORS ) {
+					setState( 'running' );
+					schedulePoll();
+					return;
+				}
 				setBusy( false );
 				setState( 'error' );
 				appendLog( 'Error: ' + err.message );
