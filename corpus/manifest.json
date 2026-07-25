@@ -1433,6 +1433,23 @@
       ]
     },
     {
+      "slug": "google-youtube-transcript-importer",
+      "pluginName": "Google YouTube Transcript Importer",
+      "description": "Connects to Google account to import YouTube videos and retrieve their transcripts.",
+      "version": "1.0.0",
+      "prefix": "gyti",
+      "tags": [],
+      "files": [
+        "SPEC.json",
+        "google-youtube-transcript-importer.php",
+        "includes/storage.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "greeting-box",
       "pluginName": "Greeting Box",
       "description": "A very small plugin that provides a single shortcode [greeting_box] for the front end.",

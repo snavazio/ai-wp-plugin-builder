@@ -20,6 +20,27 @@ import { mkdir, writeFile, readFile, access } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { join, basename } from 'node:path';
 import type { BuildResult } from './resultFile.js';
+import { ollamaConfig, ollamaChat, type ChatMessage } from './engines/ollama.js';
+
+const CHAT_SYSTEM = `You are a friendly WordPress plugin consultant helping a user define a plugin to build.
+Talk like a person in a chat: reply in 1-3 short sentences and ask at most one or two questions at a time.
+Do NOT use headings, bold labels, or bulleted forms. Draw out, over the conversation, what matters for the
+plugin: purpose, custom post types + fields, taxonomies, admin screens/columns, shortcodes/blocks, REST
+endpoints, AJAX, cron, widgets, capabilities, and data cleanup on uninstall — but only ask about what is
+actually ambiguous or missing, a bit at a time. Do NOT write PHP or code. Assume standard WordPress security
+(escaping, sanitizing, nonces, capability checks) is always applied — never ask about it. Once you have
+enough for a solid plugin, give a one or two sentence summary of what you'll build and tell the user they can
+click the "Build plugin" button.`;
+
+const DISTILL_INSTRUCTION = `Write the FINAL plugin specification as a single clear description in plain
+English that captures every decision from our conversation (name, post types + fields, taxonomies, admin
+screens/columns, shortcodes/blocks, REST endpoints, AJAX, cron, widgets, capabilities, data cleanup). Output
+ONLY the specification text — no preamble, no questions, no markdown headings.`;
+
+/** Strip qwen3-style <think>…</think> reasoning from a reply. */
+function stripThink(s: string): string {
+  return s.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+}
 
 interface ServeEnv {
   repoRoot: string;
@@ -70,6 +91,37 @@ export async function runServer(_args: string[], env: ServeEnv): Promise<number>
     // Auth for everything else.
     if (req.headers['x-api-key'] !== apiKey) {
       return json(res, 401, { error: 'Invalid or missing X-API-Key.' });
+    }
+
+    if (path === '/api/chat' && req.method === 'POST') {
+      const body = await readBody(req).catch(() => null);
+      const raw = Array.isArray(body?.messages) ? (body!.messages as unknown[]) : null;
+      if (!raw) return json(res, 400, { error: 'Body must include a "messages" array.' });
+      const messages: ChatMessage[] = raw
+        .slice(-40)
+        .map((m) => {
+          const mm = m as { role?: string; content?: unknown };
+          return {
+            role: mm.role === 'assistant' ? 'assistant' : 'user',
+            content: String(mm.content ?? '').slice(0, 8000),
+          } as ChatMessage;
+        })
+        .filter((m) => m.content.trim() !== '');
+      // `distill` mode asks the model to output a single consolidated spec for building.
+      const distill = body?.mode === 'distill';
+      try {
+        const cfg = ollamaConfig();
+        const model = process.env.OLLAMA_CHAT_MODEL || cfg.model;
+        const sys = distill ? CHAT_SYSTEM + '\n\n' + DISTILL_INSTRUCTION : CHAT_SYSTEM;
+        const r = await ollamaChat(
+          { ...cfg, model },
+          [{ role: 'system', content: sys }, ...messages],
+          { temperature: distill ? 0.2 : 0.5, numCtx: 16384, timeoutMs: 5 * 60_000 },
+        );
+        return json(res, 200, { reply: stripThink(r.content), model });
+      } catch (e) {
+        return json(res, 502, { error: `Chat model error: ${String(e)}` });
+      }
     }
 
     if (path === '/api/build' && req.method === 'POST') {

@@ -63,6 +63,25 @@ class Aiwpb_Rest {
 		);
 		register_rest_route(
 			self::NS,
+			'/chat',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'permission_callback' => array( $this, 'can_manage' ),
+				'callback'            => array( $this, 'chat' ),
+				'args'                => array(
+					'messages' => array(
+						'required' => true,
+						'type'     => 'array',
+					),
+					'mode'     => array(
+						'required' => false,
+						'type'     => 'string',
+					),
+				),
+			)
+		);
+		register_rest_route(
+			self::NS,
 			'/jobs/(?P<id>[a-fA-F0-9\-]{36})',
 			array(
 				'methods'             => WP_REST_Server::READABLE,
@@ -103,6 +122,36 @@ class Aiwpb_Rest {
 		$result = ( new Aiwpb_Client() )->build( $spec, $engine, $model );
 		if ( is_wp_error( $result ) ) {
 			return new WP_Error( 'aiwpb_build', $result->get_error_message(), array( 'status' => 502 ) );
+		}
+		return rest_ensure_response( $result );
+	}
+
+	/**
+	 * POST /chat — one turn of the spec-building conversation (proxied to the service).
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function chat( WP_REST_Request $request ) {
+		$raw      = (array) $request->get_param( 'messages' );
+		$mode     = ( 'distill' === $request->get_param( 'mode' ) ) ? 'distill' : '';
+		$messages = array();
+		foreach ( $raw as $m ) {
+			$role    = ( is_array( $m ) && isset( $m['role'] ) && 'assistant' === $m['role'] ) ? 'assistant' : 'user';
+			$content = ( is_array( $m ) && isset( $m['content'] ) ) ? sanitize_textarea_field( (string) $m['content'] ) : '';
+			if ( '' !== trim( $content ) ) {
+				$messages[] = array(
+					'role'    => $role,
+					'content' => $content,
+				);
+			}
+		}
+		if ( empty( $messages ) ) {
+			return new WP_Error( 'aiwpb_chat', __( 'No messages to send.', 'ai-plugin-builder' ), array( 'status' => 400 ) );
+		}
+		$result = ( new Aiwpb_Client() )->chat( $messages, $mode );
+		if ( is_wp_error( $result ) ) {
+			return new WP_Error( 'aiwpb_chat', $result->get_error_message(), array( 'status' => 502 ) );
 		}
 		return rest_ensure_response( $result );
 	}

@@ -83,20 +83,24 @@ class Aiwpb_Admin {
 		?>
 		<div class="wrap aiwpb-wrap">
 			<h1><?php echo esc_html__( 'AI Plugin Builder', 'ai-plugin-builder' ); ?></h1>
-			<p class="description"><?php echo esc_html__( 'Describe the plugin you want in plain English. It is generated, security-audited against 8 gates, and returned as an install-ready .zip.', 'ai-plugin-builder' ); ?></p>
+			<p class="description"><?php echo esc_html__( 'Chat about the plugin you want — the assistant asks a few questions to get it right. When you\'re happy, click Build plugin: it\'s generated, security-audited against 8 gates, and returned as an install-ready .zip.', 'ai-plugin-builder' ); ?></p>
 
 			<div id="aiwpb-app">
-				<div class="aiwpb-form">
-					<label for="aiwpb-spec"><strong><?php echo esc_html__( 'Plugin spec', 'ai-plugin-builder' ); ?></strong></label>
-					<textarea id="aiwpb-spec" rows="10" class="large-text code" placeholder="<?php echo esc_attr__( 'e.g. A Testimonials custom post type with a 1-5 star rating and a shortcode that lists recent testimonials.', 'ai-plugin-builder' ); ?>"></textarea>
-
+				<div class="aiwpb-chat">
+					<div id="aiwpb-messages" class="aiwpb-messages" aria-live="polite"></div>
+					<div class="aiwpb-chat-input">
+						<input type="text" id="aiwpb-input" class="large-text" placeholder="<?php echo esc_attr__( 'Describe the plugin you want…', 'ai-plugin-builder' ); ?>" autocomplete="off" />
+						<button id="aiwpb-send" class="button"><?php echo esc_html__( 'Send', 'ai-plugin-builder' ); ?></button>
+						<span id="aiwpb-chat-spinner" class="spinner"></span>
+					</div>
 					<div class="aiwpb-controls">
-						<label for="aiwpb-engine"><?php echo esc_html__( 'Engine:', 'ai-plugin-builder' ); ?></label>
+						<label for="aiwpb-engine"><?php echo esc_html__( 'Build engine:', 'ai-plugin-builder' ); ?></label>
 						<select id="aiwpb-engine">
 							<option value="claude"><?php echo esc_html__( 'Claude (Agent SDK)', 'ai-plugin-builder' ); ?></option>
 							<option value="local"><?php echo esc_html__( 'Local (Ollama, $0)', 'ai-plugin-builder' ); ?></option>
 						</select>
-						<button id="aiwpb-generate" class="button button-primary"><?php echo esc_html__( 'Generate Plugin', 'ai-plugin-builder' ); ?></button>
+						<button id="aiwpb-build" class="button button-primary" disabled><?php echo esc_html__( 'Build plugin', 'ai-plugin-builder' ); ?></button>
+						<button id="aiwpb-reset" class="button-link"><?php echo esc_html__( 'Start over', 'ai-plugin-builder' ); ?></button>
 						<span id="aiwpb-spinner" class="spinner"></span>
 					</div>
 					<p id="aiwpb-config-warning" class="notice notice-warning" style="display:none;padding:8px 12px;">

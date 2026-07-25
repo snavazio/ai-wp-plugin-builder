@@ -1,0 +1,22 @@
+{
+  "slug": "google-youtube-transcript-importer",
+  "pluginName": "Google YouTube Transcript Importer",
+  "description": "Connects to Google account to import YouTube videos and retrieve their transcripts.",
+  "version": "1.0.0",
+  "prefix": "gyti",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [],
+  "postTypes": [],
+  "taxonomies": [],
+  "adminPages": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "Stores Google OAuth tokens and YouTube video data in WordPress options and post meta.",
+  "securityRequirements": [],
+  "smokeAssertions": []
+}

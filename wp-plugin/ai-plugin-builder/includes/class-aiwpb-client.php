@@ -94,6 +94,31 @@ class Aiwpb_Client {
 	}
 
 	/**
+	 * POST /api/chat — one turn of the spec-building conversation.
+	 *
+	 * @param array  $messages List of { role, content } messages.
+	 * @param string $mode     '' for a normal turn, 'distill' to consolidate into a final spec.
+	 * @return array|WP_Error
+	 */
+	public function chat( $messages, $mode = '' ) {
+		$payload = array( 'messages' => array_values( (array) $messages ) );
+		if ( '' !== $mode ) {
+			$payload['mode'] = $mode;
+		}
+		return $this->decode(
+			wp_remote_post(
+				$this->base_url() . '/api/chat',
+				$this->args(
+					array(
+						'timeout' => 300,
+						'body'    => wp_json_encode( $payload ),
+					)
+				)
+			)
+		);
+	}
+
+	/**
 	 * GET /api/jobs/:id.
 	 *
 	 * @param string $job_id Job id.
