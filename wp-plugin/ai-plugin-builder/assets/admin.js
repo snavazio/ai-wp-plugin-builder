@@ -9,6 +9,8 @@
 	var pollTimer = null;
 	var pollErrors = 0;
 	var MAX_POLL_ERRORS = 12;
+	var mode = 'new'; // 'new' | 'update'
+	var lastUpdateSlug = null;
 
 	function el( id ) {
 		return document.getElementById( id );
@@ -98,14 +100,109 @@
 			} );
 	}
 
+	// ---- mode switching + ingest ----
+	function setMode( m ) {
+		mode = m;
+		el( 'aiwpb-mode-new' ).className = 'button' + ( 'new' === m ? ' button-primary' : '' );
+		el( 'aiwpb-mode-update' ).className = 'button' + ( 'update' === m ? ' button-primary' : '' );
+		el( 'aiwpb-source' ).style.display = 'update' === m ? 'block' : 'none';
+		el( 'aiwpb-build' ).textContent = 'update' === m ? 'Update plugin' : 'Build plugin';
+		if ( 'update' === m ) {
+			loadInstalled();
+		}
+	}
+	function loadInstalled() {
+		var sel = el( 'aiwpb-installed' );
+		if ( sel.getAttribute( 'data-loaded' ) ) {
+			return;
+		}
+		api( '/plugins', { method: 'GET' } ).then( function ( d ) {
+			( d.plugins || [] ).forEach( function ( p ) {
+				var o = document.createElement( 'option' );
+				o.value = p.slug;
+				o.textContent = p.name + ' (' + p.version + ')';
+				sel.appendChild( o );
+			} );
+			sel.setAttribute( 'data-loaded', '1' );
+		} ).catch( function () {} );
+	}
+	function readUploadB64() {
+		return new Promise( function ( resolve, reject ) {
+			var f = el( 'aiwpb-zip' ).files[ 0 ];
+			if ( ! f ) {
+				reject( new Error( 'Choose a .zip to upload.' ) );
+				return;
+			}
+			var r = new window.FileReader();
+			r.onload = function () {
+				var s = String( r.result );
+				resolve( s.substring( s.indexOf( ',' ) + 1 ) );
+			};
+			r.onerror = function () {
+				reject( new Error( 'Could not read the file.' ) );
+			};
+			r.readAsDataURL( f );
+		} );
+	}
+	function startUpdate() {
+		if ( ! messages.length ) {
+			window.alert( 'Describe the change in the chat first.' );
+			return;
+		}
+		var srcType = ( document.querySelector( 'input[name="aiwpb-src"]:checked' ) || {} ).value || 'installed';
+		var transcript = messages.map( function ( m ) {
+			return ( 'user' === m.role ? 'User: ' : 'Assistant: ' ) + m.content;
+		} ).join( '\n\n' );
+		var payload = { spec: transcript, engine: el( 'aiwpb-engine' ).value, source: srcType };
+		var prep;
+		if ( 'installed' === srcType ) {
+			var slug = el( 'aiwpb-installed' ).value;
+			if ( ! slug ) {
+				window.alert( 'Choose an installed plugin to update.' );
+				return;
+			}
+			payload.slug = slug;
+			prep = Promise.resolve();
+		} else {
+			prep = readUploadB64().then( function ( b64 ) {
+				payload.zipB64 = b64;
+			} );
+		}
+		setBuildBusy( true );
+		el( 'aiwpb-status' ).style.display = 'block';
+		el( 'aiwpb-result' ).style.display = 'none';
+		el( 'aiwpb-install-result' ).innerHTML = '';
+		pollErrors = 0;
+		setState( 'queued' );
+		el( 'aiwpb-log' ).textContent = 'Updating the plugin from your conversation…\n';
+		prep.then( function () {
+			return api( '/ingest', { method: 'POST', body: JSON.stringify( payload ) } );
+		} ).then( function ( data ) {
+			currentJob = data.jobId;
+			schedulePoll();
+		} ).catch( function ( err ) {
+			setBuildBusy( false );
+			setState( 'error' );
+			el( 'aiwpb-log' ).textContent += '\nError: ' + err.message;
+		} );
+	}
+
 	// ---- build from the conversation ----
 	function onBuild( e ) {
 		if ( e ) {
 			e.preventDefault();
 		}
+		if ( 'update' === mode ) {
+			startUpdate();
+			return;
+		}
 		if ( ! messages.length ) {
 			return;
 		}
+		startNewBuild();
+	}
+
+	function startNewBuild() {
 		setBuildBusy( true );
 		el( 'aiwpb-status' ).style.display = 'block';
 		el( 'aiwpb-result' ).style.display = 'none';
@@ -181,6 +278,16 @@
 		var dl = cfg.adminPost + '?action=aiwpb_download&job=' + encodeURIComponent( currentJob ) +
 			'&_wpnonce=' + encodeURIComponent( cfg.downloadNonce );
 		el( 'aiwpb-download' ).setAttribute( 'href', dl );
+		if ( 'update' === mode ) {
+			el( 'aiwpb-install' ).style.display = 'none';
+			el( 'aiwpb-update-inplace' ).style.display = '';
+			el( 'aiwpb-rollback' ).style.display = 'none';
+			lastUpdateSlug = a.slug || null;
+		} else {
+			el( 'aiwpb-install' ).style.display = '';
+			el( 'aiwpb-update-inplace' ).style.display = 'none';
+			el( 'aiwpb-rollback' ).style.display = 'none';
+		}
 		// Keep the conversation open so the user can revise and rebuild.
 		var note = 'Built ✅ ' + name + '.';
 		if ( a.provides ) {
@@ -203,6 +310,42 @@
 				var css = r.activated ? 'notice-success' : 'notice-warning';
 				el( 'aiwpb-install-result' ).innerHTML =
 					'<div class="notice ' + css + '" style="padding:8px 12px;">' + escapeHtml( r.message || 'Installed.' ) + '</div>';
+			} )
+			.catch( function ( err ) {
+				el( 'aiwpb-install-result' ).innerHTML =
+					'<div class="notice notice-error" style="padding:8px 12px;">' + escapeHtml( err.message ) + '</div>';
+			} );
+	}
+	function onUpdateInPlace( e ) {
+		e.preventDefault();
+		if ( ! currentJob ) {
+			return;
+		}
+		el( 'aiwpb-install-result' ).innerHTML = escapeHtml( 'Updating in place…' );
+		api( '/update', { method: 'POST', body: JSON.stringify( { jobId: currentJob } ) } )
+			.then( function ( r ) {
+				lastUpdateSlug = r.slug || lastUpdateSlug;
+				el( 'aiwpb-install-result' ).innerHTML =
+					'<div class="notice notice-success" style="padding:8px 12px;">' + escapeHtml( r.message || 'Updated.' ) + '</div>';
+				if ( r.canRollback ) {
+					el( 'aiwpb-rollback' ).style.display = '';
+				}
+			} )
+			.catch( function ( err ) {
+				el( 'aiwpb-install-result' ).innerHTML =
+					'<div class="notice notice-error" style="padding:8px 12px;">' + escapeHtml( err.message ) + '</div>';
+			} );
+	}
+	function onRollback( e ) {
+		e.preventDefault();
+		if ( ! lastUpdateSlug || ! window.confirm( 'Roll back to the previous version of this plugin?' ) ) {
+			return;
+		}
+		el( 'aiwpb-install-result' ).innerHTML = escapeHtml( 'Rolling back…' );
+		api( '/rollback', { method: 'POST', body: JSON.stringify( { slug: lastUpdateSlug } ) } )
+			.then( function ( r ) {
+				el( 'aiwpb-install-result' ).innerHTML =
+					'<div class="notice notice-success" style="padding:8px 12px;">' + escapeHtml( r.message || 'Rolled back.' ) + '</div>';
 			} )
 			.catch( function ( err ) {
 				el( 'aiwpb-install-result' ).innerHTML =
@@ -240,6 +383,14 @@
 		el( 'aiwpb-build' ).addEventListener( 'click', onBuild );
 		el( 'aiwpb-reset' ).addEventListener( 'click', onReset );
 		el( 'aiwpb-install' ).addEventListener( 'click', onInstall );
+		el( 'aiwpb-update-inplace' ).addEventListener( 'click', onUpdateInPlace );
+		el( 'aiwpb-rollback' ).addEventListener( 'click', onRollback );
+		el( 'aiwpb-mode-new' ).addEventListener( 'click', function () {
+			setMode( 'new' );
+		} );
+		el( 'aiwpb-mode-update' ).addEventListener( 'click', function () {
+			setMode( 'update' );
+		} );
 		el( 'aiwpb-input' ).focus();
 	} );
 } )();

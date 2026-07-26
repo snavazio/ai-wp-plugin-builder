@@ -86,6 +86,22 @@ class Aiwpb_Admin {
 			<p class="description"><?php echo esc_html__( 'Chat about the plugin you want — the assistant asks a few questions to get it right. When you\'re happy, click Build plugin: it\'s generated, security-audited against 8 gates, and returned as an install-ready .zip.', 'ai-plugin-builder' ); ?></p>
 
 			<div id="aiwpb-app">
+				<div class="aiwpb-mode">
+					<button type="button" id="aiwpb-mode-new" class="button button-primary"><?php echo esc_html__( 'Build new plugin', 'ai-plugin-builder' ); ?></button>
+					<button type="button" id="aiwpb-mode-update" class="button"><?php echo esc_html__( 'Update existing plugin', 'ai-plugin-builder' ); ?></button>
+				</div>
+				<div id="aiwpb-source" class="aiwpb-source" style="display:none;">
+					<p><strong><?php echo esc_html__( 'Which plugin do you want to update?', 'ai-plugin-builder' ); ?></strong></p>
+					<p>
+						<label><input type="radio" name="aiwpb-src" value="installed" checked /> <?php echo esc_html__( 'Installed on this site:', 'ai-plugin-builder' ); ?></label>
+						<select id="aiwpb-installed"><option value=""><?php echo esc_html__( '— choose a plugin —', 'ai-plugin-builder' ); ?></option></select>
+					</p>
+					<p>
+						<label><input type="radio" name="aiwpb-src" value="upload" /> <?php echo esc_html__( 'Upload a .zip:', 'ai-plugin-builder' ); ?></label>
+						<input type="file" id="aiwpb-zip" accept=".zip,application/zip" />
+					</p>
+					<p class="description"><?php echo esc_html__( 'Then chat about the changes below. Claude is recommended for editing existing code.', 'ai-plugin-builder' ); ?></p>
+				</div>
 				<div class="aiwpb-chat">
 					<div id="aiwpb-messages" class="aiwpb-messages" aria-live="polite"></div>
 					<div class="aiwpb-chat-input">
@@ -127,6 +143,8 @@ class Aiwpb_Admin {
 					<p>
 						<a id="aiwpb-download" class="button" href="#" download><?php echo esc_html__( 'Download .zip', 'ai-plugin-builder' ); ?></a>
 						<button id="aiwpb-install" class="button button-primary"><?php echo esc_html__( 'Install & activate', 'ai-plugin-builder' ); ?></button>
+						<button id="aiwpb-update-inplace" class="button button-primary" style="display:none;"><?php echo esc_html__( 'Update in place', 'ai-plugin-builder' ); ?></button>
+						<button id="aiwpb-rollback" class="button" style="display:none;"><?php echo esc_html__( 'Roll back', 'ai-plugin-builder' ); ?></button>
 					</p>
 					<div id="aiwpb-install-result"></div>
 				</div>

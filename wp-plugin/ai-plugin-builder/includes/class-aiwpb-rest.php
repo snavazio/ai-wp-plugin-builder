@@ -91,6 +91,72 @@ class Aiwpb_Rest {
 		);
 		register_rest_route(
 			self::NS,
+			'/plugins',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'permission_callback' => array( $this, 'can_manage' ),
+				'callback'            => array( $this, 'list_plugins' ),
+			)
+		);
+		register_rest_route(
+			self::NS,
+			'/ingest',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'permission_callback' => array( $this, 'can_manage' ),
+				'callback'            => array( $this, 'ingest' ),
+				'args'                => array(
+					'spec'   => array(
+						'required' => true,
+						'type'     => 'string',
+					),
+					'source' => array(
+						'required' => false,
+						'type'     => 'string',
+					),
+					'slug'   => array(
+						'required' => false,
+						'type'     => 'string',
+					),
+					'zipB64' => array(
+						'required' => false,
+						'type'     => 'string',
+					),
+				),
+			)
+		);
+		register_rest_route(
+			self::NS,
+			'/update',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'permission_callback' => array( $this, 'can_manage' ),
+				'callback'            => array( $this, 'update_in_place' ),
+				'args'                => array(
+					'jobId' => array(
+						'required' => true,
+						'type'     => 'string',
+					),
+				),
+			)
+		);
+		register_rest_route(
+			self::NS,
+			'/rollback',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'permission_callback' => array( $this, 'can_manage' ),
+				'callback'            => array( $this, 'rollback' ),
+				'args'                => array(
+					'slug' => array(
+						'required' => true,
+						'type'     => 'string',
+					),
+				),
+			)
+		);
+		register_rest_route(
+			self::NS,
 			'/install',
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -157,6 +223,266 @@ class Aiwpb_Rest {
 	}
 
 	/**
+	 * GET /plugins — installed plugins (folder-based) available to update.
+	 *
+	 * @return WP_REST_Response
+	 */
+	public function list_plugins() {
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		$out = array();
+		foreach ( get_plugins() as $file => $data ) {
+			$slug = dirname( $file );
+			if ( '.' === $slug || 'ai-plugin-builder' === $slug ) {
+				continue; // skip single-file plugins and this plugin itself.
+			}
+			$out[] = array(
+				'slug'    => $slug,
+				'name'    => $data['Name'],
+				'version' => $data['Version'],
+			);
+		}
+		usort(
+			$out,
+			static function ( $a, $b ) {
+				return strcasecmp( $a['name'], $b['name'] );
+			}
+		);
+		return rest_ensure_response( array( 'plugins' => $out ) );
+	}
+
+	/**
+	 * POST /ingest — update an existing plugin (installed or uploaded) to a change request.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function ingest( WP_REST_Request $request ) {
+		$spec   = sanitize_textarea_field( (string) $request->get_param( 'spec' ) );
+		$source = ( 'upload' === $request->get_param( 'source' ) ) ? 'upload' : 'installed';
+		$engine = ( 'local' === $request->get_param( 'engine' ) ) ? 'local' : 'claude';
+		$model  = ( 'local' === $engine ) ? (string) get_option( 'aiwpb_local_model', 'qwen3:30b' ) : '';
+		if ( '' === trim( $spec ) ) {
+			return new WP_Error( 'aiwpb_ingest', __( 'Describe the change first.', 'ai-plugin-builder' ), array( 'status' => 400 ) );
+		}
+
+		if ( 'installed' === $source ) {
+			$slug    = sanitize_key( (string) $request->get_param( 'slug' ) );
+			$zip_b64 = '' !== $slug ? $this->zip_installed_plugin( $slug ) : new WP_Error( 'aiwpb_ingest', __( 'Choose a plugin to update.', 'ai-plugin-builder' ) );
+		} else {
+			$raw     = (string) $request->get_param( 'zipB64' );
+			$zip_b64 = '' !== $raw ? $raw : new WP_Error( 'aiwpb_ingest', __( 'Upload a plugin .zip.', 'ai-plugin-builder' ) );
+		}
+		if ( is_wp_error( $zip_b64 ) ) {
+			return new WP_Error( 'aiwpb_ingest', $zip_b64->get_error_message(), array( 'status' => 400 ) );
+		}
+
+		$result = ( new Aiwpb_Client() )->ingest( $zip_b64, $spec, $engine, $model );
+		if ( is_wp_error( $result ) ) {
+			return new WP_Error( 'aiwpb_ingest', $result->get_error_message(), array( 'status' => 502 ) );
+		}
+		return rest_ensure_response( $result );
+	}
+
+	/**
+	 * POST /update — install the updated plugin from a finished job in place, with a rollback backup.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function update_in_place( WP_REST_Request $request ) {
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		$job_id = sanitize_text_field( (string) $request->get_param( 'jobId' ) );
+		$client = new Aiwpb_Client();
+		$job    = $client->job( $job_id );
+		$slug   = ( ! is_wp_error( $job ) && isset( $job['artifact']['slug'] ) ) ? sanitize_key( $job['artifact']['slug'] ) : '';
+		$bytes  = $client->zip( $job_id );
+		if ( is_wp_error( $bytes ) ) {
+			return new WP_Error( 'aiwpb_update', $bytes->get_error_message(), array( 'status' => 502 ) );
+		}
+
+		$was_installed = '' !== $slug && is_dir( trailingslashit( WP_PLUGIN_DIR ) . $slug );
+		$backup        = false;
+		if ( $was_installed ) {
+			$backup = ! is_wp_error( $this->backup_plugin( $slug ) );
+		}
+
+		$plugin_file = $this->install_zip_bytes( $bytes );
+		if ( is_wp_error( $plugin_file ) ) {
+			if ( $backup ) {
+				$this->restore_backup( $slug );
+			}
+			return new WP_Error( 'aiwpb_update', $plugin_file->get_error_message(), array( 'status' => 500 ) );
+		}
+		$activation = activate_plugin( $plugin_file );
+		if ( is_wp_error( $activation ) ) {
+			if ( $backup ) {
+				$this->restore_backup( $slug );
+			}
+			return new WP_Error(
+				'aiwpb_update',
+				sprintf(
+					/* translators: %s: activation error */
+					__( 'Update installed but failed to activate (%s). Rolled back to the previous version.', 'ai-plugin-builder' ),
+					$activation->get_error_message()
+				),
+				array( 'status' => 500 )
+			);
+		}
+		return rest_ensure_response(
+			array(
+				'updated'     => true,
+				'activated'   => true,
+				'slug'        => $slug,
+				'canRollback' => $backup,
+				'message'     => __( 'Plugin updated in place and activated.', 'ai-plugin-builder' ),
+			)
+		);
+	}
+
+	/**
+	 * POST /rollback — restore the pre-update backup of a plugin.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function rollback( WP_REST_Request $request ) {
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		$slug   = sanitize_key( (string) $request->get_param( 'slug' ) );
+		$result = $this->restore_backup( $slug );
+		if ( is_wp_error( $result ) ) {
+			return new WP_Error( 'aiwpb_rollback', $result->get_error_message(), array( 'status' => 500 ) );
+		}
+		return rest_ensure_response(
+			array(
+				'rolledBack' => true,
+				'message'    => __( 'Rolled back to the previous version.', 'ai-plugin-builder' ),
+			)
+		);
+	}
+
+	/**
+	 * Zip an installed plugin folder and return it base64-encoded.
+	 *
+	 * @param string $slug Plugin folder slug.
+	 * @return string|WP_Error
+	 */
+	private function zip_installed_plugin( $slug ) {
+		$dir = trailingslashit( WP_PLUGIN_DIR ) . $slug;
+		if ( ! is_dir( $dir ) ) {
+			return new WP_Error( 'aiwpb_notfound', __( 'That plugin was not found.', 'ai-plugin-builder' ) );
+		}
+		if ( ! class_exists( 'ZipArchive' ) ) {
+			return new WP_Error( 'aiwpb_zip', __( 'ZipArchive is required on the server.', 'ai-plugin-builder' ) );
+		}
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		global $wp_filesystem;
+		WP_Filesystem();
+		$tmp = wp_tempnam( $slug . '.zip' );
+		$zip = new ZipArchive();
+		if ( ! $tmp || true !== $zip->open( $tmp, ZipArchive::CREATE | ZipArchive::OVERWRITE ) ) {
+			return new WP_Error( 'aiwpb_zip', __( 'Could not create the archive.', 'ai-plugin-builder' ) );
+		}
+		$items = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $dir, FilesystemIterator::SKIP_DOTS ) );
+		foreach ( $items as $file ) {
+			$rel = $slug . '/' . str_replace( '\\', '/', substr( $file->getPathname(), strlen( $dir ) + 1 ) );
+			$zip->addFile( $file->getPathname(), $rel );
+		}
+		$zip->close();
+		$bytes = $wp_filesystem->get_contents( $tmp );
+		$wp_filesystem->delete( $tmp );
+		if ( false === $bytes ) {
+			return new WP_Error( 'aiwpb_zip', __( 'Could not read the archive.', 'ai-plugin-builder' ) );
+		}
+		return base64_encode( $bytes );
+	}
+
+	/**
+	 * Write a .zip to a temp file and install it (overwriting), returning the main plugin file.
+	 *
+	 * @param string $bytes Raw .zip bytes.
+	 * @return string|WP_Error Plugin file path or error.
+	 */
+	private function install_zip_bytes( $bytes ) {
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/misc.php';
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+		global $wp_filesystem;
+		if ( ! WP_Filesystem() ) {
+			return new WP_Error( 'aiwpb_fs', __( 'Could not initialize the filesystem.', 'ai-plugin-builder' ) );
+		}
+		$tmp = wp_tempnam( 'aiwpb-plugin.zip' );
+		if ( ! $tmp || ! $wp_filesystem->put_contents( $tmp, $bytes ) ) {
+			return new WP_Error( 'aiwpb_write', __( 'Could not write the plugin package.', 'ai-plugin-builder' ) );
+		}
+		$skin     = new Automatic_Upgrader_Skin();
+		$upgrader = new Plugin_Upgrader( $skin );
+		$outcome  = $upgrader->install( $tmp, array( 'overwrite_package' => true ) );
+		$wp_filesystem->delete( $tmp );
+		if ( is_wp_error( $outcome ) ) {
+			return $outcome;
+		}
+		if ( true !== $outcome ) {
+			return new WP_Error( 'aiwpb_install', __( 'Installation failed.', 'ai-plugin-builder' ), array( 'messages' => $skin->get_upgrade_messages() ) );
+		}
+		return $upgrader->plugin_info();
+	}
+
+	/**
+	 * Back up the current copy of a plugin (for rollback), keeping one backup per slug.
+	 *
+	 * @param string $slug Plugin slug.
+	 * @return string|WP_Error Backup path or error.
+	 */
+	private function backup_plugin( $slug ) {
+		$b64 = $this->zip_installed_plugin( $slug );
+		if ( is_wp_error( $b64 ) ) {
+			return $b64;
+		}
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		global $wp_filesystem;
+		WP_Filesystem();
+		$uploads = wp_upload_dir();
+		$dir     = trailingslashit( $uploads['basedir'] ) . 'aiwpb-backups';
+		if ( ! $wp_filesystem->is_dir( $dir ) ) {
+			$wp_filesystem->mkdir( $dir );
+		}
+		$path = trailingslashit( $dir ) . $slug . '.zip';
+		if ( ! $wp_filesystem->put_contents( $path, base64_decode( $b64 ) ) ) {
+			return new WP_Error( 'aiwpb_backup', __( 'Could not write the backup.', 'ai-plugin-builder' ) );
+		}
+		update_option( 'aiwpb_backup_' . $slug, $path, false );
+		return $path;
+	}
+
+	/**
+	 * Restore a plugin from its backup and reactivate it.
+	 *
+	 * @param string $slug Plugin slug.
+	 * @return string|WP_Error Plugin file path or error.
+	 */
+	private function restore_backup( $slug ) {
+		$path = (string) get_option( 'aiwpb_backup_' . $slug, '' );
+		if ( '' === $path ) {
+			return new WP_Error( 'aiwpb_rollback', __( 'No backup is available for this plugin.', 'ai-plugin-builder' ) );
+		}
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		global $wp_filesystem;
+		WP_Filesystem();
+		$bytes = $wp_filesystem->get_contents( $path );
+		if ( false === $bytes ) {
+			return new WP_Error( 'aiwpb_rollback', __( 'The backup file is missing.', 'ai-plugin-builder' ) );
+		}
+		$plugin_file = $this->install_zip_bytes( $bytes );
+		if ( is_wp_error( $plugin_file ) ) {
+			return $plugin_file;
+		}
+		activate_plugin( $plugin_file );
+		return $plugin_file;
+	}
+
+	/**
 	 * GET /jobs/:id — proxy the job status.
 	 *
 	 * @param WP_REST_Request $request Request.
@@ -185,41 +511,13 @@ class Aiwpb_Rest {
 			return new WP_Error( 'aiwpb_zip', $bytes->get_error_message(), array( 'status' => 502 ) );
 		}
 
-		require_once ABSPATH . 'wp-admin/includes/file.php';
-		require_once ABSPATH . 'wp-admin/includes/misc.php';
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
-		require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
-
-		global $wp_filesystem;
-		if ( ! WP_Filesystem() ) {
-			return new WP_Error( 'aiwpb_fs', __( 'Could not initialize the filesystem.', 'ai-plugin-builder' ), array( 'status' => 500 ) );
-		}
-		$tmp = wp_tempnam( 'aiwpb-plugin.zip' );
-		if ( ! $tmp || ! $wp_filesystem->put_contents( $tmp, $bytes ) ) {
-			return new WP_Error( 'aiwpb_write', __( 'Could not write the downloaded plugin.', 'ai-plugin-builder' ), array( 'status' => 500 ) );
-		}
-
-		$skin     = new Automatic_Upgrader_Skin();
-		$upgrader = new Plugin_Upgrader( $skin );
-		$outcome  = $upgrader->install( $tmp, array( 'overwrite_package' => true ) );
-		$wp_filesystem->delete( $tmp );
-
-		if ( is_wp_error( $outcome ) ) {
-			return new WP_Error( 'aiwpb_install', $outcome->get_error_message(), array( 'status' => 500 ) );
-		}
-		if ( true !== $outcome ) {
-			return new WP_Error(
-				'aiwpb_install',
-				__( 'Installation failed.', 'ai-plugin-builder' ),
-				array(
-					'status'   => 500,
-					'messages' => $skin->get_upgrade_messages(),
-				)
-			);
+		$plugin_file = $this->install_zip_bytes( $bytes );
+		if ( is_wp_error( $plugin_file ) ) {
+			return new WP_Error( 'aiwpb_install', $plugin_file->get_error_message(), array( 'status' => 500 ) );
 		}
 
 		// Auto-activate the freshly installed plugin. Activation hooks run; report if the plugin fatals.
-		$plugin_file    = $upgrader->plugin_info();
 		$activated      = false;
 		$activate_error = '';
 		if ( $plugin_file ) {

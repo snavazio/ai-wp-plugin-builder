@@ -29,3 +29,7 @@
 .aiwpb-badge--error { background: #dc3232; color: #fff; }
 .aiwpb-result .button { margin-right: 8px; }
 .aiwpb-provides { font-size: 13px; color: #3c434a; background: #f6f7f7; border-left: 4px solid #46b450; padding: 8px 12px; border-radius: 4px; max-width: 640px; }
+.aiwpb-mode { margin: 12px 0; }
+.aiwpb-mode .button { margin-right: 6px; }
+.aiwpb-source { max-width: 900px; background: #fff; border: 1px solid #dcdcde; border-radius: 6px; padding: 10px 14px; margin-bottom: 12px; }
+.aiwpb-source select { min-width: 260px; margin-left: 6px; }
