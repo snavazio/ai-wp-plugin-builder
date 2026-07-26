@@ -119,6 +119,37 @@ class Aiwpb_Client {
 	}
 
 	/**
+	 * POST /api/ingest — update an existing plugin (sent as base64 zip) to a change request.
+	 *
+	 * @param string $zip_b64 Base64-encoded plugin .zip.
+	 * @param string $spec    Change request (the conversation transcript).
+	 * @param string $engine  "claude" or "local".
+	 * @param string $model   Optional model override.
+	 * @return array|WP_Error
+	 */
+	public function ingest( $zip_b64, $spec, $engine, $model = '' ) {
+		$payload = array(
+			'zipB64' => $zip_b64,
+			'spec'   => $spec,
+			'engine' => ( 'local' === $engine ) ? 'local' : 'claude',
+		);
+		if ( '' !== $model ) {
+			$payload['model'] = $model;
+		}
+		return $this->decode(
+			wp_remote_post(
+				$this->base_url() . '/api/ingest',
+				$this->args(
+					array(
+						'timeout' => 30,
+						'body'    => wp_json_encode( $payload ),
+					)
+				)
+			)
+		);
+	}
+
+	/**
 	 * GET /api/jobs/:id.
 	 *
 	 * @param string $job_id Job id.

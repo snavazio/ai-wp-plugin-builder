@@ -76,6 +76,11 @@ export async function runServer(_args: string[], env: ServeEnv): Promise<number>
     chain = chain.then(() => runJob(env, jobsRoot, job, specText, model));
   }
 
+  function enqueueIngest(job: Job, zipB64: string, changeRequest: string, model?: string): void {
+    jobs.set(job.id, job);
+    chain = chain.then(() => runIngestJob(env, jobsRoot, job, zipB64, changeRequest, model));
+  }
+
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url || '/', `http://localhost`);
     const path = url.pathname;
@@ -133,6 +138,20 @@ export async function runServer(_args: string[], env: ServeEnv): Promise<number>
       if (spec.length > 20000) return json(res, 400, { error: 'Spec too large (max 20k chars).' });
       const job: Job = { id: randomUUID(), engine, status: 'queued', createdAt: Date.now(), log: [] };
       enqueue(job, spec, model);
+      return json(res, 202, { jobId: job.id, status: job.status });
+    }
+
+    if (path === '/api/ingest' && req.method === 'POST') {
+      const body = await readBody(req).catch(() => null);
+      const zipB64 = typeof body?.zipB64 === 'string' ? body.zipB64 : '';
+      const spec = typeof body?.spec === 'string' ? body.spec.trim() : '';
+      const engine: 'claude' | 'local' = body?.engine === 'local' ? 'local' : 'claude';
+      const model = typeof body?.model === 'string' ? body.model : undefined;
+      if (!zipB64) return json(res, 400, { error: 'Body must include the plugin as base64 "zipB64".' });
+      if (!spec) return json(res, 400, { error: 'Body must include a "spec" (the change request).' });
+      if (zipB64.length > 34_000_000) return json(res, 400, { error: 'Plugin too large (max ~25 MB).' });
+      const job: Job = { id: randomUUID(), engine, status: 'queued', createdAt: Date.now(), log: [] };
+      enqueueIngest(job, zipB64, spec, model);
       return json(res, 202, { jobId: job.id, status: job.status });
     }
 
@@ -213,6 +232,65 @@ async function runJob(env: ServeEnv, jobsRoot: string, job: Job, specText: strin
     child.on('error', (e) => {
       job.status = 'error';
       job.error = `Failed to start build process: ${String(e)}`;
+      resolve();
+    });
+  });
+}
+
+async function runIngestJob(
+  env: ServeEnv,
+  jobsRoot: string,
+  job: Job,
+  zipB64: string,
+  changeRequest: string,
+  model?: string,
+): Promise<void> {
+  job.status = 'running';
+  const dir = join(jobsRoot, job.id);
+  await mkdir(dir, { recursive: true });
+  const zipFile = join(dir, 'plugin.zip');
+  const changeFile = join(dir, 'change.txt');
+  const resultFile = join(dir, 'result.json');
+  try {
+    await writeFile(zipFile, Buffer.from(zipB64, 'base64'));
+  } catch {
+    job.status = 'error';
+    job.error = 'Could not decode the uploaded plugin.';
+    return;
+  }
+  await writeFile(changeFile, changeRequest, 'utf8');
+
+  const childEnv: NodeJS.ProcessEnv = { ...process.env, AIWPB_RESULT_FILE: resultFile };
+  if (model) childEnv.OLLAMA_MODEL = model;
+  const argv = ['tsx', 'src/run.ts', 'ingest', zipFile, changeFile, '--engine', job.engine];
+  if (model) argv.push('--model', model);
+
+  const pushLog = (chunk: Buffer) => {
+    for (const line of chunk.toString().split('\n')) {
+      if (line.trim()) job.log.push(line.replace(/\x1b\[[0-9;]*m/g, ''));
+    }
+    if (job.log.length > MAX_LOG_LINES * 2) job.log = job.log.slice(-MAX_LOG_LINES);
+  };
+
+  await new Promise<void>((resolve) => {
+    const child = spawn('npx', argv, { cwd: env.repoRoot, env: childEnv });
+    child.stdout.on('data', pushLog);
+    child.stderr.on('data', pushLog);
+    child.on('close', async (code) => {
+      try {
+        const result = JSON.parse(await readFile(resultFile, 'utf8')) as BuildResult;
+        job.artifact = result;
+        job.status = result.ok ? 'done' : 'error';
+        if (!result.ok) job.error = result.error || 'Update did not pass all gates.';
+      } catch {
+        job.status = 'error';
+        job.error = `Update process exited with code ${code} and produced no result.`;
+      }
+      resolve();
+    });
+    child.on('error', (e) => {
+      job.status = 'error';
+      job.error = `Failed to start update process: ${String(e)}`;
       resolve();
     });
   });
