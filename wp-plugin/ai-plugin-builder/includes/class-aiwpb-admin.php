@@ -122,6 +122,8 @@ class Aiwpb_Admin {
 				<div id="aiwpb-result" class="aiwpb-result" style="display:none;">
 					<h2><?php echo esc_html__( 'Result', 'ai-plugin-builder' ); ?></h2>
 					<p id="aiwpb-result-summary"></p>
+					<p id="aiwpb-result-provides" class="aiwpb-provides"></p>
+					<p class="description"><?php echo esc_html__( 'To change it, just tell the assistant what to adjust above and click Build plugin again.', 'ai-plugin-builder' ); ?></p>
 					<p>
 						<a id="aiwpb-download" class="button" href="#" download><?php echo esc_html__( 'Download .zip', 'ai-plugin-builder' ); ?></a>
 						<button id="aiwpb-install" class="button button-primary"><?php echo esc_html__( 'Install & activate', 'ai-plugin-builder' ); ?></button>

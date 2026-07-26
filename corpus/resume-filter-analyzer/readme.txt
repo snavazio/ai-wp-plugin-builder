@@ -1,4 +1,4 @@
-=== Business Hours ===
+=== Resume Filter Analyzer ===
 Contributors: stephennavazio
 Requires at least: 6.0
 Tested up to: 7.0
@@ -7,11 +7,11 @@ Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-A plugin to manage and display business hours with a settings page and shortcode.
+Analyze resumes against job descriptions to simulate how hiring company filters evaluate candidates.
 
 == Description ==
 
-A plugin to manage and display business hours with a settings page and shortcode.
+Analyze resumes against job descriptions to simulate how hiring company filters evaluate candidates.
 
 == Installation ==
 

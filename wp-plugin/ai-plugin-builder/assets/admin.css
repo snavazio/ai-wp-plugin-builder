@@ -28,3 +28,4 @@
 .aiwpb-badge--done { background: #46b450; color: #fff; }
 .aiwpb-badge--error { background: #dc3232; color: #fff; }
 .aiwpb-result .button { margin-right: 8px; }
+.aiwpb-provides { font-size: 13px; color: #3c434a; background: #f6f7f7; border-left: 4px solid #46b450; padding: 8px 12px; border-radius: 4px; max-width: 640px; }

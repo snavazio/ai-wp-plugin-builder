@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name:       Business Hours
- * Description:       Display business opening hours via settings page and shortcode.
- * Version:           1.0.1
+ * Description:       A plugin to manage and display business hours with a settings page and shortcode.
+ * Version:           1.0.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Stephen Navazio Agency
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'BHRS_VERSION', '1.0.1' );
+define( 'BHRS_VERSION', '1.0.0' );
 define( 'BHRS_FILE', __FILE__ );
 define( 'BHRS_PATH', plugin_dir_path( __FILE__ ) );
 
@@ -31,19 +31,42 @@ function bhrs_load_textdomain() {
 }
 add_action( 'init', 'bhrs_load_textdomain' );
 
-// Load admin settings.
-require_once BHRS_PATH . 'includes/admin-settings.php';
-
-// Load shortcode.
-require_once BHRS_PATH . 'includes/shortcode.php';
+// Include feature files.
+require_once BHRS_PATH . 'includes/admin-page.php';
 
 /**
- * Activation hook.
+ * Shortcode for displaying business hours.
+ *
+ * @param array $atts Shortcode attributes.
+ * @return string
+ */
+function bhrs_shortcode( $atts ) {
+	$business_hours = get_option( 'bhrs_business_hours', array() );
+	$output         = '<div class="bhrs-business-hours">';
+
+	if ( ! empty( $business_hours ) ) {
+		foreach ( $business_hours as $day => $hours ) {
+			if ( ! empty( $hours['open'] ) && ! empty( $hours['close'] ) ) {
+				$output .= '<p>' . esc_html( ucfirst( $day ) ) . ': ' . esc_html( $hours['open'] ) . ' - ' . esc_html( $hours['close'] ) . '</p>';
+			}
+		}
+	} else {
+		$output .= '<p>' . esc_html__( 'Business hours not set.', 'business-hours' ) . '</p>';
+	}
+
+	$output .= '</div>';
+
+	return $output;
+}
+add_shortcode( 'business_hours', 'bhrs_shortcode' );
+
+/**
+ * Activation hook. Register rewrite-affecting features before flushing rules.
  *
  * @return void
  */
 function bhrs_activate() {
-	// No activation tasks needed.
+	flush_rewrite_rules();
 }
 register_activation_hook( __FILE__, 'bhrs_activate' );
 
@@ -53,6 +76,6 @@ register_activation_hook( __FILE__, 'bhrs_activate' );
  * @return void
  */
 function bhrs_deactivate() {
-	// No deactivation tasks needed.
+	flush_rewrite_rules();
 }
 register_deactivation_hook( __FILE__, 'bhrs_deactivate' );

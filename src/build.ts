@@ -17,7 +17,7 @@ import {
   type RoleConfig,
 } from './agents.js';
 import { makeCoderHooks, newHookStats, type HookStats } from './hooks.js';
-import { scaffoldPlugin, validateSpec, normalizeSpec, type StructuredSpec } from './spec.js';
+import { scaffoldPlugin, validateSpec, normalizeSpec, summarizeProvides, type StructuredSpec } from './spec.js';
 import { runPipeline } from './pipeline.js';
 import { renderTerminal, renderMarkdown } from './report.js';
 import { WpEnv, dockerAvailable } from './wpEnv.js';
@@ -309,7 +309,7 @@ export async function runBuild(args: string[], env: BuildEnv): Promise<number> {
 
   // ---------- 9. report ----------
   await writeReport({ repoRoot, spec, pipe, findings, auditNote: parseNote, hookStats, iterations, totalCost, startTs, zipPath, runLog });
-  await emitResult({ ok: true, engine: 'claude', slug: spec.slug, pluginName: spec.pluginName, version: spec.version, zip: zipPath, report: join(repoRoot, 'dist', `${spec.slug}-report.md`), iterations, costUsd: totalCost });
+  await emitResult({ ok: true, engine: 'claude', slug: spec.slug, pluginName: spec.pluginName, version: spec.version, zip: zipPath, report: join(repoRoot, 'dist', `${spec.slug}-report.md`), iterations, costUsd: totalCost, provides: summarizeProvides(spec) });
 
   console.log('\n' + '='.repeat(64));
   console.log(`✔ DONE: ${spec.pluginName}`);

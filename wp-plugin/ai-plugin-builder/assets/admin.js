@@ -174,12 +174,23 @@
 	}
 	function showResult( job ) {
 		var a = job.artifact || {};
+		var name = a.pluginName || a.slug || 'Plugin';
 		el( 'aiwpb-result' ).style.display = 'block';
-		el( 'aiwpb-result-summary' ).textContent =
-			( a.pluginName || a.slug || 'Plugin' ) + ' — v' + ( a.version || '1.0.0' ) + ' · all 8 gates passed';
+		el( 'aiwpb-result-summary' ).textContent = name + ' — v' + ( a.version || '1.0.0' ) + ' · all 8 gates passed';
+		el( 'aiwpb-result-provides' ).textContent = a.provides ? ( 'Provides — ' + a.provides ) : '';
 		var dl = cfg.adminPost + '?action=aiwpb_download&job=' + encodeURIComponent( currentJob ) +
 			'&_wpnonce=' + encodeURIComponent( cfg.downloadNonce );
 		el( 'aiwpb-download' ).setAttribute( 'href', dl );
+		// Keep the conversation open so the user can revise and rebuild.
+		var note = 'Built ✅ ' + name + '.';
+		if ( a.provides ) {
+			note += ' It provides: ' + a.provides;
+		}
+		note += ' Want to change anything? Tell me what to adjust, then click "Build plugin" again.';
+		messages.push( { role: 'assistant', content: note } );
+		renderMessages();
+		el( 'aiwpb-build' ).disabled = false;
+		el( 'aiwpb-input' ).focus();
 	}
 	function onInstall( e ) {
 		e.preventDefault();

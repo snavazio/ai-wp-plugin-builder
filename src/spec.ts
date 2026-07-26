@@ -202,6 +202,24 @@ export async function scaffoldPlugin(spec: StructuredSpec, repoRoot: string): Pr
   return dir;
 }
 
+/** Human-readable summary of what a plugin exposes + where to find it (for the build result screen). */
+export function summarizeProvides(spec: StructuredSpec): string {
+  const parts: string[] = [];
+  if (spec.postTypes?.length) parts.push('Adds a "' + spec.postTypes.map((p) => p.labelPlural).join('", "') + '" menu (custom post type)');
+  if (spec.adminPages?.length) parts.push('Admin page: ' + spec.adminPages.map((a) => a.title).join(', '));
+  if (spec.widgets?.length) parts.push('Widget: ' + spec.widgets.map((w) => w.name).join(', ') + ' (Appearance → Widgets)');
+  if (spec.shortcodes?.length) parts.push('Shortcode: ' + spec.shortcodes.map((s) => `[${s.tag}]`).join(', '));
+  if (spec.blocks?.length) parts.push('Block: ' + spec.blocks.map((b) => b.title).join(', ') + ' (in the editor)');
+  if (spec.restEndpoints?.length) parts.push('REST: ' + spec.restEndpoints.map((r) => `${r.namespace}${r.route}`).join(', '));
+  if (spec.taxonomies?.length) parts.push('Taxonomy: ' + spec.taxonomies.map((t) => t.labelPlural).join(', '));
+  if (spec.cronEvents?.length) parts.push('Scheduled task');
+  const hasMenu = (spec.postTypes?.length ?? 0) > 0 || (spec.adminPages?.length ?? 0) > 0;
+  if (!hasMenu && ((spec.shortcodes?.length ?? 0) > 0 || (spec.restEndpoints?.length ?? 0) > 0 || (spec.blocks?.length ?? 0) > 0)) {
+    parts.push('No admin menu — it works through the shortcode/block/REST above (find it under Plugins → Installed Plugins).');
+  }
+  return parts.join(' · ');
+}
+
 /** Read and parse a SPEC.json file (normalized so missing array fields default to []). */
 export async function readSpec(path: string): Promise<StructuredSpec> {
   const raw = await readFile(path, 'utf8');

@@ -14,6 +14,8 @@ export interface BuildResult {
   report?: string | null;
   iterations?: number;
   costUsd?: number;
+  /** Human-readable summary of what the plugin exposes + where to find it. */
+  provides?: string;
   error?: string;
 }
 

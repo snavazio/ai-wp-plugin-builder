@@ -12,7 +12,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import type { BuildEnv } from './build.js';
 import { loadRules } from './agents.js';
-import { scaffoldPlugin, validateSpec, normalizeSpec, type StructuredSpec } from './spec.js';
+import { scaffoldPlugin, validateSpec, normalizeSpec, summarizeProvides, type StructuredSpec } from './spec.js';
 import { runPipeline } from './pipeline.js';
 import { renderTerminal, renderMarkdown } from './report.js';
 import { WpEnv, dockerAvailable } from './wpEnv.js';
@@ -280,7 +280,7 @@ PHP. Follow these hard rules exactly:\n\n${rules}\n\n${PROTOCOL}`;
   ];
   await mkdir(join(repoRoot, 'dist'), { recursive: true });
   await writeFile(join(repoRoot, 'dist', `${spec.slug}-local-report.md`), reportLines.join('\n') + '\n', 'utf8');
-  await emitResult({ ok: pipe.passed, engine: 'local', slug: spec.slug, pluginName: spec.pluginName, version: spec.version, zip: zipPath, report: join(repoRoot, 'dist', `${spec.slug}-local-report.md`), iterations, error: pipe.passed ? undefined : 'did not pass all gates' });
+  await emitResult({ ok: pipe.passed, engine: 'local', slug: spec.slug, pluginName: spec.pluginName, version: spec.version, zip: zipPath, report: join(repoRoot, 'dist', `${spec.slug}-local-report.md`), iterations, provides: summarizeProvides(spec), error: pipe.passed ? undefined : 'did not pass all gates' });
 
   console.log('\n' + '='.repeat(64));
   console.log(`${pipe.passed ? '✔' : '✖'} LOCAL BUILD: ${spec.pluginName} (${cfg.model})`);

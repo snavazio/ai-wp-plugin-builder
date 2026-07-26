@@ -553,18 +553,17 @@
     {
       "slug": "business-hours",
       "pluginName": "Business Hours",
-      "description": "Display business opening hours via settings page and shortcode.",
-      "version": "1.0.1",
+      "description": "A plugin to manage and display business hours with a settings page and shortcode.",
+      "version": "1.0.0",
       "prefix": "bhrs",
       "tags": [
-        "settings",
+        "metabox",
         "shortcode"
       ],
       "files": [
         "SPEC.json",
         "business-hours.php",
-        "includes/admin-settings.php",
-        "includes/shortcode.php",
+        "includes/admin-page.php",
         "readme.txt",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
@@ -2402,6 +2401,27 @@
         "includes/shortcode.php",
         "readme.txt",
         "restaurant-menu.php",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
+      "slug": "resume-filter-analyzer",
+      "pluginName": "Resume Filter Analyzer",
+      "description": "Analyze resumes against job descriptions to simulate how hiring company filters evaluate candidates.",
+      "version": "1.0.0",
+      "prefix": "rfa",
+      "tags": [
+        "shortcode",
+        "rest"
+      ],
+      "files": [
+        "SPEC.json",
+        "includes/rest-api.php",
+        "includes/shortcode-analyzer.php",
+        "readme.txt",
+        "resume-filter-analyzer.php",
         "tests/bootstrap.php",
         "tests/test-smoke.php",
         "uninstall.php"

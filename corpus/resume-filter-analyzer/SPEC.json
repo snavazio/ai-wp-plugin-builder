@@ -1,0 +1,62 @@
+{
+  "slug": "resume-filter-analyzer",
+  "pluginName": "Resume Filter Analyzer",
+  "description": "Analyze resumes against job descriptions to simulate how hiring company filters evaluate candidates.",
+  "version": "1.0.0",
+  "prefix": "rfa",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "read"
+  ],
+  "postTypes": [],
+  "adminPages": [],
+  "taxonomies": [],
+  "shortcodes": [
+    {
+      "tag": "rfa_analyzer",
+      "description": "Frontend form allowing users to submit resume text, job description, and company name for analysis.",
+      "attributes": []
+    }
+  ],
+  "blocks": [],
+  "restEndpoints": [
+    {
+      "namespace": "rfa/v1",
+      "route": "/analyze",
+      "methods": [
+        "POST"
+      ],
+      "public": true,
+      "description": "Accepts resume text, job description, company name, and optional flags (research company, provide suggestions) and returns analysis results including keyword matches, strengths, weaknesses, and optional suggestions with reasoning."
+    },
+    {
+      "namespace": "rfa/v1",
+      "route": "/export",
+      "methods": [
+        "POST"
+      ],
+      "public": true,
+      "description": "Accepts analysis results and returns a downloadable file (PDF or text) containing the full analysis and suggestions."
+    }
+  ],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "Transient storage for analysis results (set_transient/get_transient with user-specific keys). No persistent data storage; analysis is performed on-demand and results are discarded after export or timeout.",
+  "securityRequirements": [
+    "Escape all output using esc_html(), esc_attr(), esc_url(), esc_textarea() as appropriate",
+    "Sanitize all input: sanitize_textarea_field() for resume/job description text, sanitize_text_field() for company name, rest_sanitize_boolean() for checkboxes",
+    "REST endpoints must verify nonce via REST API nonce mechanism or use permission_callback to validate requests",
+    "Rate-limit REST endpoints to prevent abuse (store request counts in transients keyed by IP or user ID)",
+    "All external API calls (if researching company via Glassdoor or similar) must use wp_remote_get/wp_remote_post with HTTPS URLs and check for WP_Error",
+    "ADA compliance: ensure shortcode output uses semantic HTML, proper ARIA labels, keyboard navigation support, and sufficient color contrast",
+    "No eval(), no arbitrary file inclusion, no @ error suppression",
+    "Validate and sanitize any export format parameters to prevent path traversal or code injection"
+  ],
+  "smokeAssertions": [
+    "shortcode_exists('rfa_analyzer')",
+    "rest_get_server()->get_routes()['rfa/v1'] !== null",
+    "has_filter('rest_api_init')"
+  ]
+}
