@@ -84,7 +84,7 @@
 		el( 'aiwpb-input' ).value = '';
 		renderMessages();
 		setChatBusy( true );
-		api( '/chat', { method: 'POST', body: JSON.stringify( { messages: messages } ) } )
+		api( '/chat', { method: 'POST', body: JSON.stringify( { messages: messages, platform: el( 'aiwpb-engine' ).value } ) } )
 			.then( function ( data ) {
 				messages.push( { role: 'assistant', content: data.reply || '(no reply)' } );
 				renderMessages();
@@ -153,7 +153,7 @@
 		var transcript = messages.map( function ( m ) {
 			return ( 'user' === m.role ? 'User: ' : 'Assistant: ' ) + m.content;
 		} ).join( '\n\n' );
-		var payload = { spec: transcript, engine: el( 'aiwpb-engine' ).value, source: srcType };
+		var payload = { spec: transcript, platform: el( 'aiwpb-engine' ).value, source: srcType };
 		var prep;
 		if ( 'installed' === srcType ) {
 			var slug = el( 'aiwpb-installed' ).value;
@@ -219,7 +219,7 @@
 			'Build exactly what they asked for; use sensible WordPress defaults for anything left unspecified.\n\n' + transcript;
 		el( 'aiwpb-log' ).textContent = 'Building from your conversation…\n';
 
-		api( '/build', { method: 'POST', body: JSON.stringify( { spec: spec, engine: el( 'aiwpb-engine' ).value } ) } )
+		api( '/build', { method: 'POST', body: JSON.stringify( { spec: spec, platform: el( 'aiwpb-engine' ).value } ) } )
 			.then( function ( data ) {
 				currentJob = data.jobId;
 				schedulePoll();
@@ -367,9 +367,6 @@
 	}
 
 	document.addEventListener( 'DOMContentLoaded', function () {
-		if ( el( 'aiwpb-engine' ) && cfg.defaultEngine ) {
-			el( 'aiwpb-engine' ).value = cfg.defaultEngine;
-		}
 		if ( ! cfg.configured && el( 'aiwpb-config-warning' ) ) {
 			el( 'aiwpb-config-warning' ).style.display = 'block';
 		}

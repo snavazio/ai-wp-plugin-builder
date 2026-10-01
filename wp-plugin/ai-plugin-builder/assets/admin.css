@@ -33,3 +33,15 @@
 .aiwpb-mode .button { margin-right: 6px; }
 .aiwpb-source { max-width: 900px; background: #fff; border: 1px solid #dcdcde; border-radius: 6px; padding: 10px 14px; margin-bottom: 12px; }
 .aiwpb-source select { min-width: 260px; margin-left: 6px; }
+.aiwpb-service-help { margin-top: 10px; padding: 10px 12px; background: #fcf9e8; border-left: 4px solid #dba617; max-width: 640px; }
+.aiwpb-service-help p { margin: 6px 0; }
+.aiwpb-platforms { max-width: 1200px; margin-top: 8px; }
+.aiwpb-platforms td { vertical-align: top; }
+.aiwpb-platforms .aiwpb-actions .button { margin: 0 4px 4px 0; }
+.aiwpb-platforms .aiwpb-badge { margin-left: 6px; }
+.aiwpb-test { font-size: 12px; }
+.aiwpb-test--ok { color: #007017; }
+.aiwpb-test--fail { color: #b32d2e; }
+.aiwpb-models { font-size: 12px; margin-top: 4px; }
+.aiwpb-models code { display: inline-block; margin: 2px 2px 0 0; }
+.aiwpb-controls a { margin-left: -4px; }

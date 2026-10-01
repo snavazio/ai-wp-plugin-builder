@@ -1,7 +1,8 @@
 /**
- * Phase 4 — LOCAL generator loop. Same pipeline as `build`, but the generation engine is a local
- * Ollama model (default qwen2.5-coder:14b) instead of the Claude Agent SDK, with a small local RAG
- * feeding the WordPress rules to the model. The 8-gate harness remains the objective judge, so a
+ * Phase 4 — FILE-PROTOCOL generator loop. Same pipeline as `build`, but instead of the Claude Agent SDK
+ * the model returns whole files as text. The model is any chat platform from engines/llm.ts (default: a
+ * local Ollama model; the builder service may hand it OpenAI-compatible or Gemini via AIWPB_LLM_* env).
+ * A small local RAG (Ollama embeddings) feeds the WordPress rules to the model when it is available. The 8-gate harness remains the objective judge, so a
  * local model's output is held to the exact same bar — and the harness honestly reports where a
  * smaller model falls short.
  *
@@ -17,7 +18,8 @@ import { runPipeline } from './pipeline.js';
 import { renderTerminal, renderMarkdown } from './report.js';
 import { WpEnv, dockerAvailable } from './wpEnv.js';
 import { exec, findPhpFiles } from './util/exec.js';
-import { ollamaConfig, ollamaHealth, ollamaChat, type OllamaConfig, type ChatMessage } from './engines/ollama.js';
+import { ollamaConfig } from './engines/ollama.js';
+import { llmChat, platformFromEnv, testPlatform, type Platform, type ChatMessage } from './engines/llm.js';
 import { loadOrBuildIndex, retrieve, formatContext, type RagIndex } from './rag.js';
 import { parseFiles, extractJson, writeGeneratedFiles } from './fileProtocol.js';
 import { emitResult } from './resultFile.js';
@@ -34,8 +36,8 @@ interface Usage {
   calls: number;
 }
 
-async function chat(cfg: OllamaConfig, messages: ChatMessage[], usage: Usage, temperature = 0.1): Promise<string> {
-  const r = await ollamaChat(cfg, messages, { temperature, numCtx: 32768 });
+async function chat(llm: Platform, messages: ChatMessage[], usage: Usage, temperature = 0.1): Promise<string> {
+  const r = await llmChat(llm, messages, { temperature, numCtx: 32768 });
   usage.promptTokens += r.promptTokens;
   usage.completionTokens += r.completionTokens;
   usage.calls += 1;
@@ -79,7 +81,7 @@ between markers, like:
 Output nothing outside these blocks except a one-line summary at the very end. Paths are relative to the
 plugin folder. Include the whole file, not a diff. Do not wrap file contents in markdown code fences.`;
 
-async function generateSpec(cfg: OllamaConfig, specText: string, usage: Usage): Promise<StructuredSpec | null> {
+async function generateSpec(llm: Platform, specText: string, usage: Usage): Promise<StructuredSpec | null> {
   const schema = `Output ONLY a JSON object (in a \`\`\`json fence) with keys: slug (kebab-case), pluginName,
 description, version ("1.0.0"), prefix (4-7 lowercase alnum, not wp/__/_), requiresWp ("6.0"), requiresPhp ("7.4"),
 capabilities [], postTypes [], taxonomies [], adminPages [], shortcodes [], blocks [], restEndpoints [],
@@ -90,7 +92,7 @@ Only fill arrays for features the spec calls for; use [] otherwise. All keys use
   let feedback = '';
   for (let attempt = 1; attempt <= 3; attempt++) {
     const out = await chat(
-      cfg,
+      llm,
       [
         { role: 'system', content: 'You convert loose WordPress plugin specs into strict JSON. Output only JSON.' },
         { role: 'user', content: `${schema}\n\nLOOSE SPEC:\n${specText}${feedback}` },
@@ -121,13 +123,14 @@ export async function runBuildLocal(args: string[], env: BuildEnv): Promise<numb
     return 2;
   }
   const { repoRoot, harnessDir } = env;
-  const cfg = ollamaConfig();
+  const cfg = ollamaConfig(); // embeddings for RAG
+  const llm = platformFromEnv(); // the generation model
+  const engineLabel = `${llm.protocol} (${llm.model}) @ ${llm.baseUrl}`;
 
-  const health = await ollamaHealth(cfg);
-  console.log(`\nEngine: Ollama (${cfg.model}) @ ${cfg.host}`);
+  const health = await testPlatform(llm);
+  console.log(`\nEngine: ${engineLabel}`);
   if (!health.ok) {
     console.error(`✖ ${health.message}`);
-    console.error(`  Start Ollama and pull the model, e.g.:  ollama pull ${cfg.model}`);
     return 2;
   }
   if (!(await dockerAvailable())) {
@@ -142,9 +145,9 @@ export async function runBuildLocal(args: string[], env: BuildEnv): Promise<numb
 
   // 1. Spec (local).
   console.log('\n▶ spec (local model)…');
-  const spec = await generateSpec(cfg, specText, usage);
+  const spec = await generateSpec(llm, specText, usage);
   if (!spec) {
-    console.error('Local model could not produce a valid structured spec. Try OLLAMA_MODEL=qwen2.5-coder:32b.');
+    console.error('The model could not produce a valid structured spec. Try a larger model.');
     return 1;
   }
   console.log(`  ${spec.pluginName} (slug ${spec.slug}, prefix ${spec.prefix})`);
@@ -154,10 +157,19 @@ export async function runBuildLocal(args: string[], env: BuildEnv): Promise<numb
   console.log(`▶ scaffolded build/${spec.slug}/`);
 
   // 3. RAG index + retrieval (rules) + exemplar retrieval (verified whole-plugin templates).
+  // RAG embeddings run on Ollama (OLLAMA_HOST). If it's unavailable — e.g. a cloud-only platform on a box
+  // with no Ollama — build without retrieved rules rather than fail; the full rules are in the prompt anyway.
   console.log('▶ building/loading RAG index…');
-  const idx: RagIndex = await loadOrBuildIndex(cfg, repoRoot, (m) => console.log('  ' + m));
+  let idx: RagIndex | null = null;
+  try {
+    idx = await loadOrBuildIndex(cfg, repoRoot, (m) => console.log('  ' + m));
+  } catch (e) {
+    console.log(`  RAG unavailable (${e instanceof Error ? e.message : String(e)}) — continuing without it.`);
+  }
+  const rag = async (q: string, k: number): Promise<string> =>
+    idx ? formatContext(await retrieve(idx, cfg, q, k).catch(() => [])) : '';
   const ragQuery = `${spec.description} ${spec.securityRequirements.join(' ')} WordPress plugin security escaping sanitizing nonce capability`;
-  const ragCtx = formatContext(await retrieve(idx, cfg, ragQuery, 5));
+  const ragCtx = await rag(ragQuery, 5);
 
   // Seed the corpus from examples on first run so exemplar retrieval has templates.
   if ((await readManifest(repoRoot)).entries.length === 0) {
@@ -181,10 +193,10 @@ export async function runBuildLocal(args: string[], env: BuildEnv): Promise<numb
 PHP. Follow these hard rules exactly:\n\n${rules}\n\n${PROTOCOL}`;
 
   // 4. Initial implementation.
-  console.log('\n▶ coder (local model): implementing…');
+  console.log('\n▶ coder (file protocol): implementing…');
   const scaffold = await snapshotFiles(pluginDir);
   const firstOut = await chat(
-    cfg,
+    llm,
     [
       { role: 'system', content: systemPrompt },
       {
@@ -221,7 +233,7 @@ PHP. Follow these hard rules exactly:\n\n${rules}\n\n${PROTOCOL}`;
     const allErrors = failing.flatMap((r) => [...r.errors, ...r.notes]);
     const canonicalFixes = formatFixes(allErrors);
     const fixQuery = 'fix ' + failing.map((r) => r.label).join(' ') + ' ' + failing.flatMap((r) => r.errors.slice(0, 3)).join(' ');
-    const fixCtx = (canonicalFixes ? canonicalFixes + '\n\n' : '') + formatContext(await retrieve(idx, cfg, fixQuery, 4));
+    const fixCtx = (canonicalFixes ? canonicalFixes + '\n\n' : '') + (await rag(fixQuery, 4));
     console.log(`\n  Harness failed (${failing.map((r) => r.gate).join(', ')}) — fix iteration ${iterations}/${MAX_FIX_ITERATIONS}.`);
     const snap = await snapshotFiles(pluginDir);
     const example = '===FILE: ' + spec.slug + '.php===\n<?php\n// full corrected file here\n===ENDFILE===';
@@ -235,11 +247,11 @@ PHP. Follow these hard rules exactly:\n\n${rules}\n\n${PROTOCOL}`;
           `ERRORS:\n${digest}\n\nRELEVANT RULES:\n${fixCtx}\n\nCURRENT FILES:\n${snap}`,
       },
     ];
-    let out = await chat(cfg, fixMsg(''), usage);
+    let out = await chat(llm, fixMsg(''), usage);
     parsed = parseFiles(out);
     if (parsed.length === 0) {
       // Local models sometimes forget the protocol on a fix turn — remind once.
-      out = await chat(cfg, fixMsg(' You MUST wrap every file in the ===FILE:path=== ... ===ENDFILE=== markers.'), usage);
+      out = await chat(llm, fixMsg(' You MUST wrap every file in the ===FILE:path=== ... ===ENDFILE=== markers.'), usage);
       parsed = parseFiles(out);
     }
     if (parsed.length === 0) {
@@ -271,10 +283,10 @@ PHP. Follow these hard rules exactly:\n\n${rules}\n\n${PROTOCOL}`;
   const reportLines = [
     `# Local build report: ${spec.pluginName}`,
     '',
-    `- **Engine:** Ollama \`${cfg.model}\` @ ${cfg.host}  ·  **RAG:** \`${cfg.embedModel}\``,
+    `- **Engine:** \`${engineLabel}\`  ·  **RAG:** ${idx ? `\`${cfg.embedModel}\`` : 'unavailable'}`,
     `- **Slug:** \`${spec.slug}\`  ·  **Version:** ${spec.version}`,
     `- **Outcome:** ${pipe.passed && zipPath ? '✅ passed all gates — .zip produced' : '❌ did not pass all gates'}`,
-    `- **Iterations:** ${iterations}  ·  **Duration:** ${durMin} min  ·  **Local cost:** $0 (${usage.calls} calls, ${usage.promptTokens}+${usage.completionTokens} tokens)`,
+    `- **Iterations:** ${iterations}  ·  **Duration:** ${durMin} min  ·  **Calls:** ${usage.calls} (${usage.promptTokens}+${usage.completionTokens} tokens)`,
     '',
     renderMarkdown(pipe),
   ];
@@ -283,8 +295,8 @@ PHP. Follow these hard rules exactly:\n\n${rules}\n\n${PROTOCOL}`;
   await emitResult({ ok: pipe.passed, engine: 'local', slug: spec.slug, pluginName: spec.pluginName, version: spec.version, zip: zipPath, report: join(repoRoot, 'dist', `${spec.slug}-local-report.md`), iterations, provides: summarizeProvides(spec), error: pipe.passed ? undefined : 'did not pass all gates' });
 
   console.log('\n' + '='.repeat(64));
-  console.log(`${pipe.passed ? '✔' : '✖'} LOCAL BUILD: ${spec.pluginName} (${cfg.model})`);
-  console.log(`   gates: ${pipe.results.filter((r) => r.passed).length}/${pipe.results.length} pass · iterations: ${iterations} · ${durMin} min · $0`);
+  console.log(`${pipe.passed ? '✔' : '✖'} BUILD: ${spec.pluginName} (${engineLabel})`);
+  console.log(`   gates: ${pipe.results.filter((r) => r.passed).length}/${pipe.results.length} pass · iterations: ${iterations} · ${durMin} min`);
   if (zipPath) console.log(`   .zip:   ${zipPath}`);
   console.log(`   report: dist/${spec.slug}-local-report.md`);
   console.log('='.repeat(64));

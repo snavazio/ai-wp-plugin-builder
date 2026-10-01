@@ -50,7 +50,7 @@ class Aiwpb_Admin {
 	 * @return void
 	 */
 	public function enqueue( $hook ) {
-		if ( false === strpos( (string) $hook, self::PAGE ) ) {
+		if ( 'toplevel_page_' . self::PAGE !== $hook ) {
 			return;
 		}
 		wp_enqueue_style( 'aiwpb-admin', AIWPB_URL . 'assets/admin.css', array(), AIWPB_VERSION );
@@ -62,8 +62,7 @@ class Aiwpb_Admin {
 				'root'          => esc_url_raw( rest_url( 'aiwpb/v1' ) ),
 				'nonce'         => wp_create_nonce( 'wp_rest' ),
 				'configured'    => ( new Aiwpb_Client() )->is_configured(),
-				'defaultEngine' => (string) get_option( 'aiwpb_default_engine', 'claude' ),
-				'localModel'    => (string) get_option( 'aiwpb_local_model', 'qwen3:30b' ),
+				'hasPlatforms'  => ! empty( Aiwpb_Platforms::all() ),
 				'settingsUrl'   => esc_url_raw( admin_url( 'admin.php?page=ai-plugin-builder-settings' ) ),
 				'adminPost'     => esc_url_raw( admin_url( 'admin-post.php' ) ),
 				'downloadNonce' => wp_create_nonce( 'aiwpb_download' ),
@@ -110,11 +109,17 @@ class Aiwpb_Admin {
 						<span id="aiwpb-chat-spinner" class="spinner"></span>
 					</div>
 					<div class="aiwpb-controls">
-						<label for="aiwpb-engine"><?php echo esc_html__( 'Build engine:', 'ai-plugin-builder' ); ?></label>
+						<label for="aiwpb-engine"><?php echo esc_html__( 'AI:', 'ai-plugin-builder' ); ?></label>
 						<select id="aiwpb-engine">
-							<option value="claude"><?php echo esc_html__( 'Claude (Agent SDK)', 'ai-plugin-builder' ); ?></option>
-							<option value="local"><?php echo esc_html__( 'Local (Ollama, $0)', 'ai-plugin-builder' ); ?></option>
+							<?php
+							$aiwpb_default = Aiwpb_Platforms::default_id();
+							foreach ( Aiwpb_Platforms::all() as $aiwpb_id => $aiwpb_p ) :
+								$aiwpb_label = '' !== $aiwpb_p['model'] ? $aiwpb_p['name'] . ' — ' . $aiwpb_p['model'] : $aiwpb_p['name'];
+								?>
+								<option value="<?php echo esc_attr( $aiwpb_id ); ?>" <?php selected( $aiwpb_default, $aiwpb_id ); ?>><?php echo esc_html( $aiwpb_label ); ?></option>
+							<?php endforeach; ?>
 						</select>
+						<a href="<?php echo esc_url( admin_url( 'admin.php?page=ai-plugin-builder-settings#aiwpb-platforms' ) ); ?>"><?php echo esc_html__( 'Manage AIs', 'ai-plugin-builder' ); ?></a>
 						<button id="aiwpb-build" class="button button-primary" disabled><?php echo esc_html__( 'Build plugin', 'ai-plugin-builder' ); ?></button>
 						<button id="aiwpb-reset" class="button-link"><?php echo esc_html__( 'Start over', 'ai-plugin-builder' ); ?></button>
 						<span id="aiwpb-spinner" class="spinner"></span>

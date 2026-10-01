@@ -2,7 +2,8 @@
  * Ingest an existing plugin (from a .zip) and update it to a change request, then re-verify against all
  * 8 gates and re-package at a bumped version. Works with either engine:
  *   - claude: the Agent SDK coder edits the files in place (best for editing existing code).
- *   - local:  a local Ollama model returns modified files via the ===FILE=== protocol.
+ *   - local:  any chat platform (engines/llm.ts; default local Ollama) returns modified files via the
+ *             ===FILE=== protocol.
  *
  * CLI:  tsx src/run.ts ingest <plugin.zip> <changeRequestFile> [--engine claude|local] [--model X]
  */
@@ -17,7 +18,8 @@ import { renderTerminal, renderMarkdown } from './report.js';
 import { WpEnv, dockerAvailable } from './wpEnv.js';
 import { exec, findPhpFiles } from './util/exec.js';
 import { emitResult } from './resultFile.js';
-import { ollamaConfig, ollamaHealth, ollamaChat, type OllamaConfig, type ChatMessage } from './engines/ollama.js';
+import { ollamaConfig, type OllamaConfig } from './engines/ollama.js';
+import { llmChat, platformFromEnv, testPlatform, type ChatMessage } from './engines/llm.js';
 import { loadOrBuildIndex, retrieve, formatContext } from './rag.js';
 import { parseFiles, writeGeneratedFiles } from './fileProtocol.js';
 import { formatFixes } from './fixKb.js';
@@ -161,15 +163,21 @@ export async function runIngest(args: string[], env: BuildEnv): Promise<number> 
   const startTs = Date.now();
   let totalCost = 0;
 
-  const cfg: OllamaConfig = { ...ollamaConfig(), ...(model ? { model } : {}) };
+  const cfg: OllamaConfig = ollamaConfig(); // embeddings for RAG
+  const llm = platformFromEnv();
+  if (model) llm.model = model;
   if (engine === 'local') {
-    const h = await ollamaHealth(cfg);
+    const h = await testPlatform(llm);
+    console.log(`  Engine: ${llm.protocol} (${llm.model}) @ ${llm.baseUrl}`);
     if (!h.ok) {
       console.error('✖ ' + h.message);
       return 2;
     }
   }
-  const idx = engine === 'local' ? await loadOrBuildIndex(cfg, repoRoot) : null;
+  // RAG is optional: without an Ollama for embeddings, edit with the full rules only.
+  const idx = engine === 'local' ? await loadOrBuildIndex(cfg, repoRoot).catch(() => null) : null;
+  const rag = async (q: string, k: number): Promise<string> =>
+    idx ? formatContext(await retrieve(idx, cfg, q, k).catch(() => [])) : '';
 
   const verify = async (): Promise<PipelineResult> =>
     runPipeline(pluginDir, {
@@ -185,90 +193,117 @@ export async function runIngest(args: string[], env: BuildEnv): Promise<number> 
       const r = await runAgent({ repoRoot, role: coder, rulesAppend: rules, prompt: instruction, hooks: coderHooks, maxTurns: 120, maxBudgetUsd: 5 });
       totalCost += r.costUsd;
       console.log(`  coder done (${r.turns} turns, $${r.costUsd.toFixed(4)}).`);
+      if (r.isError) console.log(`  coder ended early: ${r.errorInfo}`);
       return;
     }
     // local engine — file protocol
     const failing = pipe ? pipe.results.filter((x) => !x.passed && !x.skipped) : [];
     const fixCtx = failing.length
-      ? (formatFixes(failing.flatMap((x) => [...x.errors, ...x.notes])) + '\n\n' + formatContext(await retrieve(idx!, cfg, 'fix ' + failing.map((x) => x.label).join(' '), 4)))
-      : formatContext(await retrieve(idx!, cfg, changeRequest + ' WordPress plugin security', 5));
+      ? formatFixes(failing.flatMap((x) => [...x.errors, ...x.notes])) + '\n\n' + (await rag('fix ' + failing.map((x) => x.label).join(' '), 4))
+      : await rag(changeRequest + ' WordPress plugin security', 5);
     const snap = await snapshotFiles(pluginDir);
     const sys = `You are an expert WordPress developer editing an EXISTING plugin. Keep existing behavior unless asked to change it. Follow these hard rules:\n\n${rules}\n\nOUTPUT PROTOCOL: for every file you create or modify, output the ENTIRE file between markers:\n===FILE: relative/path.php===\n<content>\n===ENDFILE===\nNo prose, no markdown fences.`;
     const msgs: ChatMessage[] = [
       { role: 'system', content: sys },
       { role: 'user', content: `${instruction}\n\nRELEVANT RULES / FIXES:\n${fixCtx}\n\nCURRENT FILES:\n${snap}` },
     ];
-    const out = await ollamaChat(cfg, msgs, { temperature: 0.1, numCtx: 32768, timeoutMs: 15 * 60_000 });
+    const out = await llmChat(llm, msgs, { temperature: 0.1, numCtx: 32768, timeoutMs: 15 * 60_000 });
     const wr = await writeGeneratedFiles(parseFiles(out.content), pluginDir);
     console.log(`  wrote ${wr.written.length} file(s).`);
     await exec(join(harnessDir, 'vendor', 'bin', 'phpcbf'), ['-q', `--standard=${join(harnessDir, 'phpcs.xml.dist')}`, pluginDir], { timeoutMs: 120_000 });
   };
 
-  // 4. apply the change
-  console.log(`\n▶ Updating with ${engine === 'claude' ? 'Claude' : 'the local model'}…`);
-  await applyChange(
-    `You are updating the EXISTING WordPress plugin in build/${slug}/. Apply this change request, preserving all ` +
-      `existing functionality unless the request says otherwise:\n\n"${changeRequest}"\n\nAlso make the plugin fully ` +
-      `comply with the hard rules and pass all 8 gates (add ABSPATH guards, escape output, sanitize input, pair every ` +
-      `state change with a nonce AND current_user_can(), use $wpdb->prepare(), etc. wherever missing). Bump the version ` +
-      `to ${newVersion} in the plugin header, the readme.txt "Stable tag" (if present), and any *_VERSION constant, and ` +
-      `add a "= ${newVersion} =" changelog entry to readme.txt if it has a changelog. When done, stop.`,
-    null,
-  );
-
-  // 5. verify → fix loop
-  console.log('\n▶ Verifying…');
-  let pipe = await verify();
+  // The update/verify/package body runs inside a try so that ANY unexpected throw (engine transport
+  // crash, docker/wp-env hiccup, packaging error) still produces a report and a result.json. Without
+  // this, a mid-run throw exits the process with no result and the service reports the opaque
+  // "produced no result", discarding the whole run.
+  let pipe: PipelineResult | null = null;
   let iterations = 0;
-  while (!pipe.passed && iterations < MAX_FIX_ITERATIONS) {
-    iterations++;
-    console.log(`\n  Failed — fix iteration ${iterations}/${MAX_FIX_ITERATIONS}.`);
-    await applyChange(`The verification harness FAILED. Fix ONLY these issues in build/${slug}/, then stop.\n\n${digestFailures(pipe)}`, pipe);
-    console.log('\n▶ Re-verifying…');
-    pipe = await verify();
-  }
-
-  const durMin = ((Date.now() - startTs) / 60000).toFixed(1);
   let zipPath2: string | null = null;
-  if (pipe.passed) {
-    await mkdir(join(repoRoot, 'dist'), { recursive: true });
-    zipPath2 = join(repoRoot, 'dist', `${slug}.${newVersion}.zip`);
-    const pkg = await exec('php', [join(harnessDir, 'bin', 'package.php'), pluginDir, slug, zipPath2], { timeoutMs: 60_000 });
-    if (pkg.code === 0) console.log('\n▶ Packaged: ' + pkg.stdout.trim());
-    else zipPath2 = null;
-  } else {
-    console.log('\n' + renderTerminal(pipe));
+  let crashError: string | null = null;
+
+  try {
+    // 4. apply the change
+    console.log(`\n▶ Updating with ${engine === 'claude' ? 'Claude' : 'the local model'}…`);
+    await applyChange(
+      `You are updating the EXISTING WordPress plugin in build/${slug}/. Apply this change request, preserving all ` +
+        `existing functionality unless the request says otherwise:\n\n"${changeRequest}"\n\nAlso make the plugin fully ` +
+        `comply with the hard rules and pass all 8 gates (add ABSPATH guards, escape output, sanitize input, pair every ` +
+        `state change with a nonce AND current_user_can(), use $wpdb->prepare(), etc. wherever missing). Bump the version ` +
+        `to ${newVersion} in the plugin header, the readme.txt "Stable tag" (if present), and any *_VERSION constant, and ` +
+        `add a "= ${newVersion} =" changelog entry to readme.txt if it has a changelog. When done, stop.`,
+      null,
+    );
+
+    // 5. verify → fix loop
+    console.log('\n▶ Verifying…');
+    pipe = await verify();
+    while (!pipe.passed && iterations < MAX_FIX_ITERATIONS) {
+      iterations++;
+      console.log(`\n  Failed — fix iteration ${iterations}/${MAX_FIX_ITERATIONS}.`);
+      await applyChange(`The verification harness FAILED. Fix ONLY these issues in build/${slug}/, then stop.\n\n${digestFailures(pipe)}`, pipe);
+      console.log('\n▶ Re-verifying…');
+      pipe = await verify();
+    }
+
+    // 6. package if green
+    if (pipe.passed) {
+      await mkdir(join(repoRoot, 'dist'), { recursive: true });
+      zipPath2 = join(repoRoot, 'dist', `${slug}.${newVersion}.zip`);
+      const pkg = await exec('php', [join(harnessDir, 'bin', 'package.php'), pluginDir, slug, zipPath2], { timeoutMs: 60_000 });
+      if (pkg.code === 0) console.log('\n▶ Packaged: ' + pkg.stdout.trim());
+      else zipPath2 = null;
+    } else {
+      console.log('\n' + renderTerminal(pipe));
+    }
+  } catch (e) {
+    crashError = e instanceof Error ? e.message : String(e);
+    console.error(`\n✖ Update run crashed: ${crashError}`);
   }
 
-  const report = [
-    `# Update report: ${root.name}`,
-    '',
-    `- **Slug:** \`${slug}\`  ·  **Version:** ${root.version} → ${newVersion}  ·  **Engine:** ${engine}`,
-    `- **Change:** ${changeRequest}`,
-    `- **Outcome:** ${pipe.passed && zipPath2 ? '✅ updated & verified' : '❌ did not pass all gates'}  ·  ${iterations} fix iteration(s)  ·  ${durMin} min`,
-    '',
-    renderMarkdown(pipe),
-  ].join('\n');
-  await mkdir(join(repoRoot, 'dist'), { recursive: true });
-  await writeFile(join(repoRoot, 'dist', `${slug}-update-report.md`), report + '\n', 'utf8');
+  const passed = !!pipe?.passed && !!zipPath2 && !crashError;
+  const durMin = ((Date.now() - startTs) / 60000).toFixed(1);
+  const outcome = passed
+    ? '✅ updated & verified'
+    : crashError
+      ? `❌ crashed: ${crashError}`
+      : '❌ did not pass all gates';
+  const reportPath = join(repoRoot, 'dist', `${slug}-update-report.md`);
+
+  // Report + result are best-effort but MUST NOT prevent emitResult from running.
+  try {
+    const report = [
+      `# Update report: ${root.name}`,
+      '',
+      `- **Slug:** \`${slug}\`  ·  **Version:** ${root.version} → ${newVersion}  ·  **Engine:** ${engine}`,
+      `- **Change:** ${changeRequest}`,
+      `- **Outcome:** ${outcome}  ·  ${iterations} fix iteration(s)  ·  ${durMin} min`,
+      '',
+      pipe ? renderMarkdown(pipe) : '_No verification results — the run crashed before/while verifying._',
+    ].join('\n');
+    await mkdir(join(repoRoot, 'dist'), { recursive: true });
+    await writeFile(reportPath, report + '\n', 'utf8');
+  } catch (e) {
+    console.error('Could not write update report:', e instanceof Error ? e.message : String(e));
+  }
 
   await emitResult({
-    ok: pipe.passed,
+    ok: passed,
     engine: engine === 'claude' ? 'claude' : 'local',
     slug,
     pluginName: root.name,
     version: newVersion,
     zip: zipPath2,
-    report: join(repoRoot, 'dist', `${slug}-update-report.md`),
+    report: reportPath,
     iterations,
     costUsd: totalCost,
-    provides: await scanProvides(pluginDir),
-    error: pipe.passed ? undefined : 'did not pass all gates',
+    provides: await scanProvides(pluginDir).catch(() => ''),
+    error: passed ? undefined : crashError ? `run crashed: ${crashError}` : 'did not pass all gates',
   });
 
   console.log('\n' + '='.repeat(64));
-  console.log(`${pipe.passed ? '✔' : '✖'} UPDATE: ${root.name} ${root.version} → ${newVersion}`);
+  console.log(`${passed ? '✔' : '✖'} UPDATE: ${root.name} ${root.version} → ${newVersion}`);
   if (zipPath2) console.log(`   .zip: ${zipPath2}`);
   console.log('='.repeat(64));
-  return pipe.passed ? 0 : 1;
+  return passed ? 0 : 1;
 }

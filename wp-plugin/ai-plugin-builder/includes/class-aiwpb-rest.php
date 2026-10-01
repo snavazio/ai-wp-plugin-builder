@@ -50,11 +50,11 @@ class Aiwpb_Rest {
 				'permission_callback' => array( $this, 'can_manage' ),
 				'callback'            => array( $this, 'build' ),
 				'args'                => array(
-					'spec'   => array(
+					'spec'     => array(
 						'required' => true,
 						'type'     => 'string',
 					),
-					'engine' => array(
+					'platform' => array(
 						'required' => false,
 						'type'     => 'string',
 					),
@@ -74,6 +74,10 @@ class Aiwpb_Rest {
 						'type'     => 'array',
 					),
 					'mode'     => array(
+						'required' => false,
+						'type'     => 'string',
+					),
+					'platform' => array(
 						'required' => false,
 						'type'     => 'string',
 					),
@@ -106,19 +110,23 @@ class Aiwpb_Rest {
 				'permission_callback' => array( $this, 'can_manage' ),
 				'callback'            => array( $this, 'ingest' ),
 				'args'                => array(
-					'spec'   => array(
+					'spec'     => array(
 						'required' => true,
 						'type'     => 'string',
 					),
-					'source' => array(
+					'platform' => array(
 						'required' => false,
 						'type'     => 'string',
 					),
-					'slug'   => array(
+					'source'   => array(
 						'required' => false,
 						'type'     => 'string',
 					),
-					'zipB64' => array(
+					'slug'     => array(
+						'required' => false,
+						'type'     => 'string',
+					),
+					'zipB64'   => array(
 						'required' => false,
 						'type'     => 'string',
 					),
@@ -157,6 +165,15 @@ class Aiwpb_Rest {
 		);
 		register_rest_route(
 			self::NS,
+			'/platforms/(?P<id>[a-z0-9]+)/test',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'permission_callback' => array( $this, 'can_manage' ),
+				'callback'            => array( $this, 'test_platform' ),
+			)
+		);
+		register_rest_route(
+			self::NS,
 			'/install',
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -179,13 +196,15 @@ class Aiwpb_Rest {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function build( WP_REST_Request $request ) {
-		$spec   = sanitize_textarea_field( (string) $request->get_param( 'spec' ) );
-		$engine = ( 'local' === $request->get_param( 'engine' ) ) ? 'local' : 'claude';
+		$spec = sanitize_textarea_field( (string) $request->get_param( 'spec' ) );
 		if ( '' === trim( $spec ) ) {
 			return new WP_Error( 'aiwpb_empty', __( 'Please enter a spec.', 'ai-plugin-builder' ), array( 'status' => 400 ) );
 		}
-		$model  = ( 'local' === $engine ) ? (string) get_option( 'aiwpb_local_model', 'qwen3:30b' ) : '';
-		$result = ( new Aiwpb_Client() )->build( $spec, $engine, $model );
+		$platform = $this->platform_from( $request );
+		if ( is_wp_error( $platform ) ) {
+			return $platform;
+		}
+		$result = ( new Aiwpb_Client() )->build( $spec, $platform );
 		if ( is_wp_error( $result ) ) {
 			return new WP_Error( 'aiwpb_build', $result->get_error_message(), array( 'status' => 502 ) );
 		}
@@ -215,11 +234,70 @@ class Aiwpb_Rest {
 		if ( empty( $messages ) ) {
 			return new WP_Error( 'aiwpb_chat', __( 'No messages to send.', 'ai-plugin-builder' ), array( 'status' => 400 ) );
 		}
-		$result = ( new Aiwpb_Client() )->chat( $messages, $mode );
+		$platform = $this->platform_from( $request );
+		if ( is_wp_error( $platform ) ) {
+			return $platform;
+		}
+		$result = ( new Aiwpb_Client() )->chat( $messages, $platform, $mode );
 		if ( is_wp_error( $result ) ) {
 			return new WP_Error( 'aiwpb_chat', $result->get_error_message(), array( 'status' => 502 ) );
 		}
 		return rest_ensure_response( $result );
+	}
+
+	/**
+	 * The service payload for the platform a request asks for (its `platform` id, or the default).
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return array|WP_Error
+	 */
+	private function platform_from( WP_REST_Request $request ) {
+		$p = Aiwpb_Platforms::resolve( sanitize_key( (string) $request->get_param( 'platform' ) ) );
+		if ( ! $p ) {
+			return new WP_Error( 'aiwpb_platform', __( 'No AI platform is set up. Add one under AI Plugin Builder → Settings.', 'ai-plugin-builder' ), array( 'status' => 400 ) );
+		}
+		return Aiwpb_Platforms::to_service( $p );
+	}
+
+	/**
+	 * POST /platforms/:id/test — ask the builder service to test one saved platform, and record the result.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function test_platform( WP_REST_Request $request ) {
+		$id = sanitize_key( (string) $request->get_param( 'id' ) );
+		$p  = Aiwpb_Platforms::get( $id );
+		if ( ! $p ) {
+			return new WP_Error( 'aiwpb_platform', __( 'That AI platform no longer exists.', 'ai-plugin-builder' ), array( 'status' => 404 ) );
+		}
+		$client = new Aiwpb_Client();
+		if ( ! $client->is_configured() ) {
+			$result = array(
+				'ok'      => false,
+				'message' => __( 'Set the builder service URL and API key above first — tests run on the service.', 'ai-plugin-builder' ),
+				'ms'      => 0,
+			);
+		} else {
+			$result = $client->test_platform( Aiwpb_Platforms::to_service( $p ) );
+			if ( is_wp_error( $result ) ) {
+				$result = array(
+					'ok'      => false,
+					/* translators: %s: error from the builder service connection */
+					'message' => sprintf( __( 'Could not reach the builder service: %s', 'ai-plugin-builder' ), $result->get_error_message() ),
+					'ms'      => 0,
+				);
+			}
+		}
+		Aiwpb_Platforms::record_test( $id, $result );
+		return rest_ensure_response(
+			array(
+				'ok'      => ! empty( $result['ok'] ),
+				'message' => isset( $result['message'] ) ? (string) $result['message'] : '',
+				'ms'      => isset( $result['ms'] ) ? (int) $result['ms'] : 0,
+				'models'  => isset( $result['models'] ) ? array_slice( array_map( 'strval', (array) $result['models'] ), 0, 50 ) : array(),
+			)
+		);
 	}
 
 	/**
@@ -259,10 +337,12 @@ class Aiwpb_Rest {
 	public function ingest( WP_REST_Request $request ) {
 		$spec   = sanitize_textarea_field( (string) $request->get_param( 'spec' ) );
 		$source = ( 'upload' === $request->get_param( 'source' ) ) ? 'upload' : 'installed';
-		$engine = ( 'local' === $request->get_param( 'engine' ) ) ? 'local' : 'claude';
-		$model  = ( 'local' === $engine ) ? (string) get_option( 'aiwpb_local_model', 'qwen3:30b' ) : '';
 		if ( '' === trim( $spec ) ) {
 			return new WP_Error( 'aiwpb_ingest', __( 'Describe the change first.', 'ai-plugin-builder' ), array( 'status' => 400 ) );
+		}
+		$platform = $this->platform_from( $request );
+		if ( is_wp_error( $platform ) ) {
+			return $platform;
 		}
 
 		if ( 'installed' === $source ) {
@@ -276,7 +356,7 @@ class Aiwpb_Rest {
 			return new WP_Error( 'aiwpb_ingest', $zip_b64->get_error_message(), array( 'status' => 400 ) );
 		}
 
-		$result = ( new Aiwpb_Client() )->ingest( $zip_b64, $spec, $engine, $model );
+		$result = ( new Aiwpb_Client() )->ingest( $zip_b64, $spec, $platform );
 		if ( is_wp_error( $result ) ) {
 			return new WP_Error( 'aiwpb_ingest', $result->get_error_message(), array( 'status' => 502 ) );
 		}

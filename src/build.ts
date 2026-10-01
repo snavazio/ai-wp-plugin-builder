@@ -54,6 +54,8 @@ export async function runAgent(params: {
   const { role } = params;
   const options: Options = {
     cwd: params.repoRoot,
+    // Set by the builder service from the chosen AI platform; unset = the SDK's default model.
+    model: process.env.AIWPB_CLAUDE_MODEL || undefined,
     settingSources: ['project'],
     systemPrompt: {
       type: 'preset',
@@ -70,17 +72,26 @@ export async function runAgent(params: {
   };
 
   const run: AgentRun = { text: '', costUsd: 0, turns: 0, isError: false, errorInfo: '' };
-  for await (const msg of query({ prompt: params.prompt, options })) {
-    if (msg.type === 'result') {
-      run.costUsd = msg.total_cost_usd;
-      run.turns = msg.num_turns;
-      if (msg.subtype === 'success') {
-        run.text = msg.result;
-      } else {
-        run.isError = true;
-        run.errorInfo = (msg as unknown as { errors?: string[] }).errors?.join('; ') ?? msg.subtype;
+  try {
+    for await (const msg of query({ prompt: params.prompt, options })) {
+      if (msg.type === 'result') {
+        run.costUsd = msg.total_cost_usd;
+        run.turns = msg.num_turns;
+        if (msg.subtype === 'success') {
+          run.text = msg.result;
+        } else {
+          run.isError = true;
+          run.errorInfo = (msg as unknown as { errors?: string[] }).errors?.join('; ') ?? msg.subtype;
+        }
       }
     }
+  } catch (e) {
+    // A transport/subprocess-level failure (e.g. "Claude Code process exited with code 1") is thrown
+    // from the async generator rather than delivered as a result message. It is frequently transient.
+    // Convert it into a soft failure so the caller's fix loop can retry or emit a proper result,
+    // instead of the whole job crashing before it can write result.json.
+    run.isError = true;
+    run.errorInfo = e instanceof Error ? e.message : String(e);
   }
   return run;
 }
@@ -180,144 +191,174 @@ export async function runBuild(args: string[], env: BuildEnv): Promise<number> {
   );
   runLog.push(`Spec: ${spec.pluginName} (slug ${spec.slug}). ${spec.description}`);
 
-  // ---------- 2. scaffold from templates ----------
-  const pluginDir = await scaffoldPlugin(spec, repoRoot);
-  console.log(`\n▶ Scaffolded skeleton at build/${spec.slug}/`);
-
-  // Shared wp-env instance reused across every verify iteration.
-  const wpEnv = new WpEnv(repoRoot, pluginDir, spec.slug, harnessDir);
-  const hookStats: HookStats = newHookStats();
-  const coderHooks = makeCoderHooks(pluginDir, join(repoRoot, 'dist'), hookStats);
-
-  const verify = async (): Promise<PipelineResult> =>
-    runPipeline(pluginDir, {
-      repoRoot,
-      harnessDir,
-      wpEnv,
-      onGate: (r) => {
-        const s = r.skipped ? 'SKIP' : r.passed ? 'PASS' : 'FAIL';
-        process.stdout.write(`    [${s}] ${r.label}\n`);
-      },
+  // A failed build MUST still write result.json, or the service reports the opaque "produced no
+  // result" and discards the whole run. emitFail centralizes that for every non-success exit.
+  let iterations = 0;
+  const specOk = spec;
+  const emitFail = (error: string): Promise<void> =>
+    emitResult({
+      ok: false,
+      engine: 'claude',
+      slug: specOk.slug,
+      pluginName: specOk.pluginName,
+      version: specOk.version,
+      zip: null,
+      report: join(repoRoot, 'dist', `${specOk.slug}-report.md`),
+      iterations,
+      costUsd: totalCost,
+      provides: summarizeProvides(specOk),
+      error,
     });
 
-  const runCoder = async (prompt: string, label: string): Promise<void> => {
-    console.log(`\n▶ coder: ${label}…`);
-    const r = await runAgent({ repoRoot, role: coder, rulesAppend: rules, prompt, hooks: coderHooks, maxTurns: 120, maxBudgetUsd: 5 });
-    totalCost += r.costUsd;
-    console.log(`  coder done (${r.turns} turns, $${r.costUsd.toFixed(4)}).`);
-    if (r.isError) console.log(`  coder ended early: ${r.errorInfo}`);
-  };
+  // Everything from scaffolding onward runs inside a try so any unexpected throw still emits a result.
+  try {
+    // ---------- 2. scaffold from templates ----------
+    const pluginDir = await scaffoldPlugin(spec, repoRoot);
+    console.log(`\n▶ Scaffolded skeleton at build/${spec.slug}/`);
 
-  // ---------- 3. coder implements ----------
-  await runCoder(
-    `Implement the plugin fully from build/${spec.slug}/SPEC.json into build/${spec.slug}/. The compliant ` +
-      `skeleton is already scaffolded there — build on it. Implement every CPT/field, admin page, shortcode/block, ` +
-      `and REST endpoint in the spec. Update tests/test-smoke.php with the spec's smokeAssertions and uninstall.php ` +
-      `with data cleanup. Keep everything PHP_CodeSniffer-clean. When the whole spec is implemented, stop.`,
-    'initial implementation',
-  );
+    // Shared wp-env instance reused across every verify iteration.
+    const wpEnv = new WpEnv(repoRoot, pluginDir, spec.slug, harnessDir);
+    const hookStats: HookStats = newHookStats();
+    const coderHooks = makeCoderHooks(pluginDir, join(repoRoot, 'dist'), hookStats);
 
-  // ---------- 4–6. verify → fix loop (capped) ----------
-  console.log('\n▶ Verifying…');
-  let pipe = await verify();
-  let iterations = 0;
-  while (!pipe.passed && iterations < MAX_FIX_ITERATIONS) {
-    iterations++;
-    console.log(`\n  Harness failed — fix iteration ${iterations}/${MAX_FIX_ITERATIONS}.`);
+    const verify = async (): Promise<PipelineResult> =>
+      runPipeline(pluginDir, {
+        repoRoot,
+        harnessDir,
+        wpEnv,
+        onGate: (r) => {
+          const s = r.skipped ? 'SKIP' : r.passed ? 'PASS' : 'FAIL';
+          process.stdout.write(`    [${s}] ${r.label}\n`);
+        },
+      });
+
+    const runCoder = async (prompt: string, label: string): Promise<void> => {
+      console.log(`\n▶ coder: ${label}…`);
+      const r = await runAgent({ repoRoot, role: coder, rulesAppend: rules, prompt, hooks: coderHooks, maxTurns: 120, maxBudgetUsd: 5 });
+      totalCost += r.costUsd;
+      console.log(`  coder done (${r.turns} turns, $${r.costUsd.toFixed(4)}).`);
+      if (r.isError) console.log(`  coder ended early: ${r.errorInfo}`);
+    };
+
+    // ---------- 3. coder implements ----------
     await runCoder(
-      `The verification harness FAILED. Fix ONLY these issues in build/${spec.slug}/, then stop. Do not add ` +
-        `unrelated changes.\n\n${digestFailures(pipe)}`,
-      `fix iteration ${iterations}`,
+      `Implement the plugin fully from build/${spec.slug}/SPEC.json into build/${spec.slug}/. The compliant ` +
+        `skeleton is already scaffolded there — build on it. Implement every CPT/field, admin page, shortcode/block, ` +
+        `and REST endpoint in the spec. Update tests/test-smoke.php with the spec's smokeAssertions and uninstall.php ` +
+        `with data cleanup. Keep everything PHP_CodeSniffer-clean. When the whole spec is implemented, stop.`,
+      'initial implementation',
     );
-    console.log('\n▶ Re-verifying…');
-    pipe = await verify();
-  }
 
-  if (!pipe.passed) {
-    console.log('\n' + renderTerminal(pipe));
-    console.error(`\n✖ Still failing after ${iterations} iterations — surfacing the blocker. No .zip produced.`);
-    await writeReport({ repoRoot, spec, pipe, findings: [], auditNote: 'Not reached — harness never passed.', hookStats, iterations, totalCost, startTs, zipPath: null, runLog });
-    return 1;
-  }
-  console.log(`\n✔ Harness green after ${iterations} fix iteration(s).`);
+    // ---------- 4–6. verify → fix loop (capped) ----------
+    console.log('\n▶ Verifying…');
+    let pipe = await verify();
+    while (!pipe.passed && iterations < MAX_FIX_ITERATIONS) {
+      iterations++;
+      console.log(`\n  Harness failed — fix iteration ${iterations}/${MAX_FIX_ITERATIONS}.`);
+      await runCoder(
+        `The verification harness FAILED. Fix ONLY these issues in build/${spec.slug}/, then stop. Do not add ` +
+          `unrelated changes.\n\n${digestFailures(pipe)}`,
+        `fix iteration ${iterations}`,
+      );
+      console.log('\n▶ Re-verifying…');
+      pipe = await verify();
+    }
 
-  // ---------- 7. independent security auditor ----------
-  console.log('\n▶ security-auditor (independent, read-only)…');
-  let auditRun = await runAgent({
-    repoRoot,
-    role: securityAuditor,
-    rulesAppend: rules,
-    prompt: `Audit the plugin in build/${spec.slug}/ against the hard security rules. Output ONLY the findings JSON block.`,
-    maxTurns: 40,
-    maxBudgetUsd: 3,
-  });
-  totalCost += auditRun.costUsd;
-  let { findings, parseNote } = parseFindings(auditRun.text);
-  console.log(`  auditor: ${findings.length} finding(s)${parseNote ? ' — ' + parseNote : ''} ($${auditRun.costUsd.toFixed(4)}).`);
-
-  let auditRounds = 0;
-  while (blockingFindings(findings).length > 0 && auditRounds < MAX_AUDIT_ROUNDS) {
-    auditRounds++;
-    const blk = blockingFindings(findings);
-    console.log(`\n  Auditor raised ${blk.length} blocking finding(s) — fix round ${auditRounds}/${MAX_AUDIT_ROUNDS}.`);
-    const fixList = blk
-      .map((f) => `- [${f.severity}] ${f.file ?? '?'}:${f.line ?? '?'} — ${f.issue} → ${f.required_fix}`)
-      .join('\n');
-    await runCoder(
-      `The INDEPENDENT security auditor found issues. Fix ONLY these in build/${spec.slug}/, then stop:\n${fixList}`,
-      `auditor fix round ${auditRounds}`,
-    );
-    console.log('\n▶ Re-verifying after auditor fixes…');
-    pipe = await verify();
     if (!pipe.passed) {
       console.log('\n' + renderTerminal(pipe));
-      console.error('\n✖ Harness regressed after auditor fixes. No .zip produced.');
-      await writeReport({ repoRoot, spec, pipe, findings, auditNote: parseNote, hookStats, iterations, totalCost, startTs, zipPath: null, runLog });
+      console.error(`\n✖ Still failing after ${iterations} iterations — surfacing the blocker. No .zip produced.`);
+      await writeReport({ repoRoot, spec, pipe, findings: [], auditNote: 'Not reached — harness never passed.', hookStats, iterations, totalCost, startTs, zipPath: null, runLog });
+      await emitFail('did not pass all gates');
       return 1;
     }
-    auditRun = await runAgent({
+    console.log(`\n✔ Harness green after ${iterations} fix iteration(s).`);
+
+    // ---------- 7. independent security auditor ----------
+    console.log('\n▶ security-auditor (independent, read-only)…');
+    let auditRun = await runAgent({
       repoRoot,
       role: securityAuditor,
       rulesAppend: rules,
-      prompt: `Re-audit build/${spec.slug}/ after fixes. Output ONLY the findings JSON block.`,
+      prompt: `Audit the plugin in build/${spec.slug}/ against the hard security rules. Output ONLY the findings JSON block.`,
       maxTurns: 40,
       maxBudgetUsd: 3,
     });
     totalCost += auditRun.costUsd;
-    ({ findings, parseNote } = parseFindings(auditRun.text));
-    console.log(`  auditor: ${findings.length} finding(s) remaining.`);
-  }
+    let { findings, parseNote } = parseFindings(auditRun.text);
+    console.log(`  auditor: ${findings.length} finding(s)${parseNote ? ' — ' + parseNote : ''} ($${auditRun.costUsd.toFixed(4)}).`);
 
-  const stillBlocking = blockingFindings(findings);
-  if (stillBlocking.length > 0) {
-    console.error(`\n✖ Auditor still reports ${stillBlocking.length} blocking finding(s) after ${auditRounds} rounds. No .zip produced.`);
-    await writeReport({ repoRoot, spec, pipe, findings, auditNote: parseNote, hookStats, iterations, totalCost, startTs, zipPath: null, runLog });
+    let auditRounds = 0;
+    while (blockingFindings(findings).length > 0 && auditRounds < MAX_AUDIT_ROUNDS) {
+      auditRounds++;
+      const blk = blockingFindings(findings);
+      console.log(`\n  Auditor raised ${blk.length} blocking finding(s) — fix round ${auditRounds}/${MAX_AUDIT_ROUNDS}.`);
+      const fixList = blk
+        .map((f) => `- [${f.severity}] ${f.file ?? '?'}:${f.line ?? '?'} — ${f.issue} → ${f.required_fix}`)
+        .join('\n');
+      await runCoder(
+        `The INDEPENDENT security auditor found issues. Fix ONLY these in build/${spec.slug}/, then stop:\n${fixList}`,
+        `auditor fix round ${auditRounds}`,
+      );
+      console.log('\n▶ Re-verifying after auditor fixes…');
+      pipe = await verify();
+      if (!pipe.passed) {
+        console.log('\n' + renderTerminal(pipe));
+        console.error('\n✖ Harness regressed after auditor fixes. No .zip produced.');
+        await writeReport({ repoRoot, spec, pipe, findings, auditNote: parseNote, hookStats, iterations, totalCost, startTs, zipPath: null, runLog });
+        await emitFail('harness regressed after auditor fixes');
+        return 1;
+      }
+      auditRun = await runAgent({
+        repoRoot,
+        role: securityAuditor,
+        rulesAppend: rules,
+        prompt: `Re-audit build/${spec.slug}/ after fixes. Output ONLY the findings JSON block.`,
+        maxTurns: 40,
+        maxBudgetUsd: 3,
+      });
+      totalCost += auditRun.costUsd;
+      ({ findings, parseNote } = parseFindings(auditRun.text));
+      console.log(`  auditor: ${findings.length} finding(s) remaining.`);
+    }
+
+    const stillBlocking = blockingFindings(findings);
+    if (stillBlocking.length > 0) {
+      console.error(`\n✖ Auditor still reports ${stillBlocking.length} blocking finding(s) after ${auditRounds} rounds. No .zip produced.`);
+      await writeReport({ repoRoot, spec, pipe, findings, auditNote: parseNote, hookStats, iterations, totalCost, startTs, zipPath: null, runLog });
+      await emitFail(`auditor still reports ${stillBlocking.length} blocking finding(s)`);
+      return 1;
+    }
+
+    // ---------- 8. package ----------
+    console.log('\n▶ Packaging…');
+    await mkdir(join(repoRoot, 'dist'), { recursive: true });
+    const zipPath = join(repoRoot, 'dist', `${spec.slug}.${spec.version}.zip`);
+    const pkg = await exec('php', [join(harnessDir, 'bin', 'package.php'), pluginDir, spec.slug, zipPath], { timeoutMs: 60_000 });
+    if (pkg.code !== 0) {
+      console.error('Packaging failed:', pkg.stderr || pkg.stdout);
+      await emitFail('packaging failed');
+      return 1;
+    }
+    console.log('  ' + pkg.stdout.trim());
+    await addToCorpus(repoRoot, pluginDir, spec);
+
+    // ---------- 9. report ----------
+    await writeReport({ repoRoot, spec, pipe, findings, auditNote: parseNote, hookStats, iterations, totalCost, startTs, zipPath, runLog });
+    await emitResult({ ok: true, engine: 'claude', slug: spec.slug, pluginName: spec.pluginName, version: spec.version, zip: zipPath, report: join(repoRoot, 'dist', `${spec.slug}-report.md`), iterations, costUsd: totalCost, provides: summarizeProvides(spec) });
+
+    console.log('\n' + '='.repeat(64));
+    console.log(`✔ DONE: ${spec.pluginName}`);
+    console.log(`   .zip:    ${zipPath}`);
+    console.log(`   report:  dist/${spec.slug}-report.md`);
+    console.log(`   gates:   all 8 PASS · auditor: clean · iterations: ${iterations} · cost: $${totalCost.toFixed(4)}`);
+    console.log('='.repeat(64));
+    return 0;
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error(`\n✖ Build run crashed: ${msg}`);
+    await emitFail(`run crashed: ${msg}`);
     return 1;
   }
-
-  // ---------- 8. package ----------
-  console.log('\n▶ Packaging…');
-  await mkdir(join(repoRoot, 'dist'), { recursive: true });
-  const zipPath = join(repoRoot, 'dist', `${spec.slug}.${spec.version}.zip`);
-  const pkg = await exec('php', [join(harnessDir, 'bin', 'package.php'), pluginDir, spec.slug, zipPath], { timeoutMs: 60_000 });
-  if (pkg.code !== 0) {
-    console.error('Packaging failed:', pkg.stderr || pkg.stdout);
-    return 1;
-  }
-  console.log('  ' + pkg.stdout.trim());
-  await addToCorpus(repoRoot, pluginDir, spec);
-
-  // ---------- 9. report ----------
-  await writeReport({ repoRoot, spec, pipe, findings, auditNote: parseNote, hookStats, iterations, totalCost, startTs, zipPath, runLog });
-  await emitResult({ ok: true, engine: 'claude', slug: spec.slug, pluginName: spec.pluginName, version: spec.version, zip: zipPath, report: join(repoRoot, 'dist', `${spec.slug}-report.md`), iterations, costUsd: totalCost, provides: summarizeProvides(spec) });
-
-  console.log('\n' + '='.repeat(64));
-  console.log(`✔ DONE: ${spec.pluginName}`);
-  console.log(`   .zip:    ${zipPath}`);
-  console.log(`   report:  dist/${spec.slug}-report.md`);
-  console.log(`   gates:   all 8 PASS · auditor: clean · iterations: ${iterations} · cost: $${totalCost.toFixed(4)}`);
-  console.log('='.repeat(64));
-  return 0;
 }
 
 export async function writeReport(p: {

@@ -70,21 +70,37 @@ class Aiwpb_Client {
 	}
 
 	/**
+	 * POST /api/platforms/test — check that the service can reach an AI platform with its key + model.
+	 *
+	 * @param array $platform Service payload from Aiwpb_Platforms::to_service().
+	 * @return array|WP_Error Decoded { ok, message, ms, models? } or error.
+	 */
+	public function test_platform( $platform ) {
+		return $this->decode(
+			wp_remote_post(
+				$this->base_url() . '/api/platforms/test',
+				$this->args(
+					array(
+						'timeout' => 30,
+						'body'    => wp_json_encode( array( 'platform' => $platform ) ),
+					)
+				)
+			)
+		);
+	}
+
+	/**
 	 * POST /api/build.
 	 *
-	 * @param string $spec   The plugin spec text.
-	 * @param string $engine "claude" or "local".
-	 * @param string $model  Optional model override.
+	 * @param string $spec     The plugin spec text.
+	 * @param array  $platform Service payload from Aiwpb_Platforms::to_service().
 	 * @return array|WP_Error
 	 */
-	public function build( $spec, $engine, $model = '' ) {
+	public function build( $spec, $platform ) {
 		$payload = array(
-			'spec'   => $spec,
-			'engine' => ( 'local' === $engine ) ? 'local' : 'claude',
+			'spec'     => $spec,
+			'platform' => $platform,
 		);
-		if ( '' !== $model ) {
-			$payload['model'] = $model;
-		}
 		return $this->decode(
 			wp_remote_post(
 				$this->base_url() . '/api/build',
@@ -97,11 +113,15 @@ class Aiwpb_Client {
 	 * POST /api/chat — one turn of the spec-building conversation.
 	 *
 	 * @param array  $messages List of { role, content } messages.
+	 * @param array  $platform Service payload from Aiwpb_Platforms::to_service().
 	 * @param string $mode     '' for a normal turn, 'distill' to consolidate into a final spec.
 	 * @return array|WP_Error
 	 */
-	public function chat( $messages, $mode = '' ) {
-		$payload = array( 'messages' => array_values( (array) $messages ) );
+	public function chat( $messages, $platform, $mode = '' ) {
+		$payload = array(
+			'messages' => array_values( (array) $messages ),
+			'platform' => $platform,
+		);
 		if ( '' !== $mode ) {
 			$payload['mode'] = $mode;
 		}
@@ -121,21 +141,17 @@ class Aiwpb_Client {
 	/**
 	 * POST /api/ingest — update an existing plugin (sent as base64 zip) to a change request.
 	 *
-	 * @param string $zip_b64 Base64-encoded plugin .zip.
-	 * @param string $spec    Change request (the conversation transcript).
-	 * @param string $engine  "claude" or "local".
-	 * @param string $model   Optional model override.
+	 * @param string $zip_b64  Base64-encoded plugin .zip.
+	 * @param string $spec     Change request (the conversation transcript).
+	 * @param array  $platform Service payload from Aiwpb_Platforms::to_service().
 	 * @return array|WP_Error
 	 */
-	public function ingest( $zip_b64, $spec, $engine, $model = '' ) {
+	public function ingest( $zip_b64, $spec, $platform ) {
 		$payload = array(
-			'zipB64' => $zip_b64,
-			'spec'   => $spec,
-			'engine' => ( 'local' === $engine ) ? 'local' : 'claude',
+			'zipB64'   => $zip_b64,
+			'spec'     => $spec,
+			'platform' => $platform,
 		);
-		if ( '' !== $model ) {
-			$payload['model'] = $model;
-		}
 		return $this->decode(
 			wp_remote_post(
 				$this->base_url() . '/api/ingest',

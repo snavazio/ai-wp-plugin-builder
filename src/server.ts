@@ -6,10 +6,17 @@
  *   AIWPB_PORT=9000 npm run serve
  *
  * Endpoints (all under /api, key required via X-API-Key except /api/health):
- *   GET  /api/health                 -> { ok, service, engines }
- *   POST /api/build   {spec, engine} -> { jobId }         (engine: "claude" | "local")
- *   GET  /api/jobs/:id               -> { id, status, engine, log[], artifact? }
- *   GET  /api/jobs/:id/zip           -> streams the built .zip
+ *   GET  /api/health                            -> { ok, service, engines, protocols }
+ *   POST /api/chat           {messages, platform?}   -> { reply, model }
+ *   POST /api/build          {spec, platform?}       -> { jobId }
+ *   POST /api/ingest         {zipB64, spec, platform?} -> { jobId }
+ *   POST /api/platforms/test {platform}              -> { ok, message, ms, models? }
+ *   GET  /api/jobs/:id                          -> { id, status, engine, log[], artifact? }
+ *   GET  /api/jobs/:id/zip                      -> streams the built .zip
+ *
+ * `platform` = { protocol: anthropic|ollama|openai|gemini, baseUrl, apiKey, model } — one entry from the
+ * WordPress plugin's AI list. Anthropic builds run on the Claude Agent SDK; every other protocol runs the
+ * file-protocol loop (build-local). Without `platform`, the legacy `engine` + `model` fields still work.
  *
  * Builds are SERIALIZED (one at a time) because they share the wp-env sandbox + repo-root .wp-env.json.
  */
@@ -20,7 +27,8 @@ import { mkdir, writeFile, readFile, access } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { join, basename } from 'node:path';
 import type { BuildResult } from './resultFile.js';
-import { ollamaConfig, ollamaChat, type ChatMessage } from './engines/ollama.js';
+import { ollamaConfig } from './engines/ollama.js';
+import { PROTOCOLS, llmChat, parsePlatform, platformEnv, testPlatform, type ChatMessage, type Platform } from './engines/llm.js';
 
 const CHAT_SYSTEM = `You are a friendly WordPress plugin consultant helping a user define a plugin to build.
 Talk like a person in a chat: reply in 1-3 short sentences and ask at most one or two questions at a time.
@@ -59,7 +67,25 @@ interface Job {
   error?: string;
 }
 
+/** How a job hands its engine to the child process: which engine runs, plus the env that configures it. */
+interface EngineSpec {
+  engine: 'claude' | 'local';
+  env: NodeJS.ProcessEnv;
+}
+
 const MAX_LOG_LINES = 800;
+
+/** Resolve a request body to an engine: a `platform` object wins; otherwise the legacy engine/model fields. */
+function engineFromBody(body: Record<string, unknown> | null): EngineSpec | { error: string } {
+  if (body?.platform !== undefined) {
+    const p = parsePlatform(body.platform);
+    if (!p) return { error: `Invalid "platform" (protocol must be one of ${PROTOCOLS.join(', ')}; baseUrl must be http(s)).` };
+    return { engine: p.protocol === 'anthropic' ? 'claude' : 'local', env: platformEnv(p) };
+  }
+  const engine: 'claude' | 'local' = body?.engine === 'local' ? 'local' : 'claude';
+  const model = typeof body?.model === 'string' ? body.model : '';
+  return { engine, env: engine === 'local' && model ? { OLLAMA_MODEL: model } : {} };
+}
 
 export async function runServer(_args: string[], env: ServeEnv): Promise<number> {
   const port = Number(process.env.AIWPB_PORT || 8787);
@@ -71,14 +97,14 @@ export async function runServer(_args: string[], env: ServeEnv): Promise<number>
   const jobs = new Map<string, Job>();
   let chain: Promise<void> = Promise.resolve(); // serialize builds
 
-  function enqueue(job: Job, specText: string, model?: string): void {
+  function enqueue(job: Job, specText: string, es: EngineSpec): void {
     jobs.set(job.id, job);
-    chain = chain.then(() => runJob(env, jobsRoot, job, specText, model));
+    chain = chain.then(() => runJob(env, jobsRoot, job, specText, es));
   }
 
-  function enqueueIngest(job: Job, zipB64: string, changeRequest: string, model?: string): void {
+  function enqueueIngest(job: Job, zipB64: string, changeRequest: string, es: EngineSpec): void {
     jobs.set(job.id, job);
-    chain = chain.then(() => runIngestJob(env, jobsRoot, job, zipB64, changeRequest, model));
+    chain = chain.then(() => runIngestJob(env, jobsRoot, job, zipB64, changeRequest, es));
   }
 
   const server = http.createServer(async (req, res) => {
@@ -90,12 +116,19 @@ export async function runServer(_args: string[], env: ServeEnv): Promise<number>
     if (req.method === 'OPTIONS') return end(res, 204, '');
 
     if (path === '/api/health') {
-      return json(res, 200, { ok: true, service: 'ai-wp-plugin-builder', engines: ['claude', 'local'] });
+      return json(res, 200, { ok: true, service: 'ai-wp-plugin-builder', engines: ['claude', 'local'], protocols: PROTOCOLS });
     }
 
     // Auth for everything else.
     if (req.headers['x-api-key'] !== apiKey) {
       return json(res, 401, { error: 'Invalid or missing X-API-Key.' });
+    }
+
+    if (path === '/api/platforms/test' && req.method === 'POST') {
+      const body = await readBody(req).catch(() => null);
+      const p = parsePlatform(body?.platform);
+      if (!p) return json(res, 400, { error: `Body must include a valid "platform" (protocol: ${PROTOCOLS.join(', ')}).` });
+      return json(res, 200, await testPlatform(p));
     }
 
     if (path === '/api/chat' && req.method === 'POST') {
@@ -112,32 +145,39 @@ export async function runServer(_args: string[], env: ServeEnv): Promise<number>
           } as ChatMessage;
         })
         .filter((m) => m.content.trim() !== '');
+      let platform: Platform | null = null;
+      if (body?.platform !== undefined) {
+        platform = parsePlatform(body.platform);
+        if (!platform) return json(res, 400, { error: 'Invalid "platform".' });
+      } else {
+        const cfg = ollamaConfig();
+        platform = { protocol: 'ollama', baseUrl: cfg.host, apiKey: '', model: process.env.OLLAMA_CHAT_MODEL || cfg.model };
+      }
       // `distill` mode asks the model to output a single consolidated spec for building.
       const distill = body?.mode === 'distill';
       try {
-        const cfg = ollamaConfig();
-        const model = process.env.OLLAMA_CHAT_MODEL || cfg.model;
         const sys = distill ? CHAT_SYSTEM + '\n\n' + DISTILL_INSTRUCTION : CHAT_SYSTEM;
-        const r = await ollamaChat(
-          { ...cfg, model },
-          [{ role: 'system', content: sys }, ...messages],
-          { temperature: distill ? 0.2 : 0.5, numCtx: 16384, timeoutMs: 5 * 60_000 },
-        );
-        return json(res, 200, { reply: stripThink(r.content), model });
+        const r = await llmChat(platform, [{ role: 'system', content: sys }, ...messages], {
+          temperature: distill ? 0.2 : 0.5,
+          numCtx: 16384,
+          timeoutMs: 5 * 60_000,
+          maxTokens: 2000,
+        });
+        return json(res, 200, { reply: stripThink(r.content), model: platform.model });
       } catch (e) {
-        return json(res, 502, { error: `Chat model error: ${String(e)}` });
+        return json(res, 502, { error: `Chat model error (${platform.protocol} ${platform.model}): ${e instanceof Error ? e.message : String(e)}` });
       }
     }
 
     if (path === '/api/build' && req.method === 'POST') {
       const body = await readBody(req).catch(() => null);
       const spec = typeof body?.spec === 'string' ? body.spec.trim() : '';
-      const engine: 'claude' | 'local' = body?.engine === 'local' ? 'local' : 'claude';
-      const model = typeof body?.model === 'string' ? body.model : undefined;
       if (!spec) return json(res, 400, { error: 'Body must include a non-empty "spec" string.' });
       if (spec.length > 20000) return json(res, 400, { error: 'Spec too large (max 20k chars).' });
-      const job: Job = { id: randomUUID(), engine, status: 'queued', createdAt: Date.now(), log: [] };
-      enqueue(job, spec, model);
+      const es = engineFromBody(body);
+      if ('error' in es) return json(res, 400, { error: es.error });
+      const job: Job = { id: randomUUID(), engine: es.engine, status: 'queued', createdAt: Date.now(), log: [] };
+      enqueue(job, spec, es);
       return json(res, 202, { jobId: job.id, status: job.status });
     }
 
@@ -145,13 +185,13 @@ export async function runServer(_args: string[], env: ServeEnv): Promise<number>
       const body = await readBody(req).catch(() => null);
       const zipB64 = typeof body?.zipB64 === 'string' ? body.zipB64 : '';
       const spec = typeof body?.spec === 'string' ? body.spec.trim() : '';
-      const engine: 'claude' | 'local' = body?.engine === 'local' ? 'local' : 'claude';
-      const model = typeof body?.model === 'string' ? body.model : undefined;
       if (!zipB64) return json(res, 400, { error: 'Body must include the plugin as base64 "zipB64".' });
       if (!spec) return json(res, 400, { error: 'Body must include a "spec" (the change request).' });
       if (zipB64.length > 34_000_000) return json(res, 400, { error: 'Plugin too large (max ~25 MB).' });
-      const job: Job = { id: randomUUID(), engine, status: 'queued', createdAt: Date.now(), log: [] };
-      enqueueIngest(job, zipB64, spec, model);
+      const es = engineFromBody(body);
+      if ('error' in es) return json(res, 400, { error: es.error });
+      const job: Job = { id: randomUUID(), engine: es.engine, status: 'queued', createdAt: Date.now(), log: [] };
+      enqueueIngest(job, zipB64, spec, es);
       return json(res, 202, { jobId: job.id, status: job.status });
     }
 
@@ -185,7 +225,7 @@ export async function runServer(_args: string[], env: ServeEnv): Promise<number>
     server.listen(port, () => {
       console.log(`\n▶ AI WP Plugin Builder service listening on http://0.0.0.0:${port}`);
       if (generatedKey) console.log(`  API key (generated): ${apiKey}\n  Set AIWPB_API_KEY to pin it.`);
-      console.log('  Endpoints: GET /api/health · POST /api/build · GET /api/jobs/:id[/zip]');
+      console.log('  Endpoints: GET /api/health · POST /api/chat · POST /api/build · POST /api/ingest · POST /api/platforms/test · GET /api/jobs/:id[/zip]');
     });
     server.on('error', (e) => {
       console.error('Server error:', e);
@@ -194,18 +234,8 @@ export async function runServer(_args: string[], env: ServeEnv): Promise<number>
   });
 }
 
-async function runJob(env: ServeEnv, jobsRoot: string, job: Job, specText: string, model?: string): Promise<void> {
-  job.status = 'running';
-  const dir = join(jobsRoot, job.id);
-  await mkdir(dir, { recursive: true });
-  const specFile = join(dir, 'spec.md');
-  const resultFile = join(dir, 'result.json');
-  await writeFile(specFile, specText, 'utf8');
-
-  const cmd = job.engine === 'local' ? 'build-local' : 'build';
-  const childEnv: NodeJS.ProcessEnv = { ...process.env, AIWPB_RESULT_FILE: resultFile };
-  if (model) childEnv.OLLAMA_MODEL = model;
-
+/** Spawn a CLI child for a job, stream its output into the job log, and read its result.json. */
+function runChild(env: ServeEnv, job: Job, argv: string[], childEnv: NodeJS.ProcessEnv, resultFile: string, what: string): Promise<void> {
   const pushLog = (chunk: Buffer) => {
     for (const line of chunk.toString().split('\n')) {
       if (line.trim()) job.log.push(line.replace(/\x1b\[[0-9;]*m/g, ''));
@@ -213,8 +243,8 @@ async function runJob(env: ServeEnv, jobsRoot: string, job: Job, specText: strin
     if (job.log.length > MAX_LOG_LINES * 2) job.log = job.log.slice(-MAX_LOG_LINES);
   };
 
-  await new Promise<void>((resolve) => {
-    const child = spawn('npx', ['tsx', 'src/run.ts', cmd, specFile], { cwd: env.repoRoot, env: childEnv });
+  return new Promise<void>((resolve) => {
+    const child = spawn('npx', argv, { cwd: env.repoRoot, env: childEnv });
     child.stdout.on('data', pushLog);
     child.stderr.on('data', pushLog);
     child.on('close', async (code) => {
@@ -222,19 +252,32 @@ async function runJob(env: ServeEnv, jobsRoot: string, job: Job, specText: strin
         const result = JSON.parse(await readFile(resultFile, 'utf8')) as BuildResult;
         job.artifact = result;
         job.status = result.ok ? 'done' : 'error';
-        if (!result.ok) job.error = result.error || 'Build did not pass all gates.';
+        if (!result.ok) job.error = result.error || `${what} did not pass all gates.`;
       } catch {
         job.status = 'error';
-        job.error = `Build process exited with code ${code} and produced no result.`;
+        job.error = `${what} process exited with code ${code} and produced no result.`;
       }
       resolve();
     });
     child.on('error', (e) => {
       job.status = 'error';
-      job.error = `Failed to start build process: ${String(e)}`;
+      job.error = `Failed to start ${what.toLowerCase()} process: ${String(e)}`;
       resolve();
     });
   });
+}
+
+async function runJob(env: ServeEnv, jobsRoot: string, job: Job, specText: string, es: EngineSpec): Promise<void> {
+  job.status = 'running';
+  const dir = join(jobsRoot, job.id);
+  await mkdir(dir, { recursive: true });
+  const specFile = join(dir, 'spec.md');
+  const resultFile = join(dir, 'result.json');
+  await writeFile(specFile, specText, 'utf8');
+
+  const cmd = es.engine === 'local' ? 'build-local' : 'build';
+  const childEnv: NodeJS.ProcessEnv = { ...process.env, ...es.env, AIWPB_RESULT_FILE: resultFile };
+  await runChild(env, job, ['tsx', 'src/run.ts', cmd, specFile], childEnv, resultFile, 'Build');
 }
 
 async function runIngestJob(
@@ -243,7 +286,7 @@ async function runIngestJob(
   job: Job,
   zipB64: string,
   changeRequest: string,
-  model?: string,
+  es: EngineSpec,
 ): Promise<void> {
   job.status = 'running';
   const dir = join(jobsRoot, job.id);
@@ -260,40 +303,9 @@ async function runIngestJob(
   }
   await writeFile(changeFile, changeRequest, 'utf8');
 
-  const childEnv: NodeJS.ProcessEnv = { ...process.env, AIWPB_RESULT_FILE: resultFile };
-  if (model) childEnv.OLLAMA_MODEL = model;
-  const argv = ['tsx', 'src/run.ts', 'ingest', zipFile, changeFile, '--engine', job.engine];
-  if (model) argv.push('--model', model);
-
-  const pushLog = (chunk: Buffer) => {
-    for (const line of chunk.toString().split('\n')) {
-      if (line.trim()) job.log.push(line.replace(/\x1b\[[0-9;]*m/g, ''));
-    }
-    if (job.log.length > MAX_LOG_LINES * 2) job.log = job.log.slice(-MAX_LOG_LINES);
-  };
-
-  await new Promise<void>((resolve) => {
-    const child = spawn('npx', argv, { cwd: env.repoRoot, env: childEnv });
-    child.stdout.on('data', pushLog);
-    child.stderr.on('data', pushLog);
-    child.on('close', async (code) => {
-      try {
-        const result = JSON.parse(await readFile(resultFile, 'utf8')) as BuildResult;
-        job.artifact = result;
-        job.status = result.ok ? 'done' : 'error';
-        if (!result.ok) job.error = result.error || 'Update did not pass all gates.';
-      } catch {
-        job.status = 'error';
-        job.error = `Update process exited with code ${code} and produced no result.`;
-      }
-      resolve();
-    });
-    child.on('error', (e) => {
-      job.status = 'error';
-      job.error = `Failed to start update process: ${String(e)}`;
-      resolve();
-    });
-  });
+  const childEnv: NodeJS.ProcessEnv = { ...process.env, ...es.env, AIWPB_RESULT_FILE: resultFile };
+  const argv = ['tsx', 'src/run.ts', 'ingest', zipFile, changeFile, '--engine', es.engine];
+  await runChild(env, job, argv, childEnv, resultFile, 'Update');
 }
 
 // --- tiny http helpers ---
