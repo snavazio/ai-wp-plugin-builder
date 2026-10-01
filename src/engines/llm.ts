@@ -54,6 +54,29 @@ function anthropicKey(p: Platform): string {
   return p.apiKey || process.env.ANTHROPIC_API_KEY || '';
 }
 
+/**
+ * Hostnames the service may call, from AIWPB_ALLOWED_HOSTS (comma-separated, hostnames only, no ports).
+ * Returns null when the variable is unset/empty, meaning "no restriction" (the original behaviour).
+ */
+export function allowedHosts(): Set<string> | null {
+  const list = (process.env.AIWPB_ALLOWED_HOSTS || '')
+    .split(',')
+    .map((h) => h.trim().toLowerCase())
+    .filter(Boolean);
+  return list.length ? new Set(list) : null;
+}
+
+/** True if a base URL's host passes the allow-list (always true when no list is configured). */
+export function hostAllowed(baseUrl: string): boolean {
+  const allow = allowedHosts();
+  if (!allow) return true;
+  try {
+    return allow.has(new URL(baseUrl).hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
+
 /** Validate an untrusted platform object (from a request body). Returns null if unusable. */
 export function parsePlatform(raw: unknown): Platform | null {
   if (!raw || typeof raw !== 'object') return null;
@@ -62,6 +85,7 @@ export function parsePlatform(raw: unknown): Platform | null {
   if (!PROTOCOLS.includes(protocol)) return null;
   const baseUrl = typeof r.baseUrl === 'string' ? r.baseUrl.trim() : '';
   if (baseUrl && !/^https?:\/\//i.test(baseUrl)) return null;
+  if (baseUrl && !hostAllowed(baseUrl)) return null;
   return {
     protocol,
     baseUrl,
@@ -106,7 +130,8 @@ export function platformEnv(p: Platform): NodeJS.ProcessEnv {
 }
 
 async function getJson(url: string, headers: Record<string, string>, timeoutMs: number): Promise<{ status: number; data: unknown; text: string }> {
-  const res = await fetch(url, { headers, signal: AbortSignal.timeout(timeoutMs) });
+  // redirect:'error' — a redirect could otherwise carry the request past the host allow-list.
+  const res = await fetch(url, { headers, redirect: 'error', signal: AbortSignal.timeout(timeoutMs) });
   const text = await res.text();
   let data: unknown = null;
   try {
@@ -122,17 +147,22 @@ async function postJson(url: string, headers: Record<string, string>, body: unkn
     method: 'POST',
     headers: { 'content-type': 'application/json', ...headers },
     body: JSON.stringify(body),
+    redirect: 'error',
     signal: AbortSignal.timeout(timeoutMs),
   });
   const text = await res.text();
-  if (!res.ok) throw new Error(`${res.status} ${text.slice(0, 500)}`);
+  if (!res.ok) {
+    // The other server's reply stays in the service log; callers only get the HTTP status.
+    console.error(`[llm] ${url} answered HTTP ${res.status}: ${text.slice(0, 500)}`);
+    throw new Error(`The AI endpoint answered HTTP ${res.status} (details are in the builder service log).`);
+  }
   return JSON.parse(text);
 }
 
-function errMessage(data: unknown, text: string): string {
-  const d = data as { error?: { message?: string } | string; message?: string } | null;
-  const e = d?.error;
-  return (typeof e === 'string' ? e : e?.message) || d?.message || text.slice(0, 200) || 'no details';
+/** Generic detail for a failed lookup; the upstream body is logged on the service, not returned. */
+function errMessage(_data: unknown, text: string): string {
+  console.error(`[llm] upstream reply: ${text.slice(0, 500)}`);
+  return 'details are in the builder service log';
 }
 
 /** One chat completion. Throws on transport/HTTP errors. */

@@ -66,9 +66,13 @@ export async function ollamaChat(
         num_ctx: opts.numCtx ?? 16384,
       },
     }),
+    redirect: 'error',
     signal: AbortSignal.timeout(opts.timeoutMs ?? 15 * 60_000),
   });
-  if (!res.ok) throw new Error(`Ollama chat failed: ${res.status} ${await res.text()}`);
+  if (!res.ok) {
+    console.error(`[ollama] chat failed: ${res.status} ${(await res.text()).slice(0, 500)}`);
+    throw new Error(`Ollama chat failed: HTTP ${res.status} (details are in the builder service log).`);
+  }
   const data = (await res.json()) as {
     message?: { content?: string };
     prompt_eval_count?: number;
@@ -87,9 +91,13 @@ export async function ollamaEmbed(cfg: OllamaConfig, text: string): Promise<numb
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ model: cfg.embedModel, prompt: text }),
+    redirect: 'error',
     signal: AbortSignal.timeout(60_000),
   });
-  if (!res.ok) throw new Error(`Ollama embeddings failed: ${res.status} ${await res.text()}`);
+  if (!res.ok) {
+    console.error(`[ollama] embeddings failed: ${res.status} ${(await res.text()).slice(0, 500)}`);
+    throw new Error(`Ollama embeddings failed: HTTP ${res.status} (details are in the builder service log).`);
+  }
   const data = (await res.json()) as { embedding?: number[] };
   return data.embedding ?? [];
 }

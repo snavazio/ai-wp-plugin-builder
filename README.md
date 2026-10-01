@@ -135,6 +135,9 @@ WordPress site (AI Plugin Builder plugin)  ──HTTP──►  builder service 
    AIWPB_API_KEY=<your-secret> npm run serve      # listens on :8787 (AIWPB_PORT to change)
    ```
    Endpoints: `GET /api/health` · `POST /api/build {spec,engine}` · `GET /api/jobs/:id[/zip]` (key via `X-API-Key`).
+
+   Optional hardening: `AIWPB_ALLOWED_HOSTS=thing2,evo-x2,api.anthropic.com` restricts which AI endpoint hostnames the
+   service will call (hostnames only, no ports). Unset = no restriction, and the service warns at startup.
 2. **Install the WP plugin** (`wp-plugin/ai-plugin-builder/`) on any WordPress site and activate it.
 3. **Configure it:** AI Plugin Builder → Settings → enter the service URL + the same API key + default engine.
 4. **Use it:** AI Plugin Builder → type a spec → Generate → Download or Install.

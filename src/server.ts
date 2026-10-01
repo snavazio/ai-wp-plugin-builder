@@ -28,7 +28,7 @@ import { createReadStream } from 'node:fs';
 import { join, basename } from 'node:path';
 import type { BuildResult } from './resultFile.js';
 import { ollamaConfig } from './engines/ollama.js';
-import { PROTOCOLS, llmChat, parsePlatform, platformEnv, testPlatform, type ChatMessage, type Platform } from './engines/llm.js';
+import { PROTOCOLS, allowedHosts, llmChat, parsePlatform, platformEnv, testPlatform, type ChatMessage, type Platform } from './engines/llm.js';
 
 const CHAT_SYSTEM = `You are a friendly WordPress plugin consultant helping a user define a plugin to build.
 Talk like a person in a chat: reply in 1-3 short sentences and ask at most one or two questions at a time.
@@ -226,6 +226,9 @@ export async function runServer(_args: string[], env: ServeEnv): Promise<number>
       console.log(`\n▶ AI WP Plugin Builder service listening on http://0.0.0.0:${port}`);
       if (generatedKey) console.log(`  API key (generated): ${apiKey}\n  Set AIWPB_API_KEY to pin it.`);
       console.log('  Endpoints: GET /api/health · POST /api/chat · POST /api/build · POST /api/ingest · POST /api/platforms/test · GET /api/jobs/:id[/zip]');
+      const allow = allowedHosts();
+      if (allow) console.log(`  AI endpoint allow-list: ${[...allow].join(', ')}`);
+      else console.warn('  WARNING: AIWPB_ALLOWED_HOSTS is not set — any AI endpoint URL sent with the API key will be called. Set it to a comma-separated list of hostnames (e.g. thing2,api.anthropic.com).');
     });
     server.on('error', (e) => {
       console.error('Server error:', e);
