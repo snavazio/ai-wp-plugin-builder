@@ -9,7 +9,6 @@
  * License:           GPLv2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       greeting-box
- * Domain Path:       /languages
  *
  * @package Gbox
  */
@@ -38,18 +37,51 @@ add_action( 'init', 'gbox_load_textdomain' );
  * @return void
  */
 function gbox_register_shortcodes() {
-	add_shortcode( 'greeting_box', 'gbox_shortcode_greeting_box' );
+	add_shortcode( 'greeting_box', 'gbox_greeting_box_shortcode' );
 }
 add_action( 'init', 'gbox_register_shortcodes' );
 
 /**
  * Shortcode handler for [greeting_box].
  *
+ * @param array  $atts    Shortcode attributes.
+ * @param string $content The content of the shortcode.
  * @return string
  */
-function gbox_shortcode_greeting_box() {
-	$message = __( 'Hello, World!', 'greeting-box' );
-	return esc_html( $message );
+function gbox_greeting_box_shortcode( $atts, $content = null ) {
+	$defaults = array(
+		'name' => '',
+	);
+	$atts     = shortcode_atts( $defaults, $atts, 'greeting_box' );
+
+	// Sanitize name attribute.
+	$name = sanitize_text_field( wp_unslash( $atts['name'] ) );
+
+	// If no name provided, use a default.
+	if ( empty( $name ) ) {
+		$name = esc_html__( 'Guest', 'greeting-box' );
+	} else {
+		$name = esc_html( $name );
+	}
+
+	// Escape content for safe output.
+	$content = wp_kses_post( $content );
+
+	// Build the greeting message.
+	$message = sprintf(
+		/* translators: %s is the name of the person */
+		esc_html__( 'Hello, %s!', 'greeting-box' ),
+		$name
+	);
+
+	// Wrap in a div with appropriate classes.
+	$output = '<div class="greeting-box">' . $message . '</div>';
+
+	if ( ! empty( $content ) ) {
+		$output .= '<div class="greeting-box-content">' . $content . '</div>';
+	}
+
+	return $output;
 }
 
 /**

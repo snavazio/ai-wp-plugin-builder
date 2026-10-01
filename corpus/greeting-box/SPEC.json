@@ -18,12 +18,14 @@
   "ajaxActions": [],
   "cronEvents": [],
   "widgets": [],
-  "dataStorage": "none",
+  "dataStorage": null,
   "securityRequirements": [
-    "sanitize name attribute",
-    "escape output"
+    "esc_html()",
+    "sanitize_text_field()"
   ],
   "smokeAssertions": [
-    "shortcode_exists('greeting_box')"
+    "shortcode_exists('greeting_box')",
+    "function_exists('gbox_greeting_box_shortcode')",
+    "defined('GBOX_VERSION')"
   ]
 }

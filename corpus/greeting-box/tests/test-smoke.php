@@ -28,4 +28,13 @@ class Gbox_Smoke_Test extends WP_UnitTestCase {
 	public function test_shortcode_exists() {
 		$this->assertTrue( shortcode_exists( 'greeting_box' ) );
 	}
+
+	/**
+	 * The greeting_box shortcode function exists.
+	 *
+	 * @return void
+	 */
+	public function test_shortcode_function_exists() {
+		$this->assertTrue( function_exists( 'gbox_greeting_box_shortcode' ) );
+	}
 }
