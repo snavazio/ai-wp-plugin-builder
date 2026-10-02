@@ -6,7 +6,8 @@
  *   coder (capped iterations) → independent read-only security-auditor → coder fixes → re-verify →
  *   package (.zip) → report. Objective gate results, not a model's opinion, decide pass/fail.
  */
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, rm } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
 import { basename, join } from 'node:path';
 import { query, type Options } from '@anthropic-ai/claude-agent-sdk';
 import {
@@ -159,10 +160,15 @@ export async function runBuild(args: string[], env: BuildEnv): Promise<number> {
   // ---------- 1. spec-writer → structured SPEC.json ----------
   console.log('\n▶ spec-writer: converting the loose spec…');
   await mkdir(join(repoRoot, 'build'), { recursive: true });
-  const stagingPath = join(repoRoot, 'build', basename(specPath).replace(/\.md$/i, '') + '.spec.json');
+  // One unique staging file per run. The service names every job's input "spec.md", so a name derived
+  // from it was shared across jobs: when the spec-writer failed to write, a stale spec from an earlier
+  // job was read back and the wrong plugin was built. The file is also deleted before each attempt, so
+  // "not written" is always detected instead of silently reading old content.
+  const stagingPath = join(repoRoot, 'build', `${basename(specPath).replace(/\.md$/i, '')}-${randomUUID()}.spec.json`);
   let spec: StructuredSpec | null = null;
   let specProblems: string[] = [];
   for (let attempt = 1; attempt <= 2 && !spec; attempt++) {
+    await rm(stagingPath, { force: true });
     const prompt =
       `Convert this loose plugin spec into the structured JSON and WRITE it to EXACTLY this absolute path:\n` +
       `${stagingPath}\n\n----- LOOSE SPEC (${basename(specPath)}) -----\n${specText}` +
@@ -180,8 +186,14 @@ export async function runBuild(args: string[], env: BuildEnv): Promise<number> {
       console.log(`  ${specProblems[0]}`);
     }
   }
+  await rm(stagingPath, { force: true });
   if (!spec) {
     console.error('spec-writer could not produce a valid spec. Aborting.');
+    await emitResult({
+      ok: false,
+      engine: 'claude',
+      error: `spec-writer could not produce a valid spec (${specProblems.join('; ') || 'unknown problem'}). Nothing was built.`,
+    });
     return 1;
   }
   console.log(`\nStructured spec for "${spec.pluginName}" (slug: ${spec.slug}, prefix: ${spec.prefix}):`);
