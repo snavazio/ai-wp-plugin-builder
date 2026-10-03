@@ -138,6 +138,10 @@ WordPress site (AI Plugin Builder plugin)  ──HTTP──►  builder service 
 
    Optional hardening: `AIWPB_ALLOWED_HOSTS=thing2,evo-x2,api.anthropic.com` restricts which AI endpoint hostnames the
    service will call (hostnames only, no ports). Unset = no restriction, and the service warns at startup.
+
+   Claude builds run on the `claude` command found on the service's PATH (or `AIWPB_CLAUDE_BIN=/path/to/claude`),
+   not the older copy bundled in the SDK, which current Claude models reject. Keep Claude Code up to date on the
+   machine running the service; if the service starts without `claude` on its PATH, set `AIWPB_CLAUDE_BIN`.
 2. **Install the WP plugin** (`wp-plugin/ai-plugin-builder/`) on any WordPress site and activate it.
 3. **Configure it:** AI Plugin Builder → Settings → enter the service URL + the same API key + default engine.
 4. **Use it:** AI Plugin Builder → type a spec → Generate → Download or Install.

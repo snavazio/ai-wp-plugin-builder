@@ -6,7 +6,7 @@
  *   coder (capped iterations) → independent read-only security-auditor → coder fixes → re-verify →
  *   package (.zip) → report. Objective gate results, not a model's opinion, decide pass/fail.
  */
-import { readFile, writeFile, mkdir, rm } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, rm, access, constants } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { basename, join } from 'node:path';
 import { query, type Options } from '@anthropic-ai/claude-agent-sdk';
@@ -47,6 +47,28 @@ export interface AgentRun {
 /** Keep the tail of the agent subprocess's stderr: it is the only clue when the process crashes. */
 const STDERR_KEEP = 1500;
 
+/**
+ * Which Claude Code to run the agents with. The copy bundled inside the pinned Agent SDK (0.1.x) is old
+ * and the API rejects it for current models ("does not support this model", duplicate tool_use ids), which
+ * made every coder run crash. Prefer an explicit AIWPB_CLAUDE_BIN, then the `claude` on PATH; if neither
+ * exists the SDK falls back to its bundled copy.
+ */
+async function claudeBinary(): Promise<string | undefined> {
+  const explicit = process.env.AIWPB_CLAUDE_BIN;
+  if (explicit) return explicit;
+  for (const dir of (process.env.PATH || '').split(':')) {
+    if (!dir) continue;
+    const candidate = join(dir, 'claude');
+    try {
+      await access(candidate, constants.X_OK);
+      return candidate;
+    } catch {
+      /* not here */
+    }
+  }
+  return undefined;
+}
+
 export async function runAgent(params: {
   repoRoot: string;
   role: RoleConfig;
@@ -58,8 +80,10 @@ export async function runAgent(params: {
 }): Promise<AgentRun> {
   const { role } = params;
   let stderrTail = '';
+  const claudeBin = await claudeBinary();
   const options: Options = {
     cwd: params.repoRoot,
+    ...(claudeBin ? { pathToClaudeCodeExecutable: claudeBin } : {}),
     // Set by the builder service from the chosen AI platform; unset = the SDK's default model.
     model: process.env.AIWPB_CLAUDE_MODEL || undefined,
     settingSources: ['project'],
