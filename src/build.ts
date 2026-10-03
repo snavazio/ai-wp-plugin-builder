@@ -25,6 +25,7 @@ import { WpEnv, dockerAvailable } from './wpEnv.js';
 import { exec } from './util/exec.js';
 import { addToCorpus } from './corpus.js';
 import { emitResult } from './resultFile.js';
+import { withSpecCoverage } from './specCoverage.js';
 import type { PipelineResult } from './types.js';
 
 export interface BuildEnv {
@@ -43,6 +44,9 @@ export interface AgentRun {
   errorInfo: string;
 }
 
+/** Keep the tail of the agent subprocess's stderr: it is the only clue when the process crashes. */
+const STDERR_KEEP = 1500;
+
 export async function runAgent(params: {
   repoRoot: string;
   role: RoleConfig;
@@ -53,6 +57,7 @@ export async function runAgent(params: {
   maxBudgetUsd: number;
 }): Promise<AgentRun> {
   const { role } = params;
+  let stderrTail = '';
   const options: Options = {
     cwd: params.repoRoot,
     // Set by the builder service from the chosen AI platform; unset = the SDK's default model.
@@ -69,7 +74,9 @@ export async function runAgent(params: {
     hooks: params.hooks,
     maxTurns: params.maxTurns,
     maxBudgetUsd: params.maxBudgetUsd,
-    stderr: () => {},
+    stderr: (d: string) => {
+      stderrTail = (stderrTail + d).slice(-STDERR_KEEP);
+    },
   };
 
   const run: AgentRun = { text: '', costUsd: 0, turns: 0, isError: false, errorInfo: '' };
@@ -94,6 +101,7 @@ export async function runAgent(params: {
     run.isError = true;
     run.errorInfo = e instanceof Error ? e.message : String(e);
   }
+  if (run.isError && stderrTail.trim()) run.errorInfo += ` | agent stderr: ${stderrTail.trim().replace(/\s+/g, ' ')}`;
   return run;
 }
 
@@ -131,6 +139,25 @@ export function parseFindings(text: string): { findings: AuditFinding[]; parseNo
 
 export function blockingFindings(findings: AuditFinding[]): AuditFinding[] {
   return findings.filter((f) => f.severity === 'high' || f.severity === 'medium');
+}
+
+/** Run the independent auditor; an unreadable or failed audit is retried once, then fails the build. */
+async function runAudit(
+  repoRoot: string,
+  rules: string,
+  prompt: string,
+): Promise<{ findings: AuditFinding[]; parseNote: string; costUsd: number }> {
+  let costUsd = 0;
+  let lastProblem = '';
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const run = await runAgent({ repoRoot, role: securityAuditor, rulesAppend: rules, prompt, maxTurns: 40, maxBudgetUsd: 3 });
+    costUsd += run.costUsd;
+    const parsed = parseFindings(run.text);
+    if (!run.isError && !parsed.parseNote) return { findings: parsed.findings, parseNote: '', costUsd };
+    lastProblem = run.isError ? run.errorInfo : parsed.parseNote;
+    console.log(`  auditor result unusable${attempt < 2 ? ' — retrying' : ''}: ${lastProblem}`);
+  }
+  throw new Error(`the security auditor produced no readable result (${lastProblem}); not treating that as a clean audit`);
 }
 
 export async function runBuild(args: string[], env: BuildEnv): Promise<number> {
@@ -234,32 +261,45 @@ export async function runBuild(args: string[], env: BuildEnv): Promise<number> {
     const coderHooks = makeCoderHooks(pluginDir, join(repoRoot, 'dist'), hookStats);
 
     const verify = async (): Promise<PipelineResult> =>
-      runPipeline(pluginDir, {
-        repoRoot,
-        harnessDir,
-        wpEnv,
-        onGate: (r) => {
-          const s = r.skipped ? 'SKIP' : r.passed ? 'PASS' : 'FAIL';
-          process.stdout.write(`    [${s}] ${r.label}\n`);
-        },
-      });
+      withSpecCoverage(
+        await runPipeline(pluginDir, {
+          repoRoot,
+          harnessDir,
+          wpEnv,
+          onGate: (r) => {
+            const s = r.skipped ? 'SKIP' : r.passed ? 'PASS' : 'FAIL';
+            process.stdout.write(`    [${s}] ${r.label}\n`);
+          },
+        }),
+        pluginDir,
+      );
 
-    const runCoder = async (prompt: string, label: string): Promise<void> => {
-      console.log(`\n▶ coder: ${label}…`);
-      const r = await runAgent({ repoRoot, role: coder, rulesAppend: rules, prompt, hooks: coderHooks, maxTurns: 120, maxBudgetUsd: 5 });
-      totalCost += r.costUsd;
-      console.log(`  coder done (${r.turns} turns, $${r.costUsd.toFixed(4)}).`);
-      if (r.isError) console.log(`  coder ended early: ${r.errorInfo}`);
+    // A crashed coder run is retried once (the SDK subprocess failure is often transient). Returns whether
+    // the run ended cleanly; callers decide how fatal a failure is.
+    const runCoder = async (prompt: string, label: string): Promise<boolean> => {
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        console.log(`\n▶ coder: ${label}${attempt > 1 ? ' (retry)' : ''}…`);
+        const r = await runAgent({ repoRoot, role: coder, rulesAppend: rules, prompt, hooks: coderHooks, maxTurns: 120, maxBudgetUsd: 5 });
+        totalCost += r.costUsd;
+        console.log(`  coder done (${r.turns} turns, $${r.costUsd.toFixed(4)}).`);
+        if (!r.isError) return true;
+        console.log(`  coder ended early: ${r.errorInfo}`);
+      }
+      return false;
     };
 
     // ---------- 3. coder implements ----------
-    await runCoder(
+    const implemented = await runCoder(
       `Implement the plugin fully from build/${spec.slug}/SPEC.json into build/${spec.slug}/. The compliant ` +
         `skeleton is already scaffolded there — build on it. Implement every CPT/field, admin page, shortcode/block, ` +
         `and REST endpoint in the spec. Update tests/test-smoke.php with the spec's smokeAssertions and uninstall.php ` +
         `with data cleanup. Keep everything PHP_CodeSniffer-clean. When the whole spec is implemented, stop.`,
       'initial implementation',
     );
+    if (!implemented) {
+      // Do not verify/ship the untouched scaffold as if it were the finished plugin.
+      throw new Error('the coder failed twice during the initial implementation, so no plugin code was written');
+    }
 
     // ---------- 4–6. verify → fix loop (capped) ----------
     console.log('\n▶ Verifying…');
@@ -287,17 +327,10 @@ export async function runBuild(args: string[], env: BuildEnv): Promise<number> {
 
     // ---------- 7. independent security auditor ----------
     console.log('\n▶ security-auditor (independent, read-only)…');
-    let auditRun = await runAgent({
-      repoRoot,
-      role: securityAuditor,
-      rulesAppend: rules,
-      prompt: `Audit the plugin in build/${spec.slug}/ against the hard security rules. Output ONLY the findings JSON block.`,
-      maxTurns: 40,
-      maxBudgetUsd: 3,
-    });
-    totalCost += auditRun.costUsd;
-    let { findings, parseNote } = parseFindings(auditRun.text);
-    console.log(`  auditor: ${findings.length} finding(s)${parseNote ? ' — ' + parseNote : ''} ($${auditRun.costUsd.toFixed(4)}).`);
+    const firstAudit = await runAudit(repoRoot, rules, `Audit the plugin in build/${spec.slug}/ against the hard security rules. Output ONLY the findings JSON block.`);
+    totalCost += firstAudit.costUsd;
+    let { findings, parseNote } = firstAudit;
+    console.log(`  auditor: ${findings.length} finding(s) ($${firstAudit.costUsd.toFixed(4)}).`);
 
     let auditRounds = 0;
     while (blockingFindings(findings).length > 0 && auditRounds < MAX_AUDIT_ROUNDS) {
@@ -320,16 +353,9 @@ export async function runBuild(args: string[], env: BuildEnv): Promise<number> {
         await emitFail('harness regressed after auditor fixes');
         return 1;
       }
-      auditRun = await runAgent({
-        repoRoot,
-        role: securityAuditor,
-        rulesAppend: rules,
-        prompt: `Re-audit build/${spec.slug}/ after fixes. Output ONLY the findings JSON block.`,
-        maxTurns: 40,
-        maxBudgetUsd: 3,
-      });
-      totalCost += auditRun.costUsd;
-      ({ findings, parseNote } = parseFindings(auditRun.text));
+      const reAudit = await runAudit(repoRoot, rules, `Re-audit build/${spec.slug}/ after fixes. Output ONLY the findings JSON block.`);
+      totalCost += reAudit.costUsd;
+      ({ findings, parseNote } = reAudit);
       console.log(`  auditor: ${findings.length} finding(s) remaining.`);
     }
 

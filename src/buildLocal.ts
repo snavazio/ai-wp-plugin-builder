@@ -23,6 +23,7 @@ import { llmChat, platformFromEnv, testPlatform, type Platform, type ChatMessage
 import { loadOrBuildIndex, retrieve, formatContext, type RagIndex } from './rag.js';
 import { parseFiles, extractJson, writeGeneratedFiles } from './fileProtocol.js';
 import { emitResult } from './resultFile.js';
+import { withSpecCoverage } from './specCoverage.js';
 import { selectExemplars, formatExemplars } from './exemplarRag.js';
 import { formatFixes } from './fixKb.js';
 import { addToCorpus, readManifest, seedCorpus } from './corpus.js';
@@ -182,12 +183,15 @@ export async function runBuildLocal(args: string[], env: BuildEnv): Promise<numb
 
   const wpEnv = new WpEnv(repoRoot, pluginDir, spec.slug, harnessDir);
   const verify = async (): Promise<PipelineResult> =>
-    runPipeline(pluginDir, {
-      repoRoot,
-      harnessDir,
-      wpEnv,
-      onGate: (r) => process.stdout.write(`    [${r.skipped ? 'SKIP' : r.passed ? 'PASS' : 'FAIL'}] ${r.label}\n`),
-    });
+    withSpecCoverage(
+      await runPipeline(pluginDir, {
+        repoRoot,
+        harnessDir,
+        wpEnv,
+        onGate: (r) => process.stdout.write(`    [${r.skipped ? 'SKIP' : r.passed ? 'PASS' : 'FAIL'}] ${r.label}\n`),
+      }),
+      pluginDir,
+    );
 
   const systemPrompt = `You are an expert WordPress plugin developer. Write secure, WordPress-Coding-Standards-clean
 PHP. Follow these hard rules exactly:\n\n${rules}\n\n${PROTOCOL}`;
