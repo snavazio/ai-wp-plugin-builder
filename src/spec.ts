@@ -2,7 +2,7 @@
  * Structured plugin spec: the contract the spec-writer produces (as build/<slug>/SPEC.json)
  * and the coder implements. Also owns template rendering + scaffolding.
  */
-import { readFile, writeFile, mkdir, copyFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, copyFile, rm } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 
 export interface SpecField {
@@ -187,6 +187,9 @@ export async function scaffoldPlugin(spec: StructuredSpec, repoRoot: string): Pr
   const vars = placeholders(spec);
   const tpl = join(repoRoot, 'harness', 'templates', 'plugin');
   const dir = join(repoRoot, 'build', spec.slug);
+  // Start from an empty folder. Otherwise files left by an earlier build of the same slug survive and get
+  // packaged with the new scaffold (a crashed coder once shipped old includes/ behind an empty main file).
+  await rm(dir, { recursive: true, force: true });
   await mkdir(join(dir, 'includes'), { recursive: true });
   await mkdir(join(dir, 'tests'), { recursive: true });
 
