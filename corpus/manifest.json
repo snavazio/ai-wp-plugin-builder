@@ -1486,6 +1486,29 @@
       ]
     },
     {
+      "slug": "heatmap-tracker",
+      "pluginName": "Heatmap Tracker",
+      "description": "Records visitor click positions and scroll depth on chosen pages and posts, and shows them as a device-split heatmap overlay to administrators on the live page.",
+      "version": "1.0.0",
+      "prefix": "hmtrk",
+      "tags": [
+        "settings",
+        "rest"
+      ],
+      "files": [
+        "SPEC.json",
+        "heatmap-tracker.php",
+        "includes/db.php",
+        "includes/frontend.php",
+        "includes/rest.php",
+        "includes/settings.php",
+        "readme.txt",
+        "tests/bootstrap.php",
+        "tests/test-smoke.php",
+        "uninstall.php"
+      ]
+    },
+    {
       "slug": "hello-bar",
       "pluginName": "Hello Bar",
       "description": "A plugin with a [hello_bar] shortcode that outputs an escaped greeting bar with a configurable name attribute (default World).",

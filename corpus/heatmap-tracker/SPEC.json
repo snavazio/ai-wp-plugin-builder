@@ -1,0 +1,83 @@
+{
+  "slug": "heatmap-tracker",
+  "pluginName": "Heatmap Tracker",
+  "description": "Records visitor click positions and scroll depth on chosen pages and posts, and shows them as a device-split heatmap overlay to administrators on the live page.",
+  "version": "1.0.0",
+  "prefix": "hmtrk",
+  "requiresWp": "6.0",
+  "requiresPhp": "7.4",
+  "capabilities": [
+    "manage_options"
+  ],
+  "postTypes": [],
+  "adminPages": [
+    {
+      "type": "settings",
+      "title": "Heatmap Tracker",
+      "menuSlug": "hmtrk-settings",
+      "capability": "manage_options",
+      "fields": [
+        {
+          "key": "hmtrk_tracked_posts",
+          "label": "Tracked pages and posts (checkbox list of all published pages AND posts; only ticked IDs are tracked)",
+          "type": "checkbox_list_post_ids"
+        },
+        {
+          "key": "hmtrk_delete_on_uninstall",
+          "label": "Delete all heatmap data when the plugin is deleted",
+          "type": "checkbox"
+        }
+      ]
+    }
+  ],
+  "taxonomies": [],
+  "shortcodes": [],
+  "blocks": [],
+  "restEndpoints": [
+    {
+      "namespace": "hmtrk/v1",
+      "route": "/events",
+      "methods": [
+        "POST"
+      ],
+      "public": true,
+      "description": "Public collection endpoint for the front-end script. Validates and sanitizes post_id (absint), event_type (allow-list: click|scroll), x/y position or scroll depth (bounded numbers), and device (allow-list: desktop|tablet|mobile, derived from viewport width in the browser script). Accepts events only for post IDs ticked as tracked and ignores logged-in administrators. Inserts via $wpdb->insert / prepared SQL."
+    },
+    {
+      "namespace": "hmtrk/v1",
+      "route": "/results",
+      "methods": [
+        "GET"
+      ],
+      "public": false,
+      "description": "Aggregated click and scroll-depth results for one tracked post_id and device, for the admin overlay. permission_callback requires current_user_can('manage_options')."
+    }
+  ],
+  "ajaxActions": [],
+  "cronEvents": [],
+  "widgets": [],
+  "dataStorage": "Custom table {$wpdb->prefix}hmtrk_events (id, post_id, event_type, pos_x, pos_y, scroll_depth, device, created_at) created on activation with dbDelta and versioned through the option hmtrk_db_version. Settings in options hmtrk_tracked_posts (array of post IDs) and hmtrk_delete_on_uninstall. No automatic expiry; data is removed only by the administrator's 'Clear heatmap data' button (admin-post handler, check_admin_referer + current_user_can('manage_options'), TRUNCATE/DELETE on the plugin table) or by uninstall.php when hmtrk_delete_on_uninstall is enabled (drops the table and deletes options). Front-end: a small tracking script enqueued only on tracked singular pages for visitors who are not administrators; an admin-bar node 'Heatmap' (admin_bar_menu, manage_options only, tracked pages only, front end) enqueues and toggles the overlay script/style, which fetches /hmtrk/v1/results with a wp_rest nonce and shows a desktop/tablet/mobile switch. No third-party services; all assets are local with versions.",
+  "securityRequirements": [
+    "Direct-access ABSPATH guard in every PHP file; uninstall.php uses the WP_UNINSTALL_PLUGIN guard",
+    "Escape all output (esc_html, esc_attr, esc_url) at the echo, including post titles in the settings list",
+    "Settings save: wp_nonce_field + check_admin_referer + current_user_can('manage_options'); sanitize tracked IDs with absint and verify each is a published page/post",
+    "Clear heatmap data button: nonce (check_admin_referer) AND current_user_can('manage_options') before any delete",
+    "Public POST /hmtrk/v1/events is intentionally unauthenticated (anonymous visitors): strict allow-list validation via REST args (validate_callback + sanitize_callback), reject untracked post IDs, bound numeric values, cap payload size, never return stored data; not a nonce-protected route because page caching breaks anonymous nonces",
+    "GET /hmtrk/v1/results permission_callback checks current_user_can('manage_options'); REST cookie auth requires the X-WP-Nonce (wp_rest) header",
+    "Do not record events from logged-in users with manage_options (skip enqueue of tracker and reject server-side)",
+    "All SQL through $wpdb->prepare() with %s/%d placeholders; table name from $wpdb->prefix; dbDelta for schema",
+    "Overlay and admin-bar node only for manage_options; visitors never receive overlay assets or data",
+    "No eval, no @ suppression, no extract() on request data, no unserialize of untrusted input",
+    "Enqueue scripts/styles with wp_enqueue_script/wp_enqueue_style with version; pass REST URL and nonce via wp_localize_script/wp_add_inline_script; no remote resources",
+    "All user-facing strings internationalized with the literal text domain 'heatmap-tracker'"
+  ],
+  "smokeAssertions": [
+    "defined('HMTRK_VERSION')",
+    "$GLOBALS['wpdb']->get_var(\"SHOW TABLES LIKE '\" . $GLOBALS['wpdb']->prefix . \"hmtrk_events'\") === $GLOBALS['wpdb']->prefix . 'hmtrk_events'",
+    "get_option('hmtrk_db_version') !== false",
+    "array_key_exists('/hmtrk/v1/events', rest_get_server()->get_routes())",
+    "array_key_exists('/hmtrk/v1/results', rest_get_server()->get_routes())",
+    "has_action('admin_menu') !== false",
+    "has_action('admin_bar_menu') !== false"
+  ]
+}
