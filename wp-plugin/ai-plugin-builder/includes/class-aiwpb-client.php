@@ -114,16 +114,21 @@ class Aiwpb_Client {
 	 *
 	 * @param array  $messages List of { role, content } messages.
 	 * @param array  $platform Service payload from Aiwpb_Platforms::to_service().
-	 * @param string $mode     '' for a normal turn, 'distill' to consolidate into a final spec.
+	 * @param string $mode     '' for a normal turn, 'distill' to consolidate into a final spec, 'edit' to
+	 *                         discuss a change to an existing plugin.
+	 * @param string $context  Optional plugin context for 'edit' mode (name, what it provides, the edit kind).
 	 * @return array|WP_Error
 	 */
-	public function chat( $messages, $platform, $mode = '' ) {
+	public function chat( $messages, $platform, $mode = '', $context = '' ) {
 		$payload = array(
 			'messages' => array_values( (array) $messages ),
 			'platform' => $platform,
 		);
 		if ( '' !== $mode ) {
 			$payload['mode'] = $mode;
+		}
+		if ( '' !== $context ) {
+			$payload['context'] = $context;
 		}
 		return $this->decode(
 			wp_remote_post(
@@ -190,6 +195,44 @@ class Aiwpb_Client {
 		}
 		if ( 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
 			return new WP_Error( 'aiwpb_zip', __( 'The service did not return a .zip for this job.', 'ai-plugin-builder' ) );
+		}
+		return wp_remote_retrieve_body( $response );
+	}
+
+	/**
+	 * Generic JSON request to the service (used by the My Plugins registry).
+	 *
+	 * @param string     $method  HTTP method (GET, POST, PATCH, DELETE).
+	 * @param string     $path    Path under /api, starting with '/'.
+	 * @param array|null $body    JSON body, or null for none.
+	 * @param int        $timeout Seconds.
+	 * @return array|WP_Error
+	 */
+	public function request( $method, $path, $body = null, $timeout = 30 ) {
+		$extra = array(
+			'method'  => $method,
+			'timeout' => $timeout,
+		);
+		if ( null !== $body ) {
+			$extra['body'] = wp_json_encode( $body );
+		}
+		return $this->decode( wp_remote_request( $this->base_url() . '/api' . $path, $this->args( $extra ) ) );
+	}
+
+	/**
+	 * GET a raw file (a version .zip or report) from the service.
+	 *
+	 * @param string $path    Path under /api, starting with '/'.
+	 * @param int    $timeout Seconds.
+	 * @return string|WP_Error Raw body or error.
+	 */
+	public function raw( $path, $timeout = 60 ) {
+		$response = wp_remote_get( $this->base_url() . '/api' . $path, $this->args( array( 'timeout' => $timeout ) ) );
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+		if ( 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
+			return new WP_Error( 'aiwpb_raw', __( 'The builder service did not return that file.', 'ai-plugin-builder' ) );
 		}
 		return wp_remote_retrieve_body( $response );
 	}

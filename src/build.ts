@@ -166,7 +166,7 @@ export function blockingFindings(findings: AuditFinding[]): AuditFinding[] {
 }
 
 /** Run the independent auditor; an unreadable or failed audit is retried once, then fails the build. */
-async function runAudit(
+export async function runAudit(
   repoRoot: string,
   rules: string,
   prompt: string,
@@ -406,7 +406,7 @@ export async function runBuild(args: string[], env: BuildEnv): Promise<number> {
 
     // ---------- 9. report ----------
     await writeReport({ repoRoot, spec, pipe, findings, auditNote: parseNote, hookStats, iterations, totalCost, startTs, zipPath, runLog });
-    await emitResult({ ok: true, engine: 'claude', slug: spec.slug, pluginName: spec.pluginName, version: spec.version, zip: zipPath, report: join(repoRoot, 'dist', `${spec.slug}-report.md`), iterations, costUsd: totalCost, provides: summarizeProvides(spec) });
+    await emitResult({ ok: true, engine: 'claude', slug: spec.slug, pluginName: spec.pluginName, version: spec.version, zip: zipPath, report: join(repoRoot, 'dist', `${spec.slug}-report.md`), iterations, costUsd: totalCost, auditFindings: findings.length, provides: summarizeProvides(spec) });
 
     console.log('\n' + '='.repeat(64));
     console.log(`✔ DONE: ${spec.pluginName}`);

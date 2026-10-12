@@ -14,6 +14,8 @@ export interface BuildResult {
   report?: string | null;
   iterations?: number;
   costUsd?: number;
+  /** Security-auditor findings left at the end (Claude engine only). */
+  auditFindings?: number;
   /** Human-readable summary of what the plugin exposes + where to find it. */
   provides?: string;
   error?: string;

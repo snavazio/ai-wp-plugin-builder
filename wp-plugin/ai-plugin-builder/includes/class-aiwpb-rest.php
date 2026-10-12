@@ -25,6 +25,7 @@ class Aiwpb_Rest {
 	public function register() {
 		add_action( 'rest_api_init', array( $this, 'routes' ) );
 		add_action( 'admin_post_aiwpb_download', array( $this, 'download' ) );
+		add_action( 'admin_post_aiwpb_download_version', array( $this, 'download_version' ) );
 	}
 
 	/**
@@ -78,6 +79,10 @@ class Aiwpb_Rest {
 						'type'     => 'string',
 					),
 					'platform' => array(
+						'required' => false,
+						'type'     => 'string',
+					),
+					'context'  => array(
 						'required' => false,
 						'type'     => 'string',
 					),
@@ -187,6 +192,74 @@ class Aiwpb_Rest {
 				),
 			)
 		);
+		$this->registry_routes();
+	}
+
+	/**
+	 * Routes for the My Plugins registry (proxied to the builder service).
+	 *
+	 * @return void
+	 */
+	private function registry_routes() {
+		$slug = '/registry/(?P<slug>[a-z0-9][a-z0-9-]{1,80})';
+		register_rest_route(
+			self::NS,
+			'/registry',
+			array(
+				array(
+					'methods'             => WP_REST_Server::READABLE,
+					'permission_callback' => array( $this, 'can_manage' ),
+					'callback'            => array( $this, 'registry_list' ),
+				),
+				array(
+					'methods'             => WP_REST_Server::CREATABLE,
+					'permission_callback' => array( $this, 'can_manage' ),
+					'callback'            => array( $this, 'registry_import' ),
+				),
+			)
+		);
+		register_rest_route(
+			self::NS,
+			$slug,
+			array(
+				array(
+					'methods'             => WP_REST_Server::READABLE,
+					'permission_callback' => array( $this, 'can_manage' ),
+					'callback'            => array( $this, 'registry_get' ),
+				),
+				array(
+					'methods'             => WP_REST_Server::DELETABLE,
+					'permission_callback' => array( $this, 'can_manage' ),
+					'callback'            => array( $this, 'registry_delete' ),
+				),
+			)
+		);
+		$actions = array(
+			'/fields'  => 'registry_update',
+			'/restore' => 'registry_restore',
+			'/edit'    => 'registry_edit',
+			'/install' => 'registry_install',
+		);
+		foreach ( $actions as $suffix => $callback ) {
+			register_rest_route(
+				self::NS,
+				$slug . $suffix,
+				array(
+					'methods'             => WP_REST_Server::CREATABLE,
+					'permission_callback' => array( $this, 'can_manage' ),
+					'callback'            => array( $this, $callback ),
+				)
+			);
+		}
+		register_rest_route(
+			self::NS,
+			$slug . '/versions/(?P<version>\d+)/report',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'permission_callback' => array( $this, 'can_manage' ),
+				'callback'            => array( $this, 'registry_report' ),
+			)
+		);
 	}
 
 	/**
@@ -219,7 +292,8 @@ class Aiwpb_Rest {
 	 */
 	public function chat( WP_REST_Request $request ) {
 		$raw      = (array) $request->get_param( 'messages' );
-		$mode     = ( 'distill' === $request->get_param( 'mode' ) ) ? 'distill' : '';
+		$mode     = in_array( $request->get_param( 'mode' ), array( 'distill', 'edit' ), true ) ? (string) $request->get_param( 'mode' ) : '';
+		$context  = sanitize_textarea_field( (string) $request->get_param( 'context' ) );
 		$messages = array();
 		foreach ( $raw as $m ) {
 			$role    = ( is_array( $m ) && isset( $m['role'] ) && 'assistant' === $m['role'] ) ? 'assistant' : 'user';
@@ -238,7 +312,7 @@ class Aiwpb_Rest {
 		if ( is_wp_error( $platform ) ) {
 			return $platform;
 		}
-		$result = ( new Aiwpb_Client() )->chat( $messages, $platform, $mode );
+		$result = ( new Aiwpb_Client() )->chat( $messages, $platform, $mode, $context );
 		if ( is_wp_error( $result ) ) {
 			return new WP_Error( 'aiwpb_chat', $result->get_error_message(), array( 'status' => 502 ) );
 		}
@@ -380,6 +454,19 @@ class Aiwpb_Rest {
 			return new WP_Error( 'aiwpb_update', $bytes->get_error_message(), array( 'status' => 502 ) );
 		}
 
+		return $this->install_with_backup( $slug, $bytes );
+	}
+
+	/**
+	 * Install a plugin .zip over the current copy (backing it up first) and activate it. If install or
+	 * activation fails, the backup is restored.
+	 *
+	 * @param string $slug  Plugin folder slug ('' if unknown).
+	 * @param string $bytes Raw .zip bytes.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	private function install_with_backup( $slug, $bytes ) {
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		$was_installed = '' !== $slug && is_dir( trailingslashit( WP_PLUGIN_DIR ) . $slug );
 		$backup        = false;
 		if ( $was_installed ) {
@@ -414,7 +501,9 @@ class Aiwpb_Rest {
 				'activated'   => true,
 				'slug'        => $slug,
 				'canRollback' => $backup,
-				'message'     => __( 'Plugin updated in place and activated.', 'ai-plugin-builder' ),
+				'message'     => $was_installed
+					? __( 'Plugin updated in place and activated.', 'ai-plugin-builder' )
+					: __( 'Plugin installed and activated.', 'ai-plugin-builder' ),
 			)
 		);
 	}
@@ -651,6 +740,277 @@ class Aiwpb_Rest {
 			? sanitize_file_name( $job['artifact']['slug'] . '-' . ( isset( $job['artifact']['version'] ) ? $job['artifact']['version'] : '1.0.0' ) . '.zip' )
 			: 'plugin.zip';
 
+		nocache_headers();
+		header( 'Content-Type: application/zip' );
+		header( 'Content-Disposition: attachment; filename="' . $name . '"' );
+		header( 'Content-Length: ' . strlen( $bytes ) );
+		echo $bytes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- binary zip payload.
+		exit;
+	}
+
+	/**
+	 * Map installed plugin folder => installed version.
+	 *
+	 * @return array<string, string>
+	 */
+	private function installed_versions() {
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		$out = array();
+		foreach ( get_plugins() as $file => $data ) {
+			$dir = dirname( $file );
+			if ( '.' !== $dir ) {
+				$out[ $dir ] = (string) $data['Version'];
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Wrap a service error as a REST error.
+	 *
+	 * @param WP_Error $error  Error from the client.
+	 * @param int      $status HTTP status to return.
+	 * @return WP_Error
+	 */
+	private function upstream_error( $error, $status = 502 ) {
+		return new WP_Error( 'aiwpb_registry', $error->get_error_message(), array( 'status' => $status ) );
+	}
+
+	/**
+	 * Registry fields from a request, sanitized. Only fields actually sent are returned.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return array
+	 */
+	private function registry_fields( WP_REST_Request $request ) {
+		$out = array();
+		foreach ( array( 'name', 'client' ) as $key ) {
+			if ( null !== $request->get_param( $key ) ) {
+				$out[ $key ] = sanitize_text_field( (string) $request->get_param( $key ) );
+			}
+		}
+		if ( null !== $request->get_param( 'notes' ) ) {
+			$out['notes'] = sanitize_textarea_field( (string) $request->get_param( 'notes' ) );
+		}
+		if ( null !== $request->get_param( 'liveUrl' ) ) {
+			$out['liveUrl'] = esc_url_raw( (string) $request->get_param( 'liveUrl' ), array( 'http', 'https' ) );
+		}
+		if ( null !== $request->get_param( 'status' ) ) {
+			$status = sanitize_key( (string) $request->get_param( 'status' ) );
+			if ( in_array( $status, array( 'draft', 'in-review', 'delivered', 'live', 'archived' ), true ) ) {
+				$out['status'] = $status;
+			}
+		}
+		if ( null !== $request->get_param( 'doNotPublish' ) ) {
+			$out['doNotPublish'] = rest_sanitize_boolean( $request->get_param( 'doNotPublish' ) );
+		}
+		return $out;
+	}
+
+	/**
+	 * GET /registry — every plugin in My Plugins, with the version installed on this site.
+	 *
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function registry_list() {
+		$data = ( new Aiwpb_Client() )->request( 'GET', '/plugins' );
+		if ( is_wp_error( $data ) ) {
+			return $this->upstream_error( $data );
+		}
+		$installed = $this->installed_versions();
+		$plugins   = isset( $data['plugins'] ) && is_array( $data['plugins'] ) ? $data['plugins'] : array();
+		foreach ( array_keys( $plugins ) as $i ) {
+			$slug                              = isset( $plugins[ $i ]['slug'] ) ? sanitize_key( $plugins[ $i ]['slug'] ) : '';
+			$plugins[ $i ]['installedVersion'] = isset( $installed[ $slug ] ) ? $installed[ $slug ] : '';
+		}
+		return rest_ensure_response( array( 'plugins' => $plugins ) );
+	}
+
+	/**
+	 * POST /registry — add a plugin to My Plugins from an installed plugin or an uploaded .zip.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function registry_import( WP_REST_Request $request ) {
+		$source = ( 'upload' === $request->get_param( 'source' ) ) ? 'upload' : 'installed';
+		if ( 'installed' === $source ) {
+			$slug    = sanitize_key( (string) $request->get_param( 'slug' ) );
+			$zip_b64 = '' !== $slug ? $this->zip_installed_plugin( $slug ) : new WP_Error( 'aiwpb_registry', __( 'Choose an installed plugin.', 'ai-plugin-builder' ) );
+		} else {
+			$raw     = preg_replace( '/[^A-Za-z0-9+\/=]/', '', (string) $request->get_param( 'zipB64' ) );
+			$zip_b64 = '' !== $raw ? $raw : new WP_Error( 'aiwpb_registry', __( 'Choose a .zip to upload.', 'ai-plugin-builder' ) );
+		}
+		if ( is_wp_error( $zip_b64 ) ) {
+			return $this->upstream_error( $zip_b64, 400 );
+		}
+		$body           = $this->registry_fields( $request );
+		$body['zipB64'] = $zip_b64;
+		$data           = ( new Aiwpb_Client() )->request( 'POST', '/plugins', $body, 90 );
+		if ( is_wp_error( $data ) ) {
+			return $this->upstream_error( $data );
+		}
+		return rest_ensure_response( $data );
+	}
+
+	/**
+	 * GET /registry/:slug — one plugin with its full version history.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function registry_get( WP_REST_Request $request ) {
+		$slug = sanitize_key( (string) $request->get_param( 'slug' ) );
+		$data = ( new Aiwpb_Client() )->request( 'GET', '/plugins/' . rawurlencode( $slug ) );
+		if ( is_wp_error( $data ) ) {
+			return $this->upstream_error( $data );
+		}
+		$installed                          = $this->installed_versions();
+		$data['plugin']['installedVersion'] = isset( $installed[ $slug ] ) ? $installed[ $slug ] : '';
+		return rest_ensure_response( $data );
+	}
+
+	/**
+	 * POST /registry/:slug/fields — edit name, client, status, live URL, notes, do-not-publish.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function registry_update( WP_REST_Request $request ) {
+		$slug = sanitize_key( (string) $request->get_param( 'slug' ) );
+		$data = ( new Aiwpb_Client() )->request( 'PATCH', '/plugins/' . rawurlencode( $slug ), $this->registry_fields( $request ) );
+		if ( is_wp_error( $data ) ) {
+			return $this->upstream_error( $data );
+		}
+		return rest_ensure_response( $data );
+	}
+
+	/**
+	 * DELETE /registry/:slug — remove from My Plugins (does not uninstall it from this site).
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function registry_delete( WP_REST_Request $request ) {
+		$slug = sanitize_key( (string) $request->get_param( 'slug' ) );
+		$data = ( new Aiwpb_Client() )->request( 'DELETE', '/plugins/' . rawurlencode( $slug ) );
+		if ( is_wp_error( $data ) ) {
+			return $this->upstream_error( $data );
+		}
+		return rest_ensure_response( $data );
+	}
+
+	/**
+	 * POST /registry/:slug/restore — make an earlier version current.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function registry_restore( WP_REST_Request $request ) {
+		$slug = sanitize_key( (string) $request->get_param( 'slug' ) );
+		$data = ( new Aiwpb_Client() )->request( 'POST', '/plugins/' . rawurlencode( $slug ) . '/restore', array( 'versionId' => absint( $request->get_param( 'versionId' ) ) ) );
+		if ( is_wp_error( $data ) ) {
+			return $this->upstream_error( $data );
+		}
+		return rest_ensure_response( $data );
+	}
+
+	/**
+	 * POST /registry/:slug/edit — start a fix / change / refactor / update job with the "AI for edits" platform.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function registry_edit( WP_REST_Request $request ) {
+		$slug = sanitize_key( (string) $request->get_param( 'slug' ) );
+		$kind = sanitize_key( (string) $request->get_param( 'kind' ) );
+		if ( ! in_array( $kind, array( 'fix', 'change', 'refactor', 'update' ), true ) ) {
+			return new WP_Error( 'aiwpb_registry', __( 'Unknown edit type.', 'ai-plugin-builder' ), array( 'status' => 400 ) );
+		}
+		$text = sanitize_textarea_field( (string) $request->get_param( 'request' ) );
+		if ( '' === trim( $text ) ) {
+			return new WP_Error( 'aiwpb_registry', __( 'Describe what you want first.', 'ai-plugin-builder' ), array( 'status' => 400 ) );
+		}
+		$platform = Aiwpb_Platforms::resolve( Aiwpb_Platforms::edit_id() );
+		if ( ! $platform ) {
+			return new WP_Error( 'aiwpb_platform', __( 'No AI platform is set up. Add one under AI Plugin Builder → Settings.', 'ai-plugin-builder' ), array( 'status' => 400 ) );
+		}
+		$data = ( new Aiwpb_Client() )->request(
+			'POST',
+			'/plugins/' . rawurlencode( $slug ) . '/edit',
+			array(
+				'kind'     => $kind,
+				'request'  => $text,
+				'platform' => Aiwpb_Platforms::to_service( $platform ),
+			)
+		);
+		if ( is_wp_error( $data ) ) {
+			return $this->upstream_error( $data );
+		}
+		return rest_ensure_response( $data );
+	}
+
+	/**
+	 * GET /registry/:slug/versions/:version/report — a version's build/edit report (markdown).
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function registry_report( WP_REST_Request $request ) {
+		$slug = sanitize_key( (string) $request->get_param( 'slug' ) );
+		$ver  = absint( $request->get_param( 'version' ) );
+		$text = ( new Aiwpb_Client() )->raw( '/plugins/' . rawurlencode( $slug ) . '/versions/' . $ver . '/report', 30 );
+		if ( is_wp_error( $text ) ) {
+			return $this->upstream_error( $text, 404 );
+		}
+		return rest_ensure_response( array( 'markdown' => $text ) );
+	}
+
+	/**
+	 * POST /registry/:slug/install — install a stored version on this site (backup first, then activate).
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function registry_install( WP_REST_Request $request ) {
+		$slug  = sanitize_key( (string) $request->get_param( 'slug' ) );
+		$ver   = absint( $request->get_param( 'versionId' ) );
+		$bytes = ( new Aiwpb_Client() )->raw( '/plugins/' . rawurlencode( $slug ) . '/versions/' . $ver . '/zip' );
+		if ( is_wp_error( $bytes ) ) {
+			return $this->upstream_error( $bytes );
+		}
+		return $this->install_with_backup( $slug, $bytes );
+	}
+
+	/**
+	 * Download handler (admin-post): streams a stored version's .zip.
+	 *
+	 * @return void
+	 */
+	public function download_version() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You are not allowed to do this.', 'ai-plugin-builder' ), '', array( 'response' => 403 ) );
+		}
+		check_admin_referer( 'aiwpb_download_version' );
+		$slug = isset( $_GET['slug'] ) ? sanitize_key( wp_unslash( $_GET['slug'] ) ) : '';
+		$ver  = isset( $_GET['version'] ) ? absint( wp_unslash( $_GET['version'] ) ) : 0;
+		if ( '' === $slug || 0 === $ver ) {
+			wp_die( esc_html__( 'Missing plugin or version.', 'ai-plugin-builder' ) );
+		}
+		$client = new Aiwpb_Client();
+		$bytes  = $client->raw( '/plugins/' . rawurlencode( $slug ) . '/versions/' . $ver . '/zip' );
+		if ( is_wp_error( $bytes ) ) {
+			wp_die( esc_html( $bytes->get_error_message() ) );
+		}
+		$name = sanitize_file_name( $slug . '-v' . $ver . '.zip' );
+		$data = $client->request( 'GET', '/plugins/' . rawurlencode( $slug ) );
+		if ( ! is_wp_error( $data ) && isset( $data['plugin']['versions'] ) && is_array( $data['plugin']['versions'] ) ) {
+			foreach ( $data['plugin']['versions'] as $v ) {
+				if ( isset( $v['id'], $v['version'] ) && (int) $v['id'] === $ver ) {
+					$name = sanitize_file_name( $slug . '.' . $v['version'] . '.zip' );
+				}
+			}
+		}
 		nocache_headers();
 		header( 'Content-Type: application/zip' );
 		header( 'Content-Disposition: attachment; filename="' . $name . '"' );

@@ -17,6 +17,7 @@ class Aiwpb_Platforms {
 
 	const OPTION         = 'aiwpb_platforms';
 	const DEFAULT_OPTION = 'aiwpb_default_platform';
+	const EDIT_OPTION    = 'aiwpb_edit_platform';
 
 	/**
 	 * Wire protocols the builder service understands.
@@ -149,6 +150,28 @@ class Aiwpb_Platforms {
 		}
 		$ids = array_keys( $all );
 		return $ids ? (string) $ids[0] : '';
+	}
+
+	/**
+	 * The platform used for My Plugins edits (fix / change / refactor / update). Falls back to the default.
+	 *
+	 * @return string
+	 */
+	public static function edit_id() {
+		$id = (string) get_option( self::EDIT_OPTION, '' );
+		return null !== self::get( $id ) ? $id : self::default_id();
+	}
+
+	/**
+	 * Choose the platform for My Plugins edits ('' = use the default platform).
+	 *
+	 * @param string $id Platform id.
+	 * @return void
+	 */
+	public static function set_edit( $id ) {
+		if ( '' === $id || self::get( $id ) ) {
+			update_option( self::EDIT_OPTION, $id, false );
+		}
 	}
 
 	/**

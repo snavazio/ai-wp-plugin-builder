@@ -3,7 +3,7 @@ Contributors: stephennavazio
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,6 +28,13 @@ All generation and verification happens on the service, not inside WordPress.
 4. Open AI Plugin Builder, type a spec, choose an engine, and click Generate.
 
 == Changelog ==
+
+= 1.2.0 =
+* New My Plugins screen: every plugin you build or import, with client, status, live URL, notes and a do-not-publish flag.
+* Full version history per plugin: download any version, read its report, make it current, or install it on this site (with a backup).
+* Fix, Change, Refactor and Update buttons: describe the edit in a short chat; the result is re-checked against every gate and saved as a new version (fix/refactor bump the patch version, change bumps the minor version).
+* Settings: choose the AI used for edits.
+* Uninstall now also removes roll-back backups.
 
 = 1.1.0 =
 * Settings: manage a list of AI platforms (Claude, Ollama, OpenAI, Gemini, OpenRouter, Groq, DeepSeek, Mistral, xAI, or any OpenAI-compatible endpoint) — add, edit, delete, make default.

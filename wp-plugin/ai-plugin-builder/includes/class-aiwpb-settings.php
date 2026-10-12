@@ -30,6 +30,7 @@ class Aiwpb_Settings {
 		add_action( 'admin_post_aiwpb_save_platform', array( $this, 'handle_save' ) );
 		add_action( 'admin_post_aiwpb_delete_platform', array( $this, 'handle_delete' ) );
 		add_action( 'admin_post_aiwpb_default_platform', array( $this, 'handle_default' ) );
+		add_action( 'admin_post_aiwpb_edit_platform', array( $this, 'handle_edit_platform' ) );
 	}
 
 	/**
@@ -178,6 +179,20 @@ class Aiwpb_Settings {
 	}
 
 	/**
+	 * Choose the AI used for My Plugins edits (admin-post).
+	 *
+	 * @return void
+	 */
+	public function handle_edit_platform() {
+		$this->require_cap();
+		check_admin_referer( 'aiwpb_edit_platform' );
+		$id = isset( $_POST['edit_platform'] ) ? sanitize_key( wp_unslash( $_POST['edit_platform'] ) ) : '';
+		Aiwpb_Platforms::set_edit( $id );
+		wp_safe_redirect( $this->page_url( array( 'aiwpb_notice' => 'edit' ) ) . '#aiwpb-edit-ai' );
+		exit;
+	}
+
+	/**
 	 * Render the settings page.
 	 *
 	 * @return void
@@ -211,6 +226,7 @@ class Aiwpb_Settings {
 			'saved'   => __( 'AI platform saved.', 'ai-plugin-builder' ),
 			'deleted' => __( 'AI platform deleted.', 'ai-plugin-builder' ),
 			'default' => __( 'Default AI platform updated.', 'ai-plugin-builder' ),
+			'edit'    => __( 'AI for edits updated.', 'ai-plugin-builder' ),
 		);
 		if ( isset( $texts[ $notice ] ) ) {
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html( $texts[ $notice ] ) . '</p></div>';
@@ -368,6 +384,35 @@ class Aiwpb_Settings {
 			<?php endforeach; ?>
 			</tbody>
 		</table>
+		<?php
+		$this->render_edit_platform( $all );
+	}
+
+	/**
+	 * The "AI for edits" selector used by My Plugins (Fix / Change / Refactor / Update).
+	 *
+	 * @param array $all All saved platforms.
+	 * @return void
+	 */
+	private function render_edit_platform( $all ) {
+		if ( empty( $all ) ) {
+			return;
+		}
+		$chosen = (string) get_option( Aiwpb_Platforms::EDIT_OPTION, '' );
+		?>
+		<h3 id="aiwpb-edit-ai"><?php echo esc_html__( 'AI for edits', 'ai-plugin-builder' ); ?></h3>
+		<p class="description"><?php echo esc_html__( 'Used by My Plugins when you Fix, Change, Refactor or Update a plugin. New builds use the AI picked on the builder screen.', 'ai-plugin-builder' ); ?></p>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+			<input type="hidden" name="action" value="aiwpb_edit_platform" />
+			<?php wp_nonce_field( 'aiwpb_edit_platform' ); ?>
+			<select name="edit_platform">
+				<option value="" <?php selected( $chosen, '' ); ?>><?php echo esc_html__( 'Same as the default AI', 'ai-plugin-builder' ); ?></option>
+				<?php foreach ( $all as $id => $p ) : ?>
+					<option value="<?php echo esc_attr( $id ); ?>" <?php selected( $chosen, $id ); ?>><?php echo esc_html( '' !== $p['model'] ? $p['name'] . ' — ' . $p['model'] : $p['name'] ); ?></option>
+				<?php endforeach; ?>
+			</select>
+			<?php submit_button( __( 'Save', 'ai-plugin-builder' ), 'secondary', 'submit', false ); ?>
+		</form>
 		<?php
 	}
 

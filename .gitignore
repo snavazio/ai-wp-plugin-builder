@@ -36,3 +36,6 @@ Thumbs.db
 
 # Builder service job workdir
 /.builder-jobs/
+
+# Plugin registry (My Plugins list): client names + notes stay out of git
+/.builder-data/
