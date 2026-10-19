@@ -16,6 +16,8 @@ export interface BuildResult {
   costUsd?: number;
   /** Security-auditor findings left at the end (Claude engine only). */
   auditFindings?: number;
+  /** Set by publish-github on success. */
+  github?: { owner: string; repo: string; url: string; private: boolean; tag: string; commit: string; releaseUrl: string; versionId: number };
   /** Human-readable summary of what the plugin exposes + where to find it. */
   provides?: string;
   error?: string;

@@ -201,6 +201,35 @@
 				f.addEventListener( 'change', loadModels );
 			}
 		} );
+		var ghTest = document.getElementById( 'aiwpb-gh-test' );
+		if ( ghTest ) {
+			ghTest.addEventListener( 'click', function () {
+				var out = document.getElementById( 'aiwpb-gh-test-result' );
+				ghTest.disabled = true;
+				out.className = 'aiwpb-test';
+				out.textContent = cfg.testing;
+				fetch( cfg.root + '/github/test', {
+					method: 'POST',
+					headers: { 'X-WP-Nonce': cfg.nonce, 'Content-Type': 'application/json' },
+					credentials: 'same-origin',
+					body: JSON.stringify( { token: formVal( 'aiwpb-gh-token' ) } ),
+				} )
+					.then( function ( res ) {
+						return res.json();
+					} )
+					.then( function ( r ) {
+						out.className = 'aiwpb-test ' + ( r.ok ? 'aiwpb-test--ok' : 'aiwpb-test--fail' );
+						out.textContent = ( r.ok ? '✔ ' : '✖ ' ) + ( r.message || '' );
+					} )
+					.catch( function ( e ) {
+						out.className = 'aiwpb-test aiwpb-test--fail';
+						out.textContent = '✖ ' + e.message;
+					} )
+					.then( function () {
+						ghTest.disabled = false;
+					} );
+			} );
+		}
 		var refresh = document.getElementById( 'aiwpb-p-model-load' );
 		if ( refresh ) {
 			refresh.addEventListener( 'click', loadModels );

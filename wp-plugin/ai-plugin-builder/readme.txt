@@ -3,7 +3,7 @@ Contributors: stephennavazio
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.2
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,6 +28,12 @@ All generation and verification happens on the service, not inside WordPress.
 4. Open AI Plugin Builder, type a spec, choose an engine, and click Generate.
 
 == Changelog ==
+
+= 1.3.0 =
+* Publish to GitHub from My Plugins: creates a private repository named after the plugin (first time), re-runs every check, commits the full source to main, tags the version and creates a release with the installable .zip.
+* Settings: GitHub account, access token (masked, never shown) and private-by-default, with a Test token button.
+* Builds and edits now keep a full-source snapshot (tests included) with each version.
+* Plugins marked do-not-publish cannot be published.
 
 = 1.2.2 =
 * Settings: the Model field is now a drop-down filled with the models the platform offers (refreshes when Type, Base URL or API key change; falls back to a text box if the list cannot be loaded).

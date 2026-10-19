@@ -31,6 +31,7 @@ class Aiwpb_Settings {
 		add_action( 'admin_post_aiwpb_delete_platform', array( $this, 'handle_delete' ) );
 		add_action( 'admin_post_aiwpb_default_platform', array( $this, 'handle_default' ) );
 		add_action( 'admin_post_aiwpb_edit_platform', array( $this, 'handle_edit_platform' ) );
+		add_action( 'admin_post_aiwpb_save_github', array( $this, 'handle_save_github' ) );
 	}
 
 	/**
@@ -165,6 +166,81 @@ class Aiwpb_Settings {
 	}
 
 	/**
+	 * Save the GitHub publishing settings (admin-post).
+	 *
+	 * @return void
+	 */
+	public function handle_save_github() {
+		$this->require_cap();
+		check_admin_referer( 'aiwpb_save_github' );
+		$owner = isset( $_POST['github_owner'] ) ? sanitize_text_field( wp_unslash( $_POST['github_owner'] ) ) : '';
+		if ( '' !== $owner && ! preg_match( '/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/', $owner ) ) {
+			set_transient( 'aiwpb_platform_error_' . get_current_user_id(), __( 'That is not a valid GitHub account name.', 'ai-plugin-builder' ), 60 );
+			wp_safe_redirect( $this->page_url( array( 'aiwpb_notice' => 'error' ) ) . '#aiwpb-github' );
+			exit;
+		}
+		update_option( Aiwpb_Github::OWNER_OPTION, '' !== $owner ? $owner : 'snavazio', false );
+		update_option( Aiwpb_Github::PRIVATE_OPTION, empty( $_POST['github_private'] ) ? '0' : '1', false );
+		$token = isset( $_POST['github_token'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['github_token'] ) ) ) : '';
+		if ( '' !== $token ) {
+			update_option( Aiwpb_Github::TOKEN_OPTION, $token, false );
+		} elseif ( ! empty( $_POST['github_clear_token'] ) ) {
+			delete_option( Aiwpb_Github::TOKEN_OPTION );
+		}
+		wp_safe_redirect( $this->page_url( array( 'aiwpb_notice' => 'github' ) ) . '#aiwpb-github' );
+		exit;
+	}
+
+	/**
+	 * Section: GitHub publishing (account, token, private by default, Test).
+	 *
+	 * @return void
+	 */
+	private function render_github() {
+		$owner  = Aiwpb_Github::owner();
+		$masked = Aiwpb_Github::masked_token();
+		?>
+		<hr />
+		<h2 id="aiwpb-github"><?php echo esc_html__( 'GitHub publishing', 'ai-plugin-builder' ); ?></h2>
+		<p class="description"><?php echo esc_html__( 'Used by My Plugins → Publish to GitHub. Each plugin gets its own repository named after its slug.', 'ai-plugin-builder' ); ?></p>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+			<input type="hidden" name="action" value="aiwpb_save_github" />
+			<?php wp_nonce_field( 'aiwpb_save_github' ); ?>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><label for="aiwpb-gh-owner"><?php echo esc_html__( 'GitHub account', 'ai-plugin-builder' ); ?></label></th>
+					<td><input name="github_owner" id="aiwpb-gh-owner" type="text" class="regular-text" value="<?php echo esc_attr( $owner ); ?>" />
+						<p class="description"><?php echo esc_html__( 'Your user name, or an organisation the token can create repositories in.', 'ai-plugin-builder' ); ?></p></td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="aiwpb-gh-token"><?php echo esc_html__( 'Access token', 'ai-plugin-builder' ); ?></label></th>
+					<td>
+						<input name="github_token" id="aiwpb-gh-token" type="password" autocomplete="new-password" class="regular-text" value="" />
+						<?php if ( '' !== $masked ) : ?>
+							<p class="description">
+								<?php
+								/* translators: %s: masked token, e.g. ••••abcd */
+								echo esc_html( sprintf( __( 'Saved token %s — leave blank to keep it.', 'ai-plugin-builder' ), $masked ) );
+								?>
+								<label><input type="checkbox" name="github_clear_token" value="1" /> <?php echo esc_html__( 'Remove the saved token', 'ai-plugin-builder' ); ?></label>
+							</p>
+						<?php endif; ?>
+						<p class="description"><?php echo esc_html__( 'Create one at github.com → Settings → Developer settings → Personal access tokens. Classic token: tick the "repo" scope. Fine-grained token: All repositories, with Administration and Contents set to Read and write.', 'ai-plugin-builder' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php echo esc_html__( 'New repositories', 'ai-plugin-builder' ); ?></th>
+					<td><label><input type="checkbox" name="github_private" value="1" <?php checked( Aiwpb_Github::is_private() ); ?> /> <?php echo esc_html__( 'Create them as private', 'ai-plugin-builder' ); ?></label></td>
+				</tr>
+			</table>
+			<?php submit_button( __( 'Save GitHub settings', 'ai-plugin-builder' ), 'primary', 'submit', false ); ?>
+			<button type="button" class="button" id="aiwpb-gh-test"><?php echo esc_html__( 'Test token', 'ai-plugin-builder' ); ?></button>
+			<span id="aiwpb-gh-test-result" class="aiwpb-test"></span>
+		</form>
+		<?php
+	}
+
+	/**
 	 * Make a platform the default (admin-post).
 	 *
 	 * @return void
@@ -207,6 +283,7 @@ class Aiwpb_Settings {
 			<?php
 			$this->render_notice();
 			$this->render_service();
+			$this->render_github();
 			$this->render_platforms();
 			$this->render_platform_form();
 			?>
@@ -227,6 +304,7 @@ class Aiwpb_Settings {
 			'deleted' => __( 'AI platform deleted.', 'ai-plugin-builder' ),
 			'default' => __( 'Default AI platform updated.', 'ai-plugin-builder' ),
 			'edit'    => __( 'AI for edits updated.', 'ai-plugin-builder' ),
+			'github'  => __( 'GitHub settings saved.', 'ai-plugin-builder' ),
 		);
 		if ( isset( $texts[ $notice ] ) ) {
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html( $texts[ $notice ] ) . '</p></div>';

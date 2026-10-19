@@ -155,7 +155,7 @@
 				'<td>' + esc( money( p.totalCostUsd ) ) + '</td>' +
 				'<td>' + audit + '</td>' +
 				'<td>' + installed + '</td>' +
-				'<td>' + ( p.doNotPublish ? '<span class="aiwpb-lock" title="Marked do-not-publish">Do not publish</span>' : '<span class="aiwpb-dim">not published</span>' ) + '</td>' +
+				'<td>' + publishCell( p ) + '</td>' +
 				'<td class="aiwpb-actions">' +
 				'<button type="button" class="button button-small aiwpb-view" data-slug="' + esc( p.slug ) + '">View</button> ' +
 				'<button type="button" class="button button-small aiwpb-edit-fields" data-slug="' + esc( p.slug ) + '">Edit</button> ' +
@@ -167,6 +167,17 @@
 			html = '<p>No plugins match.</p>';
 		}
 		el( 'aiwpb-table' ).innerHTML = html;
+	}
+
+	function publishCell( p ) {
+		if ( p.github && safeUrl( p.github.url ) ) {
+			return '<a href="' + esc( p.github.url ) + '" target="_blank" rel="noopener noreferrer">GitHub</a> ' +
+				'<span class="aiwpb-dim">' + esc( p.github.lastTag ) + ( p.github.private ? ' · private' : ' · public' ) + '</span>';
+		}
+		if ( p.doNotPublish ) {
+			return '<span class="aiwpb-lock" title="Marked do-not-publish">Do not publish</span>';
+		}
+		return '<span class="aiwpb-dim">not published</span>';
 	}
 
 	// ---------- add / import ----------
@@ -297,9 +308,14 @@
 		Object.keys( KINDS ).forEach( function ( k ) {
 			html += '<button type="button" class="button button-primary aiwpb-kind" data-kind="' + k + '">' + KINDS[ k ].label + '</button> ';
 		} );
+		var gh = cfg.github || {};
+		var pubBlock = p.doNotPublish ? 'Marked do-not-publish (untick it under Edit details to allow publishing).' : ( gh.ready ? '' : 'No GitHub token saved yet (Settings → GitHub publishing).' );
+		html += '<button type="button" class="button aiwpb-publish-gh"' + ( pubBlock ? ' disabled title="' + esc( pubBlock ) + '"' : '' ) + '>Publish v' + esc( cur.version ) + ' to GitHub</button> ';
 		html += '<button type="button" class="button aiwpb-edit-fields" data-slug="' + esc( p.slug ) + '">Edit details</button>' +
 			'<span class="aiwpb-dim"> Edits use: ' + esc( cfg.editAiLabel || 'no AI set' ) + ' (<a href="' + esc( cfg.settingsUrl ) + '">change</a>)</span></div>' +
-			'<div id="aiwpb-fields-panel"></div><div id="aiwpb-edit-panel"></div>' +
+			( pubBlock ? '<p class="aiwpb-dim">Publishing: ' + esc( pubBlock ) + '</p>' : '' ) +
+			githubSection( p ) +
+			'<div id="aiwpb-fields-panel"></div><div id="aiwpb-edit-panel"></div><div id="aiwpb-publish-panel"></div>' +
 			'<h3>Versions</h3><table class="widefat striped aiwpb-versions"><thead><tr><th>#</th><th>Version</th><th>Kind</th><th>When</th><th>AI</th><th>Cost</th><th>Audit</th><th>What was asked</th><th>Actions</th></tr></thead><tbody>';
 		p.versions.slice().reverse().forEach( function ( v ) {
 			var isCur = v.id === p.currentVersionId;
@@ -331,6 +347,96 @@
 		if ( 'fields' === focus ) {
 			showFields();
 		}
+	}
+
+	function githubSection( p ) {
+		var g = p.published && p.published.github;
+		if ( ! g || ! safeUrl( g.url ) ) {
+			return '';
+		}
+		var html = '<div class="aiwpb-subcard"><strong>GitHub:</strong> <a href="' + esc( g.url ) + '" target="_blank" rel="noopener noreferrer">' + esc( g.owner + '/' + g.repo ) + '</a>' +
+			' <span class="aiwpb-dim">(' + ( g.private ? 'private' : 'public' ) + ')</span><ul class="aiwpb-activity">';
+		( g.releases || [] ).slice().reverse().forEach( function ( r ) {
+			html += '<li>' + esc( r.tag ) + ' — ' + ( safeUrl( r.releaseUrl ) ? '<a href="' + esc( r.releaseUrl ) + '" target="_blank" rel="noopener noreferrer">release</a>' : '' ) +
+				' <span class="aiwpb-dim">' + esc( date( r.at ) ) + ' · commit ' + esc( String( r.commit || '' ).slice( 0, 7 ) ) + '</span></li>';
+		} );
+		return html + '</ul></div>';
+	}
+
+	// ---------- publish to GitHub ----------
+	var pub = null; // { jobId, timer, errors }
+	function startPublish() {
+		var cur = current.versions.filter( function ( v ) {
+			return v.id === current.currentVersionId;
+		} )[ 0 ] || {};
+		var gh = cfg.github || {};
+		var already = current.published && current.published.github;
+		var msg = 'Publish ' + current.name + ' v' + cur.version + ' to GitHub?\n\n' +
+			( already ? '• Repository: ' + already.owner + '/' + already.repo + ' (exists, ' + ( already.private ? 'private' : 'PUBLIC' ) + ')\n' :
+				'• Creates a ' + ( gh.private ? 'PRIVATE' : 'PUBLIC' ) + ' repository ' + gh.owner + '/' + current.slug + '\n' ) +
+			'• Re-runs every check first; stops if anything fails\n' +
+			'• Commits the source to main, tags v' + cur.version + ', and creates a release with the .zip';
+		if ( ! window.confirm( msg ) ) {
+			return;
+		}
+		el( 'aiwpb-publish-panel' ).innerHTML = '<div class="aiwpb-subcard"><h3>Publishing to GitHub <span id="aiwpb-pub-state" class="aiwpb-badge"></span></h3><pre class="aiwpb-log" id="aiwpb-pub-log">Starting…</pre><div id="aiwpb-pub-result"></div></div>';
+		setPubState( 'queued' );
+		api( '/registry/' + encodeURIComponent( current.slug ) + '/publish', { method: 'POST', body: JSON.stringify( { versionId: cur.id } ) } )
+			.then( function ( d ) {
+				pub = { jobId: d.jobId, timer: null, errors: 0, slug: current.slug };
+				pollPub();
+			} )
+			.catch( function ( e ) {
+				setPubState( 'error' );
+				el( 'aiwpb-pub-log' ).textContent = 'Error: ' + e.message;
+			} );
+	}
+	function setPubState( s ) {
+		var b = el( 'aiwpb-pub-state' );
+		if ( b ) {
+			b.textContent = s;
+			b.className = 'aiwpb-badge aiwpb-badge--' + s;
+		}
+	}
+	function pollPub() {
+		if ( pub ) {
+			window.clearTimeout( pub.timer );
+			pub.timer = window.setTimeout( pubTick, 2000 );
+		}
+	}
+	function pubTick() {
+		if ( ! pub ) {
+			return;
+		}
+		api( '/jobs/' + pub.jobId, { method: 'GET' } ).then( function ( job ) {
+			pub.errors = 0;
+			setPubState( job.status );
+			var log = el( 'aiwpb-pub-log' );
+			if ( log ) {
+				log.textContent = ( job.log || [] ).join( '\n' );
+				log.scrollTop = log.scrollHeight;
+			}
+			if ( 'done' === job.status ) {
+				var g = ( job.artifact || {} ).github || {};
+				var slug = pub.slug;
+				pub = null;
+				load();
+				openDetail( slug ).then( function () {
+					notice( 'Published ' + ( g.tag || '' ) + ' to GitHub: ' + ( g.releaseUrl || '' ) );
+				} );
+			} else if ( 'error' === job.status ) {
+				if ( log ) {
+					log.textContent += '\n✖ ' + ( job.error || 'Publishing failed.' ) + '\nNothing was published if the checks failed.';
+				}
+				pub = null;
+			} else {
+				pollPub();
+			}
+		} ).catch( function () {
+			if ( pub && ++pub.errors <= 12 ) {
+				pollPub();
+			}
+		} );
 	}
 
 	// ---------- edit details (CRM fields) ----------
@@ -595,6 +701,8 @@
 				}
 			} else if ( t.classList.contains( 'aiwpb-delete' ) ) {
 				doDelete( t.getAttribute( 'data-slug' ) );
+			} else if ( t.classList.contains( 'aiwpb-publish-gh' ) ) {
+				startPublish();
 			} else if ( t.classList.contains( 'aiwpb-kind' ) ) {
 				openEdit( t.getAttribute( 'data-kind' ) );
 			} else if ( t.classList.contains( 'aiwpb-report' ) ) {

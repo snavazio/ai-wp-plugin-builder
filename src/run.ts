@@ -90,6 +90,11 @@ async function cmdIngest(args: string[]): Promise<number> {
   return runIngest(args, { repoRoot: REPO_ROOT, harnessDir: HARNESS_DIR });
 }
 
+async function cmdPublishGithub(args: string[]): Promise<number> {
+  const { runPublishGithub } = await import('./publishGithub.js');
+  return runPublishGithub(args, { repoRoot: REPO_ROOT, harnessDir: HARNESS_DIR });
+}
+
 async function cmdCorpus(): Promise<number> {
   const { seedCorpus, readManifest } = await import('./corpus.js');
   await seedCorpus(REPO_ROOT, (m) => console.log(m));
@@ -140,9 +145,12 @@ async function main(): Promise<void> {
     case 'ingest':
       code = await cmdIngest(rest);
       break;
+    case 'publish-github':
+      code = await cmdPublishGithub(rest);
+      break;
     default:
       console.error(
-        'Commands: verify <dir> | verify-all <dir> | regression | corpus | build <spec.md> | build-local <spec.md> | revise <slug> "change"',
+        'Commands: verify <dir> | verify-all <dir> | regression | corpus | build <spec.md> | build-local <spec.md> | revise <slug> "change" | ingest <zip> <change> | serve | publish-github <slug> <versionId>',
       );
       code = 2;
   }

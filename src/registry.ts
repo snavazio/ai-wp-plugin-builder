@@ -40,6 +40,26 @@ export interface VersionRecord {
   /** Paths relative to .builder-data/. */
   zipFile: string;
   reportFile: string | null;
+  /** Full source snapshot (tests + SPEC.json included). Absent for imports and for versions recorded before it existed. */
+  sourceFile?: string | null;
+}
+
+/** One version pushed to a GitHub repo. */
+export interface GithubRelease {
+  versionId: number;
+  version: string;
+  tag: string;
+  commit: string;
+  releaseUrl: string;
+  at: string;
+}
+
+export interface GithubPublish {
+  owner: string;
+  repo: string;
+  url: string;
+  private: boolean;
+  releases: GithubRelease[];
 }
 
 export interface ActivityEntry {
@@ -62,6 +82,8 @@ export interface PluginRecord {
   currentVersionId: number;
   versions: VersionRecord[];
   activity: ActivityEntry[];
+  /** Where the plugin has been published (step 2: GitHub; step 3 will add wordpress.org). */
+  published?: { github?: GithubPublish };
 }
 
 interface RegistryFile {
@@ -205,6 +227,35 @@ export class Registry {
     });
   }
 
+  /** Attach a full-source snapshot to a version (copied into the registry). */
+  async setVersionSource(slug: string, versionId: number, sourceZipPath: string): Promise<void> {
+    await this.exclusive(async (data) => {
+      const v = data.plugins[slug]?.versions.find((x) => x.id === versionId);
+      if (!v) return;
+      const rel = join('plugins', slug, String(versionId), 'source.zip');
+      await copyFile(sourceZipPath, this.abs(rel));
+      v.sourceFile = rel;
+      await this.save(data);
+    });
+  }
+
+  /** Record that a version was published to GitHub. */
+  async recordGithub(slug: string, repo: Omit<GithubPublish, 'releases'>, release: GithubRelease): Promise<void> {
+    await this.exclusive(async (data) => {
+      const rec = data.plugins[slug];
+      if (!rec) return;
+      rec.published = rec.published ?? {};
+      const gh = rec.published.github ?? { ...repo, releases: [] };
+      Object.assign(gh, repo);
+      gh.releases = gh.releases.filter((r) => r.tag !== release.tag);
+      gh.releases.push(release);
+      rec.published.github = gh;
+      pushActivity(rec, true, `Published v${release.version} to GitHub (${repo.owner}/${repo.repo}, tag ${release.tag}).`);
+      rec.updatedAt = new Date().toISOString();
+      await this.save(data);
+    });
+  }
+
   /** Note a failed or informational event on a plugin's activity line (no-op for unknown slugs). */
   async addActivity(slug: string, ok: boolean, message: string): Promise<void> {
     await this.exclusive(async (data) => {
@@ -266,11 +317,11 @@ export class Registry {
   }
 
   /** Absolute path of a version's file, or null. */
-  async versionFile(slug: string, versionId: number, which: 'zip' | 'report'): Promise<string | null> {
+  async versionFile(slug: string, versionId: number, which: 'zip' | 'report' | 'source'): Promise<string | null> {
     const rec = await this.get(slug);
     const v = rec?.versions.find((x) => x.id === versionId);
     if (!v) return null;
-    const rel = which === 'zip' ? v.zipFile : v.reportFile;
+    const rel = which === 'zip' ? v.zipFile : which === 'source' ? v.sourceFile ?? null : v.reportFile;
     return rel ? this.abs(rel) : null;
   }
 }

@@ -84,6 +84,11 @@ class Aiwpb_Plugins_Page {
 				'editPlatform'  => $edit_platform ? (string) $edit_platform['id'] : '',
 				'editAiLabel'   => $edit_platform ? ( '' !== $edit_platform['model'] ? $edit_platform['name'] . ' — ' . $edit_platform['model'] : $edit_platform['name'] ) : '',
 				'installed'     => $installed,
+				'github'        => array(
+					'ready'   => '' !== Aiwpb_Github::token(),
+					'owner'   => Aiwpb_Github::owner(),
+					'private' => Aiwpb_Github::is_private(),
+				),
 			)
 		);
 	}

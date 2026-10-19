@@ -170,6 +170,15 @@ class Aiwpb_Rest {
 		);
 		register_rest_route(
 			self::NS,
+			'/github/test',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'permission_callback' => array( $this, 'can_manage' ),
+				'callback'            => array( $this, 'github_test' ),
+			)
+		);
+		register_rest_route(
+			self::NS,
 			'/platforms/models',
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -247,6 +256,7 @@ class Aiwpb_Rest {
 			'/fields'  => 'registry_update',
 			'/restore' => 'registry_restore',
 			'/edit'    => 'registry_edit',
+			'/publish' => 'registry_publish',
 			'/install' => 'registry_install',
 		);
 		foreach ( $actions as $suffix => $callback ) {
@@ -1021,6 +1031,74 @@ class Aiwpb_Rest {
 				'platform' => Aiwpb_Platforms::to_service( $platform ),
 			)
 		);
+		if ( is_wp_error( $data ) ) {
+			return $this->upstream_error( $data );
+		}
+		return rest_ensure_response( $data );
+	}
+
+	/**
+	 * POST /github/test — check a GitHub token (the one typed in the form, else the saved one).
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function github_test( WP_REST_Request $request ) {
+		$token = trim( sanitize_text_field( (string) $request->get_param( 'token' ) ) );
+		if ( '' === $token ) {
+			$token = Aiwpb_Github::token();
+		}
+		if ( '' === $token ) {
+			return rest_ensure_response(
+				array(
+					'ok'      => false,
+					'message' => __( 'No token saved yet. Paste one and click Test token or Save.', 'ai-plugin-builder' ),
+				)
+			);
+		}
+		$client = new Aiwpb_Client();
+		if ( ! $client->is_configured() ) {
+			return rest_ensure_response(
+				array(
+					'ok'      => false,
+					'message' => __( 'Set the builder service URL and API key first — the check runs on the service.', 'ai-plugin-builder' ),
+				)
+			);
+		}
+		$data = $client->request( 'POST', '/github/test', array( 'token' => $token ), 30 );
+		if ( is_wp_error( $data ) ) {
+			return $this->upstream_error( $data );
+		}
+		return rest_ensure_response(
+			array(
+				'ok'      => ! empty( $data['ok'] ),
+				'message' => isset( $data['message'] ) ? (string) $data['message'] : '',
+			)
+		);
+	}
+
+	/**
+	 * POST /registry/:slug/publish — publish a version (default: current) to GitHub with the saved settings.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function registry_publish( WP_REST_Request $request ) {
+		$slug  = sanitize_key( (string) $request->get_param( 'slug' ) );
+		$token = Aiwpb_Github::token();
+		if ( '' === $token ) {
+			return new WP_Error( 'aiwpb_github', __( 'No GitHub token saved. Add one under AI Plugin Builder → Settings → GitHub publishing.', 'ai-plugin-builder' ), array( 'status' => 400 ) );
+		}
+		$body = array(
+			'target'  => 'github',
+			'token'   => $token,
+			'owner'   => Aiwpb_Github::owner(),
+			'private' => Aiwpb_Github::is_private(),
+		);
+		if ( null !== $request->get_param( 'versionId' ) ) {
+			$body['versionId'] = absint( $request->get_param( 'versionId' ) );
+		}
+		$data = ( new Aiwpb_Client() )->request( 'POST', '/plugins/' . rawurlencode( $slug ) . '/publish', $body );
 		if ( is_wp_error( $data ) ) {
 			return $this->upstream_error( $data );
 		}

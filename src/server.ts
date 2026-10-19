@@ -23,6 +23,8 @@
  *   GET    /api/plugins/:slug/versions/:id/zip|report
  *   POST   /api/plugins/:slug/restore {versionId} -> { plugin }
  *   POST   /api/plugins/:slug/edit {kind: fix|change|refactor|update, request, platform} -> { jobId }
+ *   POST   /api/plugins/:slug/publish {target: 'github', token, owner?, private?, versionId?} -> { jobId }
+ *   POST   /api/github/test {token}              -> { ok, login, scopes, message }
  * Successful builds and edits started through this service are recorded in the registry automatically.
  *
  * `platform` = { protocol: anthropic|ollama|openai|gemini, baseUrl, apiKey, model } — one entry from the
@@ -89,6 +91,8 @@ interface Job {
   error?: string;
   /** When set, the outcome is recorded in the My Plugins registry. */
   record?: { kind: VersionKind; description: string; ai: string; slugHint?: string };
+  /** Set on publish jobs: where the result is recorded. */
+  publish?: { slug: string };
 }
 
 /** How a job hands its engine to the child process: which engine runs, plus the env that configures it. */
@@ -131,14 +135,46 @@ function platformError(raw: unknown): string {
 
 /** The registry is created by runServer; runChild records finished jobs into it. */
 let registry: Registry | null = null;
+let serveEnv: ServeEnv | null = null;
+
+/**
+ * Keep the full source (tests + SPEC.json) of a just-recorded version. Jobs are serialized, so build/<slug>
+ * still holds exactly the source that was verified and packaged.
+ */
+async function snapshotSource(slug: string, versionId: number, jobDir: string): Promise<void> {
+  if (!registry || !serveEnv) return;
+  const src = join(serveEnv.repoRoot, 'build', slug);
+  if (!(await exists(src))) return;
+  const out = join(jobDir, 'source.zip');
+  const r = await exec('php', [join(serveEnv.harnessDir, 'bin', 'zipdir.php'), src, slug, out], { timeoutMs: 60_000 });
+  if (r.code === 0) await registry.setVersionSource(slug, versionId, out);
+}
 
 /** Record a finished job in the My Plugins registry (best effort — never fails the job). */
 async function recordJob(job: Job): Promise<void> {
-  if (!registry || !job.record) return;
+  if (!registry) return;
   const a = job.artifact;
+  if (job.publish) {
+    try {
+      if (a?.ok && a.github) {
+        const g = a.github;
+        await registry.recordGithub(
+          job.publish.slug,
+          { owner: g.owner, repo: g.repo, url: g.url, private: g.private },
+          { versionId: g.versionId, version: a.version ?? '', tag: g.tag, commit: g.commit, releaseUrl: g.releaseUrl, at: new Date().toISOString() },
+        );
+      } else {
+        await registry.addActivity(job.publish.slug, false, `GitHub publish failed: ${job.error || a?.error || 'unknown error'}`);
+      }
+    } catch (e) {
+      job.log.push(`Could not record the publish in My Plugins: ${e instanceof Error ? e.message : String(e)}`);
+    }
+    return;
+  }
+  if (!job.record) return;
   try {
     if (a?.ok && a.zip && a.slug && a.version) {
-      await registry.addVersion({
+      const added = await registry.addVersion({
         slug: a.slug,
         name: a.pluginName || a.slug,
         version: a.version,
@@ -152,6 +188,7 @@ async function recordJob(job: Job): Promise<void> {
         zipPath: a.zip,
         reportPath: a.report ?? null,
       });
+      if (serveEnv) await snapshotSource(a.slug, added.id, join(serveEnv.repoRoot, '.builder-jobs', job.id));
       job.log.push(`Recorded in My Plugins: ${a.slug} v${a.version}.`);
     } else {
       const slug = a?.slug || job.record.slugHint;
@@ -176,6 +213,7 @@ function summary(rec: PluginRecord): Record<string, unknown> {
     createdAt: rec.createdAt,
     updatedAt: rec.updatedAt,
     versionsCount: rec.versions.length,
+    github: rec.published?.github ? { url: rec.published.github.url, private: rec.published.github.private, lastTag: rec.published.github.releases.at(-1)?.tag ?? '' } : null,
     totalCostUsd: rec.versions.reduce((t, v) => t + (v.costUsd || 0), 0),
     current: cur
       ? { id: cur.id, version: cur.version, kind: cur.kind, ai: cur.ai, createdAt: cur.createdAt, auditFindings: cur.auditFindings, provides: cur.provides }
@@ -191,6 +229,7 @@ export async function runServer(_args: string[], env: ServeEnv): Promise<number>
   await mkdir(jobsRoot, { recursive: true });
 
   registry = new Registry(env.repoRoot);
+  serveEnv = env;
   const reg = registry;
   const jobs = new Map<string, Job>();
   let chain: Promise<void> = Promise.resolve(); // serialize builds
@@ -313,6 +352,34 @@ export async function runServer(_args: string[], env: ServeEnv): Promise<number>
       return json(res, 202, { jobId: job.id, status: job.status });
     }
 
+    if (path === '/api/github/test' && req.method === 'POST') {
+      const body = await readBody(req).catch(() => null);
+      const token = typeof body?.token === 'string' ? body.token.trim() : '';
+      if (!token) return json(res, 400, { error: 'Body must include a GitHub "token".' });
+      try {
+        const r = await fetch('https://api.github.com/user', {
+          headers: { authorization: `Bearer ${token}`, accept: 'application/vnd.github+json', 'user-agent': 'ai-wp-plugin-builder' },
+          redirect: 'error',
+          signal: AbortSignal.timeout(15_000),
+        });
+        const data = (await r.json().catch(() => ({}))) as { login?: string; message?: string };
+        if (r.status !== 200) return json(res, 200, { ok: false, message: `GitHub rejected the token (HTTP ${r.status}): ${data.message ?? ''}` });
+        const scopes = r.headers.get('x-oauth-scopes');
+        const fineGrained = scopes === null;
+        const canRepo = fineGrained || /\brepo\b/.test(scopes ?? '');
+        return json(res, 200, {
+          ok: canRepo,
+          login: data.login,
+          scopes: scopes ?? '(fine-grained token)',
+          message: canRepo
+            ? `Token works: signed in as ${data.login}${fineGrained ? ' (fine-grained token — it needs Administration + Contents read/write on all repositories to create repos)' : ' with the "repo" scope'}.`
+            : `Signed in as ${data.login}, but the token lacks the "repo" scope, so it cannot create private repos or push.`,
+        });
+      } catch (e) {
+        return json(res, 200, { ok: false, message: `Could not reach GitHub: ${e instanceof Error ? e.message : String(e)}` });
+      }
+    }
+
     // ---------- My Plugins registry ----------
     if (path === '/api/plugins' && req.method === 'GET') {
       return json(res, 200, { plugins: (await reg.list()).map(summary) });
@@ -342,7 +409,7 @@ export async function runServer(_args: string[], env: ServeEnv): Promise<number>
       }
     }
 
-    const pluginMatch = path.match(/^\/api\/plugins\/([a-z0-9][a-z0-9-]{1,80})(?:\/(restore|edit)|\/versions\/(\d+)\/(zip|report))?$/);
+    const pluginMatch = path.match(/^\/api\/plugins\/([a-z0-9][a-z0-9-]{1,80})(?:\/(restore|edit|publish)|\/versions\/(\d+)\/(zip|report))?$/);
     if (pluginMatch) {
       const [, slug, action, versionIdRaw, versionFile] = pluginMatch;
       if (!validSlug(slug)) return json(res, 400, { error: 'Invalid plugin slug.' });
@@ -404,6 +471,36 @@ export async function runServer(_args: string[], env: ServeEnv): Promise<number>
           record: { kind: kind as EditKind, description: request, ai: es.ai, slugHint: slug },
         };
         enqueueIngest(job, { zipPath }, request, es, kind as EditKind);
+        return json(res, 202, { jobId: job.id, status: job.status });
+      }
+
+      if (action === 'publish' && req.method === 'POST') {
+        const body = await readBody(req).catch(() => null);
+        if (body?.target !== 'github') return json(res, 400, { error: 'Only target "github" is supported so far.' });
+        const token = typeof body?.token === 'string' ? body.token.trim() : '';
+        if (!token) return json(res, 400, { error: 'No GitHub token. Save one under AI Plugin Builder → Settings → GitHub.' });
+        const owner = typeof body?.owner === 'string' ? body.owner.trim() : '';
+        if (owner && !/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/.test(owner)) return json(res, 400, { error: 'Invalid GitHub account name.' });
+        const rec = await reg.get(slug);
+        if (!rec) return json(res, 404, { error: 'Plugin not found.' });
+        if (rec.doNotPublish) return json(res, 409, { error: `"${rec.name}" is marked do-not-publish.` });
+        const versionId = body?.versionId !== undefined ? Number(body.versionId) : rec.currentVersionId;
+        if (!rec.versions.some((v) => v.id === versionId)) return json(res, 404, { error: 'That version was not found.' });
+        const job: Job = { id: randomUUID(), engine: 'local', status: 'queued', createdAt: Date.now(), log: [], publish: { slug } };
+        jobs.set(job.id, job);
+        const childEnv: NodeJS.ProcessEnv = {
+          ...process.env,
+          GITHUB_TOKEN: token,
+          AIWPB_GH_OWNER: owner,
+          AIWPB_GH_PRIVATE: body?.private === false ? '0' : '1',
+        };
+        chain = chain.then(async () => {
+          job.status = 'running';
+          const dir = join(jobsRoot, job.id);
+          await mkdir(dir, { recursive: true });
+          const resultFile = join(dir, 'result.json');
+          await runChild(env, job, ['tsx', 'src/run.ts', 'publish-github', slug, String(versionId)], { ...childEnv, AIWPB_RESULT_FILE: resultFile }, resultFile, 'Publish');
+        });
         return json(res, 202, { jobId: job.id, status: job.status });
       }
 
