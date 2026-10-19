@@ -471,8 +471,16 @@ class Aiwpb_Settings {
 				<tr>
 					<th scope="row"><label for="aiwpb-p-model"><?php echo esc_html__( 'Model', 'ai-plugin-builder' ); ?></label></th>
 					<td>
-						<input name="model" id="aiwpb-p-model" type="text" class="regular-text" value="<?php echo esc_attr( $p['model'] ); ?>" placeholder="<?php echo esc_attr__( 'e.g. claude-sonnet-5-5, qwen3:30b', 'ai-plugin-builder' ); ?>" />
-						<p class="description"><?php echo esc_html__( 'Not sure? Save, then click Test — it lists the models that platform offers.', 'ai-plugin-builder' ); ?></p>
+						<select name="model" id="aiwpb-p-model" class="regular-text" data-current="<?php echo esc_attr( $p['model'] ); ?>">
+							<?php if ( '' !== $p['model'] ) : ?>
+								<option value="<?php echo esc_attr( $p['model'] ); ?>" selected><?php echo esc_html( $p['model'] ); ?></option>
+							<?php else : ?>
+								<option value=""><?php echo esc_html__( '— loading models… —', 'ai-plugin-builder' ); ?></option>
+							<?php endif; ?>
+						</select>
+						<button type="button" class="button" id="aiwpb-p-model-load"><?php echo esc_html__( 'Refresh list', 'ai-plugin-builder' ); ?></button>
+						<span class="spinner" id="aiwpb-p-model-spinner"></span>
+						<p class="description" id="aiwpb-p-model-status"><?php echo esc_html__( 'The list comes from the platform itself, using the Type, Base URL and API key above.', 'ai-plugin-builder' ); ?></p>
 					</td>
 				</tr>
 				<tr>

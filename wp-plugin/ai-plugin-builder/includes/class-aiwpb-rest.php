@@ -170,6 +170,15 @@ class Aiwpb_Rest {
 		);
 		register_rest_route(
 			self::NS,
+			'/platforms/models',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'permission_callback' => array( $this, 'can_manage' ),
+				'callback'            => array( $this, 'platform_models' ),
+			)
+		);
+		register_rest_route(
+			self::NS,
 			'/platforms/(?P<id>[a-z0-9]+)/test',
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -370,6 +379,74 @@ class Aiwpb_Rest {
 				'message' => isset( $result['message'] ) ? (string) $result['message'] : '',
 				'ms'      => isset( $result['ms'] ) ? (int) $result['ms'] : 0,
 				'models'  => isset( $result['models'] ) ? array_slice( array_map( 'strval', (array) $result['models'] ), 0, 50 ) : array(),
+			)
+		);
+	}
+
+	/**
+	 * POST /platforms/models — the models a platform offers, from the add/edit form's current (possibly unsaved)
+	 * values. A blank API key falls back to the key already saved on that platform. Nothing is stored.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function platform_models( WP_REST_Request $request ) {
+		$types = Aiwpb_Platforms::types();
+		$type  = sanitize_key( (string) $request->get_param( 'type' ) );
+		if ( ! isset( $types[ $type ] ) ) {
+			return new WP_Error( 'aiwpb_platform', __( 'Choose a platform type.', 'ai-plugin-builder' ), array( 'status' => 400 ) );
+		}
+		$base = esc_url_raw( trim( (string) $request->get_param( 'base_url' ) ), array( 'http', 'https' ) );
+		if ( '' === $base ) {
+			$base = (string) $types[ $type ]['base_url'];
+		}
+		if ( '' === $base ) {
+			return rest_ensure_response(
+				array(
+					'ok'      => false,
+					'message' => __( 'Enter the base URL first.', 'ai-plugin-builder' ),
+					'models'  => array(),
+				)
+			);
+		}
+		$key = trim( sanitize_text_field( (string) $request->get_param( 'api_key' ) ) );
+		if ( '' === $key ) {
+			$existing = Aiwpb_Platforms::get( sanitize_key( (string) $request->get_param( 'id' ) ) );
+			$key      = $existing ? (string) $existing['api_key'] : '';
+		}
+		$client = new Aiwpb_Client();
+		if ( ! $client->is_configured() ) {
+			return rest_ensure_response(
+				array(
+					'ok'      => false,
+					'message' => __( 'Set the builder service URL and API key above first — the list is fetched by the service.', 'ai-plugin-builder' ),
+					'models'  => array(),
+				)
+			);
+		}
+		$result = $client->test_platform(
+			array(
+				'protocol' => $types[ $type ]['protocol'],
+				'baseUrl'  => untrailingslashit( $base ),
+				'apiKey'   => $key,
+				'model'    => '',
+			)
+		);
+		if ( is_wp_error( $result ) ) {
+			return rest_ensure_response(
+				array(
+					'ok'      => false,
+					/* translators: %s: error from the builder service */
+					'message' => sprintf( __( 'Could not load models: %s', 'ai-plugin-builder' ), $result->get_error_message() ),
+					'models'  => array(),
+				)
+			);
+		}
+		return rest_ensure_response(
+			array(
+				'ok'      => ! empty( $result['ok'] ),
+				'message' => isset( $result['message'] ) ? (string) $result['message'] : '',
+				'models'  => isset( $result['models'] ) ? array_slice( array_map( 'strval', (array) $result['models'] ), 0, 500 ) : array(),
 			)
 		);
 	}

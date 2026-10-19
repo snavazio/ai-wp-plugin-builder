@@ -62,6 +62,112 @@
 		base.required = ! t.baseUrl;
 	}
 
+	// ---- Add/edit form: Model dropdown filled from the platform's own model list ----
+	var modelSeq = 0;
+	function formVal( id ) {
+		var f = document.getElementById( id );
+		return f ? f.value : '';
+	}
+	function setModelStatus( text, bad ) {
+		var st = document.getElementById( 'aiwpb-p-model-status' );
+		if ( st ) {
+			st.textContent = text;
+			st.className = 'description' + ( bad ? ' aiwpb-test--fail' : '' );
+		}
+	}
+	/** Swap the model control between a <select> and a plain text box, keeping its value. */
+	function modelControl( asSelect ) {
+		var cur = document.getElementById( 'aiwpb-p-model' );
+		if ( ! cur || ( 'SELECT' === cur.tagName ) === asSelect ) {
+			return cur;
+		}
+		var next = document.createElement( asSelect ? 'select' : 'input' );
+		next.id = 'aiwpb-p-model';
+		next.name = 'model';
+		next.className = 'regular-text';
+		next.setAttribute( 'data-current', cur.getAttribute( 'data-current' ) || '' );
+		if ( ! asSelect ) {
+			next.type = 'text';
+			next.value = cur.value || cur.getAttribute( 'data-current' ) || '';
+			next.placeholder = 'e.g. claude-sonnet-5-5, qwen3:30b';
+		}
+		cur.parentNode.replaceChild( next, cur );
+		return next;
+	}
+	function loadModels() {
+		var ctl = document.getElementById( 'aiwpb-p-model' );
+		if ( ! ctl ) {
+			return;
+		}
+		// Remember the user's choice so a reload keeps it selected.
+		if ( ctl.value ) {
+			ctl.setAttribute( 'data-current', ctl.value );
+		}
+		var seq = ++modelSeq;
+		var spin = document.getElementById( 'aiwpb-p-model-spinner' );
+		if ( spin ) {
+			spin.classList.add( 'is-active' );
+		}
+		setModelStatus( 'Loading models…', false );
+		var idField = document.querySelector( 'form input[name="id"]' );
+		fetch( cfg.root + '/platforms/models', {
+			method: 'POST',
+			headers: { 'X-WP-Nonce': cfg.nonce, 'Content-Type': 'application/json' },
+			credentials: 'same-origin',
+			body: JSON.stringify( {
+				id: idField ? idField.value : '',
+				type: formVal( 'aiwpb-p-type' ),
+				base_url: formVal( 'aiwpb-p-base' ),
+				api_key: formVal( 'aiwpb-p-key' ),
+			} ),
+		} )
+			.then( function ( res ) {
+				return res.json().then( function ( data ) {
+					if ( ! res.ok ) {
+						throw new Error( data.message || ( 'HTTP ' + res.status ) );
+					}
+					return data;
+				} );
+			} )
+			.then( function ( r ) {
+				if ( seq !== modelSeq ) {
+					return; // a newer request superseded this one
+				}
+				var models = ( r.models || [] ).slice().sort();
+				if ( ! models.length ) {
+					modelControl( false );
+					setModelStatus( ( r.message || 'No models were returned.' ) + ' Type the model name instead.', true );
+					return;
+				}
+				var sel = modelControl( true );
+				var current = sel.getAttribute( 'data-current' ) || '';
+				var html = '';
+				if ( ! current ) {
+					html += '<option value="">— choose a model —</option>';
+				} else if ( models.indexOf( current ) === -1 ) {
+					html += '<option value="' + escapeHtml( current ) + '">' + escapeHtml( current + ' (not offered by this platform)' ) + '</option>';
+				}
+				models.forEach( function ( m ) {
+					html += '<option value="' + escapeHtml( m ) + '">' + escapeHtml( m ) + '</option>';
+				} );
+				sel.innerHTML = html;
+				sel.value = current;
+				setModelStatus( models.length + ' model' + ( 1 === models.length ? '' : 's' ) + ' available on this platform.', false );
+			} )
+			.catch( function ( err ) {
+				if ( seq !== modelSeq ) {
+					return;
+				}
+				modelControl( false );
+				setModelStatus( 'Could not load models (' + err.message + '). Type the model name instead.', true );
+			} )
+			.then( function () {
+				if ( spin && seq === modelSeq ) {
+					spin.classList.remove( 'is-active' );
+				}
+			} );
+	}
+
 	document.addEventListener( 'DOMContentLoaded', function () {
 		document.querySelectorAll( '.aiwpb-test-btn' ).forEach( function ( btn ) {
 			btn.addEventListener( 'click', function () {
@@ -77,8 +183,28 @@
 		} );
 		var type = document.getElementById( 'aiwpb-p-type' );
 		if ( type ) {
-			type.addEventListener( 'change', syncType );
+			type.addEventListener( 'change', function () {
+				syncType();
+				// A different platform type has different models: drop the old choice.
+				var ctl = document.getElementById( 'aiwpb-p-model' );
+				if ( ctl ) {
+					ctl.value = '';
+					ctl.setAttribute( 'data-current', '' );
+				}
+				loadModels();
+			} );
 			syncType();
+		}
+		[ 'aiwpb-p-base', 'aiwpb-p-key' ].forEach( function ( id ) {
+			var f = document.getElementById( id );
+			if ( f ) {
+				f.addEventListener( 'change', loadModels );
+			}
+		} );
+		var refresh = document.getElementById( 'aiwpb-p-model-load' );
+		if ( refresh ) {
+			refresh.addEventListener( 'click', loadModels );
+			loadModels();
 		}
 	} );
 } )();

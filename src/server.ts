@@ -225,7 +225,7 @@ export async function runServer(_args: string[], env: ServeEnv): Promise<number>
     if (path === '/api/platforms/test' && req.method === 'POST') {
       const body = await readBody(req).catch(() => null);
       const p = parsePlatform(body?.platform);
-      if (!p) return json(res, 400, { error: `Body must include a valid "platform" (protocol: ${PROTOCOLS.join(', ')}).` });
+      if (!p) return json(res, 400, { error: body?.platform === undefined ? 'Body must include a "platform".' : platformError(body.platform) });
       return json(res, 200, await testPlatform(p));
     }
 

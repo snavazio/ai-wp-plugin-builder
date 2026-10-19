@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       AI Plugin Builder
  * Description:       Admin screen to generate security-audited WordPress plugins from a plain-English spec, via the AI WP Plugin Builder service.
- * Version:           1.2.1
+ * Version:           1.2.2
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Stephen Navazio Agency
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'AIWPB_VERSION', '1.2.1' );
+define( 'AIWPB_VERSION', '1.2.2' );
 define( 'AIWPB_FILE', __FILE__ );
 define( 'AIWPB_PATH', plugin_dir_path( __FILE__ ) );
 define( 'AIWPB_URL', plugin_dir_url( __FILE__ ) );
