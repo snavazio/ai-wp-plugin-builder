@@ -1,5 +1,5 @@
 === AI Plugin Builder ===
-Contributors: stephennavazio
+Contributors: snavazio
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4

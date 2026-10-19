@@ -26,6 +26,7 @@ import { formatFixes } from './fixKb.js';
 import type { GateResult, PipelineResult } from './types.js';
 import { withSpecCoverage } from './specCoverage.js';
 import { emptyResult, finalize } from './gates/_util.js';
+import { emptyDir } from './util/fs.js';
 import { EDIT_KINDS, type EditKind } from './registry.js';
 
 const MAX_FIX_ITERATIONS = 6;
@@ -220,7 +221,7 @@ export async function runIngest(args: string[], env: BuildEnv): Promise<number> 
 
   // 2. copy into the working dir
   const pluginDir = join(repoRoot, 'build', slug);
-  await rm(pluginDir, { recursive: true, force: true });
+  await emptyDir(pluginDir); // keep the folder: it is bind-mounted into the wp-env sandbox
   await cp(root.dir, pluginDir, { recursive: true });
   await rm(extractDir, { recursive: true, force: true });
   const testsBefore = kind === 'refactor' ? await snapshotTests(pluginDir) : new Map<string, string>();

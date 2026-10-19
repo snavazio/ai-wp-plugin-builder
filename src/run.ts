@@ -95,6 +95,16 @@ async function cmdPublishGithub(args: string[]): Promise<number> {
   return runPublishGithub(args, { repoRoot: REPO_ROOT, harnessDir: HARNESS_DIR });
 }
 
+async function cmdWporgPrepare(args: string[]): Promise<number> {
+  const { runPrepareWporg } = await import('./prepareWporg.js');
+  return runPrepareWporg(args, { repoRoot: REPO_ROOT, harnessDir: HARNESS_DIR });
+}
+
+async function cmdWporgPush(args: string[]): Promise<number> {
+  const { runPublishWporg } = await import('./publishWporg.js');
+  return runPublishWporg(args, { repoRoot: REPO_ROOT, harnessDir: HARNESS_DIR });
+}
+
 async function cmdCorpus(): Promise<number> {
   const { seedCorpus, readManifest } = await import('./corpus.js');
   await seedCorpus(REPO_ROOT, (m) => console.log(m));
@@ -148,9 +158,15 @@ async function main(): Promise<void> {
     case 'publish-github':
       code = await cmdPublishGithub(rest);
       break;
+    case 'wporg-prepare':
+      code = await cmdWporgPrepare(rest);
+      break;
+    case 'wporg-push':
+      code = await cmdWporgPush(rest);
+      break;
     default:
       console.error(
-        'Commands: verify <dir> | verify-all <dir> | regression | corpus | build <spec.md> | build-local <spec.md> | revise <slug> "change" | ingest <zip> <change> | serve | publish-github <slug> <versionId>',
+        'Commands: verify <dir> | verify-all <dir> | regression | corpus | build <spec.md> | build-local <spec.md> | revise <slug> "change" | ingest <zip> <change> | serve | publish-github <slug> <versionId> | wporg-prepare <slug> <versionId> | wporg-push <slug> <versionId> [wporgSlug]',
       );
       code = 2;
   }

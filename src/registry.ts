@@ -16,7 +16,7 @@ import { join } from 'node:path';
 export const STATUSES = ['draft', 'in-review', 'delivered', 'live', 'archived'] as const;
 export type Status = (typeof STATUSES)[number];
 
-export const VERSION_KINDS = ['build', 'import', 'fix', 'change', 'refactor', 'update'] as const;
+export const VERSION_KINDS = ['build', 'import', 'fix', 'change', 'refactor', 'update', 'wporg'] as const;
 export type VersionKind = (typeof VERSION_KINDS)[number];
 
 export const EDIT_KINDS = ['fix', 'change', 'refactor', 'update'] as const;
@@ -42,6 +42,31 @@ export interface VersionRecord {
   reportFile: string | null;
   /** Full source snapshot (tests + SPEC.json included). Absent for imports and for versions recorded before it existed. */
   sourceFile?: string | null;
+  /** WordPress.org directory artwork + screenshots (zip). Only on versions prepared for WordPress.org. */
+  assetsFile?: string | null;
+}
+
+/** One version pushed to the WordPress.org plugin SVN. */
+export interface WporgPush {
+  versionId: number;
+  version: string;
+  revision: string;
+  at: string;
+}
+
+/**
+ * WordPress.org directory state. The first submission is a manual upload + human review, so `submitted`
+ * is set by the user; `approved` is detected once the slug appears in the directory.
+ */
+export interface WporgPublish {
+  status: 'prepared' | 'submitted' | 'approved';
+  /** Slug in the directory (assigned on approval; may differ from ours). */
+  slug: string;
+  preparedVersionId: number;
+  submittedAt?: string;
+  approvedAt?: string;
+  url?: string;
+  pushes: WporgPush[];
 }
 
 /** One version pushed to a GitHub repo. */
@@ -83,7 +108,7 @@ export interface PluginRecord {
   versions: VersionRecord[];
   activity: ActivityEntry[];
   /** Where the plugin has been published (step 2: GitHub; step 3 will add wordpress.org). */
-  published?: { github?: GithubPublish };
+  published?: { github?: GithubPublish; wporg?: WporgPublish };
 }
 
 interface RegistryFile {
@@ -239,6 +264,33 @@ export class Registry {
     });
   }
 
+  /** Attach the WordPress.org assets zip to a version. */
+  async setVersionAssets(slug: string, versionId: number, assetsZipPath: string): Promise<void> {
+    await this.exclusive(async (data) => {
+      const v = data.plugins[slug]?.versions.find((x) => x.id === versionId);
+      if (!v) return;
+      const rel = join('plugins', slug, String(versionId), 'wporg-assets.zip');
+      await copyFile(assetsZipPath, this.abs(rel));
+      v.assetsFile = rel;
+      await this.save(data);
+    });
+  }
+
+  /** Create or update the WordPress.org state, with an activity line. */
+  async setWporg(slug: string, patch: Partial<WporgPublish>, activity: string): Promise<PluginRecord | null> {
+    return this.exclusive(async (data) => {
+      const rec = data.plugins[slug];
+      if (!rec) return null;
+      rec.published = rec.published ?? {};
+      const cur: WporgPublish = rec.published.wporg ?? { status: 'prepared', slug, preparedVersionId: rec.currentVersionId, pushes: [] };
+      rec.published.wporg = { ...cur, ...patch, pushes: patch.pushes ?? cur.pushes };
+      pushActivity(rec, true, activity);
+      rec.updatedAt = new Date().toISOString();
+      await this.save(data);
+      return rec;
+    });
+  }
+
   /** Record that a version was published to GitHub. */
   async recordGithub(slug: string, repo: Omit<GithubPublish, 'releases'>, release: GithubRelease): Promise<void> {
     await this.exclusive(async (data) => {
@@ -317,11 +369,12 @@ export class Registry {
   }
 
   /** Absolute path of a version's file, or null. */
-  async versionFile(slug: string, versionId: number, which: 'zip' | 'report' | 'source'): Promise<string | null> {
+  async versionFile(slug: string, versionId: number, which: 'zip' | 'report' | 'source' | 'assets'): Promise<string | null> {
     const rec = await this.get(slug);
     const v = rec?.versions.find((x) => x.id === versionId);
     if (!v) return null;
-    const rel = which === 'zip' ? v.zipFile : which === 'source' ? v.sourceFile ?? null : v.reportFile;
+    const rel =
+      which === 'zip' ? v.zipFile : which === 'source' ? v.sourceFile ?? null : which === 'assets' ? v.assetsFile ?? null : v.reportFile;
     return rel ? this.abs(rel) : null;
   }
 }

@@ -16,6 +16,10 @@ export interface BuildResult {
   costUsd?: number;
   /** Security-auditor findings left at the end (Claude engine only). */
   auditFindings?: number;
+  /** Set by wporg-prepare. */
+  wporg?: { assetsZip: string; wporgSlug: string; testedUpTo: string; username: string; blockers: string[] };
+  /** Set by wporg-push on success. */
+  wporgPush?: { versionId: number; version: string; revision: string; wporgSlug: string };
   /** Set by publish-github on success. */
   github?: { owner: string; repo: string; url: string; private: boolean; tag: string; commit: string; releaseUrl: string; versionId: number };
   /** Human-readable summary of what the plugin exposes + where to find it. */

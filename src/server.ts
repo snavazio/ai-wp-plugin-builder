@@ -25,6 +25,11 @@
  *   POST   /api/plugins/:slug/edit {kind: fix|change|refactor|update, request, platform} -> { jobId }
  *   POST   /api/plugins/:slug/publish {target: 'github', token, owner?, private?, versionId?} -> { jobId }
  *   POST   /api/github/test {token}              -> { ok, login, scopes, message }
+ *   POST   /api/plugins/:slug/wporg/prepare {username?, versionId?} -> { jobId }   (submission package)
+ *   POST   /api/plugins/:slug/wporg/status {status: submitted|prepared, wporgSlug?} -> { plugin }
+ *   POST   /api/plugins/:slug/wporg/refresh     -> { plugin, approved }  (is the slug live in the directory?)
+ *   POST   /api/plugins/:slug/wporg/push {versionId?} -> { jobId }       (SVN; approved plugins only)
+ *   GET    /api/wporg/config                    -> { svnInstalled, credentialsSet }
  * Successful builds and edits started through this service are recorded in the registry automatically.
  *
  * `platform` = { protocol: anthropic|ollama|openai|gemini, baseUrl, apiKey, model } — one entry from the
@@ -93,6 +98,8 @@ interface Job {
   record?: { kind: VersionKind; description: string; ai: string; slugHint?: string };
   /** Set on publish jobs: where the result is recorded. */
   publish?: { slug: string };
+  /** Set on WordPress.org jobs: what to record when it finishes. */
+  wporg?: { slug: string; kind: 'prepare' | 'push'; versionId: number };
 }
 
 /** How a job hands its engine to the child process: which engine runs, plus the env that configures it. */
@@ -154,6 +161,42 @@ async function snapshotSource(slug: string, versionId: number, jobDir: string): 
 async function recordJob(job: Job): Promise<void> {
   if (!registry) return;
   const a = job.artifact;
+  if (job.wporg) {
+    const w = job.wporg;
+    try {
+      if (w.kind === 'prepare' && a?.ok && a.zip && a.version) {
+        const added = await registry.addVersion({
+          slug: w.slug,
+          name: a.pluginName || w.slug,
+          version: a.version,
+          kind: 'wporg',
+          description: `Prepared for WordPress.org from version #${w.versionId}: readme brought to directory standard (Contributors ${a.wporg?.username ?? ''}, Tested up to ${a.wporg?.testedUpTo ?? ''}), screenshots and artwork generated.`,
+          ai: '',
+          provides: a.provides,
+          zipPath: a.zip,
+          reportPath: a.report ?? null,
+        });
+        if (serveEnv) await snapshotSource(w.slug, added.id, join(serveEnv.repoRoot, '.builder-jobs', job.id));
+        if (a.wporg?.assetsZip) await registry.setVersionAssets(w.slug, added.id, a.wporg.assetsZip);
+        const cur = (await registry.get(w.slug))?.published?.wporg;
+        await registry.setWporg(
+          w.slug,
+          { status: cur?.status === 'approved' || cur?.status === 'submitted' ? cur.status : 'prepared', slug: a.wporg?.wporgSlug || w.slug, preparedVersionId: added.id },
+          `Prepared v${a.version} for WordPress.org (version #${added.id}).`,
+        );
+        job.log.push(`Recorded in My Plugins: v${a.version} (WordPress.org-ready) with its assets.`);
+      } else if (w.kind === 'push' && a?.ok && a.wporgPush) {
+        const cur = (await registry.get(w.slug))?.published?.wporg;
+        const pushes = [...(cur?.pushes ?? []), { versionId: a.wporgPush.versionId, version: a.wporgPush.version, revision: a.wporgPush.revision, at: new Date().toISOString() }];
+        await registry.setWporg(w.slug, { pushes }, `Pushed v${a.wporgPush.version} to WordPress.org (SVN r${a.wporgPush.revision}).`);
+      } else {
+        await registry.addActivity(w.slug, false, `WordPress.org ${w.kind} failed: ${job.error || a?.error || 'unknown error'}`);
+      }
+    } catch (e) {
+      job.log.push(`Could not record the WordPress.org result: ${e instanceof Error ? e.message : String(e)}`);
+    }
+    return;
+  }
   if (job.publish) {
     try {
       if (a?.ok && a.github) {
@@ -213,6 +256,7 @@ function summary(rec: PluginRecord): Record<string, unknown> {
     createdAt: rec.createdAt,
     updatedAt: rec.updatedAt,
     versionsCount: rec.versions.length,
+    wporg: rec.published?.wporg ? { status: rec.published.wporg.status, slug: rec.published.wporg.slug, url: rec.published.wporg.url ?? '' } : null,
     github: rec.published?.github ? { url: rec.published.github.url, private: rec.published.github.private, lastTag: rec.published.github.releases.at(-1)?.tag ?? '' } : null,
     totalCostUsd: rec.versions.reduce((t, v) => t + (v.costUsd || 0), 0),
     current: cur
@@ -352,6 +396,15 @@ export async function runServer(_args: string[], env: ServeEnv): Promise<number>
       return json(res, 202, { jobId: job.id, status: job.status });
     }
 
+    if (path === '/api/wporg/config' && req.method === 'GET') {
+      const { svnBinary } = await import('./publishWporg.js');
+      return json(res, 200, {
+        svnInstalled: !!(await svnBinary()),
+        credentialsSet: !!(process.env.AIWPB_WPORG_SVN_USER && process.env.AIWPB_WPORG_SVN_PASSWORD),
+        svnUser: process.env.AIWPB_WPORG_SVN_USER || '',
+      });
+    }
+
     if (path === '/api/github/test' && req.method === 'POST') {
       const body = await readBody(req).catch(() => null);
       const token = typeof body?.token === 'string' ? body.token.trim() : '';
@@ -409,7 +462,7 @@ export async function runServer(_args: string[], env: ServeEnv): Promise<number>
       }
     }
 
-    const pluginMatch = path.match(/^\/api\/plugins\/([a-z0-9][a-z0-9-]{1,80})(?:\/(restore|edit|publish)|\/versions\/(\d+)\/(zip|report))?$/);
+    const pluginMatch = path.match(/^\/api\/plugins\/([a-z0-9][a-z0-9-]{1,80})(?:\/(restore|edit|publish|wporg\/prepare|wporg\/status|wporg\/refresh|wporg\/push)|\/versions\/(\d+)\/(zip|report|assets))?$/);
     if (pluginMatch) {
       const [, slug, action, versionIdRaw, versionFile] = pluginMatch;
       if (!validSlug(slug)) return json(res, 400, { error: 'Invalid plugin slug.' });
@@ -430,9 +483,9 @@ export async function runServer(_args: string[], env: ServeEnv): Promise<number>
       }
 
       if (versionIdRaw && req.method === 'GET') {
-        const file = await reg.versionFile(slug, Number(versionIdRaw), versionFile === 'zip' ? 'zip' : 'report');
+        const file = await reg.versionFile(slug, Number(versionIdRaw), versionFile === 'zip' ? 'zip' : versionFile === 'assets' ? 'assets' : 'report');
         if (!file || !(await exists(file))) return json(res, 404, { error: 'That version file was not found.' });
-        if (versionFile === 'zip') {
+        if (versionFile === 'zip' || versionFile === 'assets') {
           res.setHeader('Content-Type', 'application/zip');
           res.setHeader('Content-Disposition', `attachment; filename="${basename(file)}"`);
         } else {
@@ -471,6 +524,83 @@ export async function runServer(_args: string[], env: ServeEnv): Promise<number>
           record: { kind: kind as EditKind, description: request, ai: es.ai, slugHint: slug },
         };
         enqueueIngest(job, { zipPath }, request, es, kind as EditKind);
+        return json(res, 202, { jobId: job.id, status: job.status });
+      }
+
+      if (action?.startsWith('wporg/') && req.method === 'POST') {
+        const body = await readBody(req).catch(() => null);
+        const rec = await reg.get(slug);
+        if (!rec) return json(res, 404, { error: 'Plugin not found.' });
+        const sub = action.slice('wporg/'.length);
+        const wp = rec.published?.wporg;
+
+        if (sub === 'status') {
+          const status = body?.status === 'submitted' ? 'submitted' : body?.status === 'prepared' ? 'prepared' : '';
+          if (!status) return json(res, 400, { error: '"status" must be "submitted" or "prepared".' });
+          if (!wp) return json(res, 409, { error: 'Prepare it for WordPress.org first.' });
+          const wporgSlug = typeof body?.wporgSlug === 'string' && /^[a-z0-9][a-z0-9-]{1,80}$/.test(body.wporgSlug) ? body.wporgSlug : wp.slug;
+          const updated = await reg.setWporg(
+            slug,
+            { status, slug: wporgSlug, ...(status === 'submitted' ? { submittedAt: new Date().toISOString() } : {}) },
+            status === 'submitted' ? 'Marked as submitted to WordPress.org (awaiting review).' : 'WordPress.org status reset to "prepared".',
+          );
+          return json(res, 200, { plugin: updated });
+        }
+
+        if (sub === 'refresh') {
+          if (!wp) return json(res, 409, { error: 'Prepare it for WordPress.org first.' });
+          const { slugStatus } = await import('./wporg.js');
+          const st = await slugStatus(wp.slug);
+          if (st.state === 'taken' && wp.status !== 'approved') {
+            const updated = await reg.setWporg(
+              slug,
+              { status: 'approved', approvedAt: new Date().toISOString(), url: `https://wordpress.org/plugins/${wp.slug}/` },
+              `Approved: live in the WordPress.org directory as "${st.name}".`,
+            );
+            return json(res, 200, { plugin: updated, approved: true, message: `Live in the directory as "${st.name}".` });
+          }
+          const message =
+            wp.status === 'approved'
+              ? 'Already approved.'
+              : st.state === 'unknown'
+                ? 'Could not reach WordPress.org to check.'
+                : `"${wp.slug}" is not in the directory yet. If the reviewers assigned a different slug, enter it.`;
+          return json(res, 200, { plugin: rec, approved: wp.status === 'approved', message });
+        }
+
+        if (rec.doNotPublish) return json(res, 409, { error: `"${rec.name}" is marked do-not-publish.` });
+        const versionId = body?.versionId !== undefined ? Number(body.versionId) : rec.currentVersionId;
+        if (!rec.versions.some((v) => v.id === versionId)) return json(res, 404, { error: 'That version was not found.' });
+
+        let argv: string[];
+        let childEnv: NodeJS.ProcessEnv = { ...process.env };
+        if (sub === 'prepare') {
+          const username = typeof body?.username === 'string' ? body.username.trim() : '';
+          if (username && !/^[A-Za-z0-9-]{1,50}$/.test(username)) return json(res, 400, { error: 'Invalid WordPress.org username.' });
+          childEnv = { ...childEnv, AIWPB_WPORG_USER: username || 'snavazio' };
+          argv = ['tsx', 'src/run.ts', 'wporg-prepare', slug, String(versionId)];
+        } else if (sub === 'push') {
+          if (wp?.status !== 'approved') return json(res, 409, { error: 'Only approved plugins can be pushed. Use "Check approval" once WordPress.org has approved it.' });
+          argv = ['tsx', 'src/run.ts', 'wporg-push', slug, String(versionId), wp.slug];
+        } else {
+          return json(res, 404, { error: 'Unknown WordPress.org action.' });
+        }
+        const job: Job = {
+          id: randomUUID(),
+          engine: 'local',
+          status: 'queued',
+          createdAt: Date.now(),
+          log: [],
+          wporg: { slug, kind: sub === 'prepare' ? 'prepare' : 'push', versionId },
+        };
+        jobs.set(job.id, job);
+        chain = chain.then(async () => {
+          job.status = 'running';
+          const dir = join(jobsRoot, job.id);
+          await mkdir(dir, { recursive: true });
+          const resultFile = join(dir, 'result.json');
+          await runChild(env, job, argv, { ...childEnv, AIWPB_RESULT_FILE: resultFile }, resultFile, sub === 'prepare' ? 'WordPress.org preparation' : 'WordPress.org push');
+        });
         return json(res, 202, { jobId: job.id, status: job.status });
       }
 
