@@ -3,7 +3,7 @@ Contributors: stephennavazio
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.3.0
+Stable tag: 1.3.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,6 +28,9 @@ All generation and verification happens on the service, not inside WordPress.
 4. Open AI Plugin Builder, type a spec, choose an engine, and click Generate.
 
 == Changelog ==
+
+= 1.3.1 =
+* Settings: the model drop-down and the Test results show each model's price (Claude list prices, live OpenRouter prices, and "free" for models on your own hardware).
 
 = 1.3.0 =
 * Publish to GitHub from My Plugins: creates a private repository named after the plugin (first time), re-runs every check, commits the full source to main, tags the version and creates a release with the installable .zip.

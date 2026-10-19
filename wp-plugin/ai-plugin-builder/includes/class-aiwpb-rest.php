@@ -388,7 +388,8 @@ class Aiwpb_Rest {
 				'ok'      => ! empty( $result['ok'] ),
 				'message' => isset( $result['message'] ) ? (string) $result['message'] : '',
 				'ms'      => isset( $result['ms'] ) ? (int) $result['ms'] : 0,
-				'models'  => isset( $result['models'] ) ? array_slice( array_map( 'strval', (array) $result['models'] ), 0, 50 ) : array(),
+				'models'  => isset( $result['models'] ) ? array_slice( array_map( 'strval', (array) $result['models'] ), 0, 500 ) : array(),
+				'prices'  => $this->clean_prices( $result ),
 			)
 		);
 	}
@@ -457,8 +458,26 @@ class Aiwpb_Rest {
 				'ok'      => ! empty( $result['ok'] ),
 				'message' => isset( $result['message'] ) ? (string) $result['message'] : '',
 				'models'  => isset( $result['models'] ) ? array_slice( array_map( 'strval', (array) $result['models'] ), 0, 500 ) : array(),
+				'prices'  => $this->clean_prices( $result ),
 			)
 		);
+	}
+
+	/**
+	 * Price labels from a service test result, as model => label strings (plain text only). Returned as an
+	 * object so an empty set still encodes as {} rather than [].
+	 *
+	 * @param array $result Service test result.
+	 * @return object
+	 */
+	private function clean_prices( $result ) {
+		$out = array();
+		if ( isset( $result['prices'] ) && is_array( $result['prices'] ) ) {
+			foreach ( array_slice( $result['prices'], 0, 500, true ) as $model => $label ) {
+				$out[ sanitize_text_field( (string) $model ) ] = sanitize_text_field( (string) $label );
+			}
+		}
+		return (object) $out;
 	}
 
 	/**

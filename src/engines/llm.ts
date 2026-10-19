@@ -13,6 +13,7 @@
  * falls back to Ollama via OLLAMA_HOST / OLLAMA_MODEL, so existing CLI usage is unchanged.
  */
 import { ollamaConfig, ollamaChat, type ChatMessage } from './ollama.js';
+import { claudePrice, isPrivateHost, openrouterPrice, FREE_LOCAL } from './prices.js';
 
 export type { ChatMessage };
 
@@ -37,6 +38,8 @@ export interface TestResult {
   message: string;
   ms: number;
   models?: string[];
+  /** Price label per model id, where one is known (see prices.ts). */
+  prices?: Record<string, string>;
 }
 
 const DEFAULT_BASE: Record<Protocol, string> = {
@@ -244,7 +247,8 @@ export async function llmChat(
  */
 export async function testPlatform(p: Platform, timeoutMs = 15_000): Promise<TestResult> {
   const start = Date.now();
-  const done = (ok: boolean, message: string, models?: string[]): TestResult => ({ ok, message, ms: Date.now() - start, models });
+  let prices: Record<string, string> | undefined;
+  const done = (ok: boolean, message: string, models?: string[]): TestResult => ({ ok, message, ms: Date.now() - start, models, prices });
   const b = base(p);
   try {
     switch (p.protocol) {
@@ -252,6 +256,7 @@ export async function testPlatform(p: Platform, timeoutMs = 15_000): Promise<Tes
         const r = await getJson(`${b}/api/tags`, {}, timeoutMs);
         if (r.status !== 200) return done(false, `Ollama at ${b} answered HTTP ${r.status}.`);
         const names = ((r.data as { models?: Array<{ name: string }> })?.models ?? []).map((m) => m.name);
+        prices = Object.fromEntries(names.map((n) => [n, FREE_LOCAL]));
         if (!p.model) return done(true, `Ollama reachable at ${b} (${names.length} models). No model set.`, names);
         const have = names.some((n) => n === p.model || n === `${p.model}:latest`);
         return have
@@ -262,7 +267,17 @@ export async function testPlatform(p: Platform, timeoutMs = 15_000): Promise<Tes
         const r = await getJson(`${b}/models`, p.apiKey ? { authorization: `Bearer ${p.apiKey}` } : {}, timeoutMs);
         if (r.status === 401 || r.status === 403) return done(false, `Key rejected (HTTP ${r.status}): ${errMessage(r.data, r.text)}`);
         if (r.status !== 200) return done(false, `${b}/models answered HTTP ${r.status}: ${errMessage(r.data, r.text)}`);
-        const ids = ((r.data as { data?: Array<{ id: string }> })?.data ?? []).map((m) => m.id);
+        const rows = (r.data as { data?: Array<{ id: string; pricing?: { prompt?: string; completion?: string } }> })?.data ?? [];
+        const ids = rows.map((m) => m.id);
+        if (isPrivateHost(b)) {
+          prices = Object.fromEntries(ids.map((id) => [id, FREE_LOCAL]));
+        } else if (/(^|\.)openrouter\.ai$/i.test(new URL(b).hostname)) {
+          prices = {};
+          for (const row of rows) {
+            const label = openrouterPrice(row.pricing);
+            if (label) prices[row.id] = label;
+          }
+        }
         if (!p.model) return done(true, `Connected to ${b} (${ids.length} models). No model set.`, ids);
         if (ids.length === 0 || ids.includes(p.model)) return done(true, `Connected to ${b}; model ${p.model} is available.`, ids);
         return done(false, `Connected, but model "${p.model}" is not offered by ${b}.`, ids);
@@ -277,6 +292,7 @@ export async function testPlatform(p: Platform, timeoutMs = 15_000): Promise<Tes
         if (r.status === 401 || r.status === 403) return done(false, `Key rejected (HTTP ${r.status}): ${errMessage(r.data, r.text)}`);
         if (r.status !== 200) return done(false, `Anthropic answered HTTP ${r.status}: ${errMessage(r.data, r.text)}`);
         const ids = ((r.data as { data?: Array<{ id: string }> })?.data ?? []).map((m) => m.id);
+        prices = Object.fromEntries(ids.map((id) => [id, claudePrice(id)]));
         if (!p.model) return done(true, `Connected to Anthropic (${via}); ${ids.length} models available. No model set.`, ids);
         if (ids.includes(p.model)) return done(true, `Connected to Anthropic (${via}); model ${p.model} is available.`, ids);
         // Not in the list: it may be an alias, so ask for that model directly before failing.

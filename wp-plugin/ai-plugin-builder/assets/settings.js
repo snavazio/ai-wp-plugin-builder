@@ -38,7 +38,10 @@
 				// (so a wrong model name can be fixed by picking one from the list).
 				if ( r.models && r.models.length ) {
 					html += '<details class="aiwpb-models"' + ( r.ok ? '' : ' open' ) + '><summary>' + escapeHtml( cfg.models ) +
-						' (' + r.models.length + ')</summary><code>' + r.models.map( escapeHtml ).join( '</code> <code>' ) + '</code></details>';
+						' (' + r.models.length + ')</summary>' + r.models.map( function ( m ) {
+							var price = r.prices && r.prices[ m ] ? ' <span class="aiwpb-dim">' + escapeHtml( r.prices[ m ] ) + '</span>' : '';
+							return '<div><code>' + escapeHtml( m ) + '</code>' + price + '</div>';
+						} ).join( '' ) + '</details>';
 				}
 				cell.innerHTML = html;
 			} )
@@ -147,12 +150,17 @@
 				} else if ( models.indexOf( current ) === -1 ) {
 					html += '<option value="' + escapeHtml( current ) + '">' + escapeHtml( current + ' (not offered by this platform)' ) + '</option>';
 				}
+				var prices = r.prices || {};
 				models.forEach( function ( m ) {
-					html += '<option value="' + escapeHtml( m ) + '">' + escapeHtml( m ) + '</option>';
+					html += '<option value="' + escapeHtml( m ) + '">' + escapeHtml( m + ( prices[ m ] ? ' — ' + prices[ m ] : '' ) ) + '</option>';
 				} );
 				sel.innerHTML = html;
 				sel.value = current;
-				setModelStatus( models.length + ' model' + ( 1 === models.length ? '' : 's' ) + ' available on this platform.', false );
+				var priced = models.filter( function ( m ) {
+					return prices[ m ];
+				} ).length;
+				setModelStatus( models.length + ' model' + ( 1 === models.length ? '' : 's' ) + ' available on this platform.' +
+					( priced ? ' Prices are input / output per 1M tokens (list prices).' : ' This platform does not publish prices through its API.' ), false );
 			} )
 			.catch( function ( err ) {
 				if ( seq !== modelSeq ) {
