@@ -169,15 +169,21 @@
 		el( 'aiwpb-table' ).innerHTML = html;
 	}
 
+	var WPORG_LABEL = { prepared: 'WP.org: ready to submit', submitted: 'WP.org: in review', approved: 'WP.org: live' };
 	function publishCell( p ) {
-		if ( p.github && safeUrl( p.github.url ) ) {
-			return '<a href="' + esc( p.github.url ) + '" target="_blank" rel="noopener noreferrer">GitHub</a> ' +
-				'<span class="aiwpb-dim">' + esc( p.github.lastTag ) + ( p.github.private ? ' · private' : ' · public' ) + '</span>';
-		}
 		if ( p.doNotPublish ) {
 			return '<span class="aiwpb-lock" title="Marked do-not-publish">Do not publish</span>';
 		}
-		return '<span class="aiwpb-dim">not published</span>';
+		var parts = [];
+		if ( p.github && safeUrl( p.github.url ) ) {
+			parts.push( '<a href="' + esc( p.github.url ) + '" target="_blank" rel="noopener noreferrer">GitHub</a> ' +
+				'<span class="aiwpb-dim">' + esc( p.github.lastTag ) + ( p.github.private ? ' · private' : ' · public' ) + '</span>' );
+		}
+		if ( p.wporg ) {
+			var label = WPORG_LABEL[ p.wporg.status ] || 'WP.org';
+			parts.push( p.wporg.url && safeUrl( p.wporg.url ) ? '<a href="' + esc( p.wporg.url ) + '" target="_blank" rel="noopener noreferrer">' + esc( label ) + '</a>' : '<span>' + esc( label ) + '</span>' );
+		}
+		return parts.length ? parts.join( '<br>' ) : '<span class="aiwpb-dim">not published</span>';
 	}
 
 	// ---------- add / import ----------
@@ -315,6 +321,7 @@
 			'<span class="aiwpb-dim"> Edits use: ' + esc( cfg.editAiLabel || 'no AI set' ) + ' (<a href="' + esc( cfg.settingsUrl ) + '">change</a>)</span></div>' +
 			( pubBlock ? '<p class="aiwpb-dim">Publishing: ' + esc( pubBlock ) + '</p>' : '' ) +
 			githubSection( p ) +
+			wporgSection( p, cur ) +
 			'<div id="aiwpb-fields-panel"></div><div id="aiwpb-edit-panel"></div><div id="aiwpb-publish-panel"></div>' +
 			'<h3>Versions</h3><table class="widefat striped aiwpb-versions"><thead><tr><th>#</th><th>Version</th><th>Kind</th><th>When</th><th>AI</th><th>Cost</th><th>Audit</th><th>What was asked</th><th>Actions</th></tr></thead><tbody>';
 		p.versions.slice().reverse().forEach( function ( v ) {
@@ -361,6 +368,107 @@
 				' <span class="aiwpb-dim">' + esc( date( r.at ) ) + ' · commit ' + esc( String( r.commit || '' ).slice( 0, 7 ) ) + '</span></li>';
 		} );
 		return html + '</ul></div>';
+	}
+
+	// ---------- WordPress.org ----------
+	function wporgSection( p, cur ) {
+		var w = p.published && p.published.wporg;
+		var user = ( cfg.wporg || {} ).username || '';
+		var html = '<div class="aiwpb-subcard aiwpb-wporg"><strong>WordPress.org</strong> ';
+		if ( p.doNotPublish ) {
+			return html + '<span class="aiwpb-lock">Do not publish</span></div>';
+		}
+		var prepared = w && p.versions.filter( function ( v ) {
+			return v.id === w.preparedVersionId;
+		} )[ 0 ];
+		if ( ! w ) {
+			html += '<span class="aiwpb-dim">not prepared yet</span><p>Makes a new version whose readme meets the directory\'s rules (Contributors <code>' + esc( user ) +
+				'</code>), re-runs every check plus Plugin Check at directory strictness, and creates screenshots, banners and icons. Nothing is sent to WordPress.org.</p>' +
+				'<p><button type="button" class="button aiwpb-wporg-prepare">Prepare v' + esc( cur.version ) + ' for WordPress.org</button></p>';
+		} else {
+			var status = { prepared: 'ready to submit', submitted: 'submitted — waiting for the review', approved: 'approved and live' }[ w.status ] || w.status;
+			html += '<span class="aiwpb-badge aiwpb-badge--' + ( 'approved' === w.status ? 'done' : 'running' ) + '">' + esc( status ) + '</span>' +
+				( w.url && safeUrl( w.url ) ? ' <a href="' + esc( w.url ) + '" target="_blank" rel="noopener noreferrer">' + esc( w.url ) + '</a>' : '' ) +
+				( prepared ? '<p>Prepared version: <strong>v' + esc( prepared.version ) + '</strong> (#' + esc( prepared.id ) + ') — ' +
+					'<a class="button button-small" href="' + esc( downloadUrl( p.slug, prepared.id ) ) + '">Download .zip</a> ' +
+					( prepared.assetsFile ? '<a class="button button-small" href="' + esc( downloadUrl( p.slug, prepared.id ) + '&file=assets' ) + '">Download assets (banners, icons, screenshots)</a> ' : '' ) +
+					( prepared.reportFile ? '<button type="button" class="button button-small aiwpb-report" data-id="' + esc( prepared.id ) + '">Checklist &amp; report</button>' : '' ) + '</p>' : '' );
+			if ( 'prepared' === w.status ) {
+				html += '<ol class="aiwpb-steps"><li>Sign in at <a href="https://wordpress.org/plugins/developers/add/" target="_blank" rel="noopener noreferrer">wordpress.org/plugins/developers/add</a> as <code>' + esc( user ) + '</code>.</li>' +
+					'<li>Upload the downloaded .zip and accept the guidelines.</li><li>Then click <strong>I submitted it</strong> below. The review takes days to a few weeks.</li></ol>' +
+					'<p><button type="button" class="button button-primary aiwpb-wporg-submitted">I submitted it</button> ' +
+					'<button type="button" class="button aiwpb-wporg-prepare">Prepare again from v' + esc( cur.version ) + '</button></p>';
+			} else if ( 'submitted' === w.status ) {
+				html += '<p>Approval is detected when <code>' + esc( w.slug ) + '</code> appears in the directory. If the reviewers gave it a different slug, enter it: ' +
+					'<input type="text" id="aiwpb-wporg-slug" value="' + esc( w.slug ) + '" class="regular-text" style="max-width:220px"></p>' +
+					'<p><button type="button" class="button button-primary aiwpb-wporg-refresh">Check approval</button> ' +
+					'<button type="button" class="button-link aiwpb-wporg-unsubmit">Not submitted after all</button></p>';
+			} else if ( 'approved' === w.status ) {
+				var last = ( w.pushes || [] ).slice( -1 )[ 0 ];
+				html += '<p>' + ( last ? 'Last pushed: v' + esc( last.version ) + ' (SVN r' + esc( last.revision ) + ', ' + esc( date( last.at ) ) + ').' : 'Nothing pushed through SVN yet.' ) + '</p>' +
+					'<p>To release an update: make a new version (Fix / Change / …), prepare it, then push the prepared version.</p>' +
+					'<p><button type="button" class="button aiwpb-wporg-prepare">Prepare v' + esc( cur.version ) + '</button> ' +
+					( prepared ? '<button type="button" class="button button-primary aiwpb-wporg-push" data-id="' + esc( prepared.id ) + '">Push v' + esc( prepared.version ) + ' to WordPress.org</button>' : '' ) + '</p>';
+			}
+		}
+		return html + '<div id="aiwpb-wporg-panel"></div></div>';
+	}
+	var wpJob = null;
+	function wporgJob( sub, body, title ) {
+		el( 'aiwpb-wporg-panel' ).innerHTML = '<h4>' + esc( title ) + ' <span id="aiwpb-wp-state" class="aiwpb-badge"></span></h4><pre class="aiwpb-log" id="aiwpb-wp-log">Starting…</pre>';
+		var slug = current.slug;
+		api( '/registry/' + encodeURIComponent( slug ) + '/wporg/' + sub, { method: 'POST', body: JSON.stringify( body || {} ) } )
+			.then( function ( d ) {
+				wpJob = { id: d.jobId, slug: slug, errors: 0 };
+				wpTick();
+			} )
+			.catch( function ( e ) {
+				el( 'aiwpb-wp-log' ).textContent = 'Error: ' + e.message;
+			} );
+	}
+	function wpTick() {
+		if ( ! wpJob ) {
+			return;
+		}
+		window.setTimeout( function () {
+			api( '/jobs/' + wpJob.id, { method: 'GET' } ).then( function ( job ) {
+				var b = el( 'aiwpb-wp-state' );
+				if ( b ) {
+					b.textContent = job.status;
+					b.className = 'aiwpb-badge aiwpb-badge--' + job.status;
+				}
+				var log = el( 'aiwpb-wp-log' );
+				if ( log ) {
+					log.textContent = ( job.log || [] ).join( '\n' ) + ( 'error' === job.status ? '\n✖ ' + ( job.error || 'Failed.' ) : '' );
+					log.scrollTop = log.scrollHeight;
+				}
+				if ( 'done' === job.status ) {
+					var slug = wpJob.slug;
+					wpJob = null;
+					load();
+					openDetail( slug );
+				} else if ( 'error' === job.status ) {
+					wpJob = null;
+				} else {
+					wpTick();
+				}
+			} ).catch( function () {
+				if ( wpJob && ++wpJob.errors <= 12 ) {
+					wpTick();
+				}
+			} );
+		}, 3000 );
+	}
+	function wporgStatus( body, okText ) {
+		api( '/registry/' + encodeURIComponent( current.slug ) + '/wporg/' + ( body ? 'status' : 'refresh' ), { method: 'POST', body: JSON.stringify( body || {} ) } )
+			.then( function ( d ) {
+				notice( d.message || okText );
+				load();
+				return openDetail( current.slug );
+			} )
+			.catch( function ( e ) {
+				notice( e.message, 'error' );
+			} );
 	}
 
 	// ---------- publish to GitHub ----------
@@ -701,6 +809,31 @@
 				}
 			} else if ( t.classList.contains( 'aiwpb-delete' ) ) {
 				doDelete( t.getAttribute( 'data-slug' ) );
+			} else if ( t.classList.contains( 'aiwpb-wporg-prepare' ) ) {
+				if ( window.confirm( 'Prepare ' + current.name + ' for WordPress.org?\n\nThis creates a new version (readme updated, screenshots and artwork made) after re-running every check. Nothing is sent to WordPress.org.' ) ) {
+					wporgJob( 'prepare', {}, 'Preparing for WordPress.org' );
+				}
+			} else if ( t.classList.contains( 'aiwpb-wporg-submitted' ) ) {
+				wporgStatus( { status: 'submitted' }, 'Marked as submitted.' );
+			} else if ( t.classList.contains( 'aiwpb-wporg-unsubmit' ) ) {
+				wporgStatus( { status: 'prepared' }, 'Back to "ready to submit".' );
+			} else if ( t.classList.contains( 'aiwpb-wporg-refresh' ) ) {
+				var slugBox = el( 'aiwpb-wporg-slug' );
+				var newSlug = slugBox ? slugBox.value.trim() : '';
+				var w = current.published && current.published.wporg;
+				var go = newSlug && w && newSlug !== w.slug
+					? api( '/registry/' + encodeURIComponent( current.slug ) + '/wporg/status', { method: 'POST', body: JSON.stringify( { status: 'submitted', wporgSlug: newSlug } ) } )
+					: Promise.resolve();
+				go.then( function () {
+					wporgStatus( null, 'Checked.' );
+				} ).catch( function ( e ) {
+					notice( e.message, 'error' );
+				} );
+			} else if ( t.classList.contains( 'aiwpb-wporg-push' ) ) {
+				var vid = Number( t.getAttribute( 'data-id' ) );
+				if ( window.confirm( 'Push this version to the live WordPress.org directory?\n\nEvery check is re-run first. The release becomes available to everyone who has the plugin installed.' ) ) {
+					wporgJob( 'push', { versionId: vid }, 'Pushing to WordPress.org' );
+				}
 			} else if ( t.classList.contains( 'aiwpb-publish-gh' ) ) {
 				startPublish();
 			} else if ( t.classList.contains( 'aiwpb-kind' ) ) {

@@ -70,3 +70,5 @@
 .aiwpb-activity { margin-left: 18px; list-style: disc; }
 .aiwpb-activity .aiwpb-bad { color: #b32d2e; }
 .aiwpb-notice .notice { margin: 8px 0; }
+.aiwpb-wporg .aiwpb-steps { margin-left: 20px; list-style: decimal; }
+.aiwpb-wporg p { margin: 8px 0; }

@@ -9,7 +9,7 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	die;
 }
 
-foreach ( array( 'aiwpb_backend_url', 'aiwpb_api_key', 'aiwpb_default_engine', 'aiwpb_local_model', 'aiwpb_platforms', 'aiwpb_default_platform', 'aiwpb_edit_platform', 'aiwpb_github_owner', 'aiwpb_github_token', 'aiwpb_github_private' ) as $aiwpb_option ) {
+foreach ( array( 'aiwpb_backend_url', 'aiwpb_api_key', 'aiwpb_default_engine', 'aiwpb_local_model', 'aiwpb_platforms', 'aiwpb_default_platform', 'aiwpb_edit_platform', 'aiwpb_github_owner', 'aiwpb_github_token', 'aiwpb_github_private', 'aiwpb_wporg_username' ) as $aiwpb_option ) {
 	delete_option( $aiwpb_option );
 }
 

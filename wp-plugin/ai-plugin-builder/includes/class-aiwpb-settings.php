@@ -32,6 +32,7 @@ class Aiwpb_Settings {
 		add_action( 'admin_post_aiwpb_default_platform', array( $this, 'handle_default' ) );
 		add_action( 'admin_post_aiwpb_edit_platform', array( $this, 'handle_edit_platform' ) );
 		add_action( 'admin_post_aiwpb_save_github', array( $this, 'handle_save_github' ) );
+		add_action( 'admin_post_aiwpb_save_wporg', array( $this, 'handle_save_wporg' ) );
 	}
 
 	/**
@@ -192,6 +193,63 @@ class Aiwpb_Settings {
 	}
 
 	/**
+	 * Save the WordPress.org username (admin-post).
+	 *
+	 * @return void
+	 */
+	public function handle_save_wporg() {
+		$this->require_cap();
+		check_admin_referer( 'aiwpb_save_wporg' );
+		$user = isset( $_POST['wporg_username'] ) ? sanitize_text_field( wp_unslash( $_POST['wporg_username'] ) ) : '';
+		if ( '' !== $user && ! preg_match( '/^[A-Za-z0-9-]{1,50}$/', $user ) ) {
+			set_transient( 'aiwpb_platform_error_' . get_current_user_id(), __( 'That is not a valid WordPress.org username.', 'ai-plugin-builder' ), 60 );
+			wp_safe_redirect( $this->page_url( array( 'aiwpb_notice' => 'error' ) ) . '#aiwpb-wporg' );
+			exit;
+		}
+		update_option( Aiwpb_Wporg::USER_OPTION, '' !== $user ? $user : 'snavazio', false );
+		wp_safe_redirect( $this->page_url( array( 'aiwpb_notice' => 'wporg' ) ) . '#aiwpb-wporg' );
+		exit;
+	}
+
+	/**
+	 * Section: WordPress.org publishing (username; SVN status from the service).
+	 *
+	 * @return void
+	 */
+	private function render_wporg() {
+		$config = ( new Aiwpb_Client() )->is_configured() ? ( new Aiwpb_Client() )->request( 'GET', '/wporg/config', null, 15 ) : null;
+		?>
+		<hr />
+		<h2 id="aiwpb-wporg"><?php echo esc_html__( 'WordPress.org publishing', 'ai-plugin-builder' ); ?></h2>
+		<p class="description"><?php echo esc_html__( 'Used by My Plugins → Prepare for WordPress.org. The first submission is a manual upload on wordpress.org followed by a human review; after approval, updates are pushed through SVN.', 'ai-plugin-builder' ); ?></p>
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+			<input type="hidden" name="action" value="aiwpb_save_wporg" />
+			<?php wp_nonce_field( 'aiwpb_save_wporg' ); ?>
+			<table class="form-table" role="presentation">
+				<tr>
+					<th scope="row"><label for="aiwpb-wporg-user"><?php echo esc_html__( 'WordPress.org username', 'ai-plugin-builder' ); ?></label></th>
+					<td><input name="wporg_username" id="aiwpb-wporg-user" type="text" class="regular-text" value="<?php echo esc_attr( Aiwpb_Wporg::username() ); ?>" />
+						<p class="description"><?php echo esc_html__( 'Goes into each readme as "Contributors". Your profile name, not your e-mail (signing in with Google does not change it).', 'ai-plugin-builder' ); ?></p></td>
+				</tr>
+				<tr>
+					<th scope="row"><?php echo esc_html__( 'SVN (for updates)', 'ai-plugin-builder' ); ?></th>
+					<td>
+						<?php if ( is_array( $config ) ) : ?>
+							<p><?php echo esc_html( ! empty( $config['svnInstalled'] ) ? __( '✔ svn is installed on the builder service.', 'ai-plugin-builder' ) : __( '✖ svn is not installed on the builder service.', 'ai-plugin-builder' ) ); ?></p>
+							<p><?php echo esc_html( ! empty( $config['credentialsSet'] ) ? __( '✔ SVN credentials are set on the builder service.', 'ai-plugin-builder' ) : __( '✖ SVN credentials are not set on the builder service yet (only needed after approval).', 'ai-plugin-builder' ) ); ?></p>
+						<?php else : ?>
+							<p><?php echo esc_html__( 'Could not ask the builder service about SVN.', 'ai-plugin-builder' ); ?></p>
+						<?php endif; ?>
+						<p class="description"><?php echo esc_html__( 'Your WordPress.org SVN password is set on the machine running the builder service (AIWPB_WPORG_SVN_USER / AIWPB_WPORG_SVN_PASSWORD), never here.', 'ai-plugin-builder' ); ?></p>
+					</td>
+				</tr>
+			</table>
+			<?php submit_button( __( 'Save WordPress.org settings', 'ai-plugin-builder' ), 'primary', 'submit', false ); ?>
+		</form>
+		<?php
+	}
+
+	/**
 	 * Section: GitHub publishing (account, token, private by default, Test).
 	 *
 	 * @return void
@@ -284,6 +342,7 @@ class Aiwpb_Settings {
 			$this->render_notice();
 			$this->render_service();
 			$this->render_github();
+			$this->render_wporg();
 			$this->render_platforms();
 			$this->render_platform_form();
 			?>
@@ -305,6 +364,7 @@ class Aiwpb_Settings {
 			'default' => __( 'Default AI platform updated.', 'ai-plugin-builder' ),
 			'edit'    => __( 'AI for edits updated.', 'ai-plugin-builder' ),
 			'github'  => __( 'GitHub settings saved.', 'ai-plugin-builder' ),
+			'wporg'   => __( 'WordPress.org settings saved.', 'ai-plugin-builder' ),
 		);
 		if ( isset( $texts[ $notice ] ) ) {
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html( $texts[ $notice ] ) . '</p></div>';

@@ -257,6 +257,10 @@ class Aiwpb_Rest {
 			'/restore' => 'registry_restore',
 			'/edit'    => 'registry_edit',
 			'/publish' => 'registry_publish',
+			'/wporg/prepare' => 'registry_wporg',
+			'/wporg/status'  => 'registry_wporg',
+			'/wporg/refresh' => 'registry_wporg',
+			'/wporg/push'    => 'registry_wporg',
 			'/install' => 'registry_install',
 		);
 		foreach ( $actions as $suffix => $callback ) {
@@ -1097,6 +1101,38 @@ class Aiwpb_Rest {
 	}
 
 	/**
+	 * POST /registry/:slug/wporg/{prepare,status,refresh,push} — WordPress.org actions, proxied to the service.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function registry_wporg( WP_REST_Request $request ) {
+		$slug = sanitize_key( (string) $request->get_param( 'slug' ) );
+		$sub  = basename( (string) $request->get_route() );
+		if ( ! in_array( $sub, array( 'prepare', 'status', 'refresh', 'push' ), true ) ) {
+			return new WP_Error( 'aiwpb_wporg', __( 'Unknown WordPress.org action.', 'ai-plugin-builder' ), array( 'status' => 400 ) );
+		}
+		$body = array();
+		if ( null !== $request->get_param( 'versionId' ) ) {
+			$body['versionId'] = absint( $request->get_param( 'versionId' ) );
+		}
+		if ( 'prepare' === $sub ) {
+			$body['username'] = Aiwpb_Wporg::username();
+		}
+		if ( 'status' === $sub ) {
+			$body['status'] = sanitize_key( (string) $request->get_param( 'status' ) );
+			if ( null !== $request->get_param( 'wporgSlug' ) ) {
+				$body['wporgSlug'] = sanitize_title( (string) $request->get_param( 'wporgSlug' ) );
+			}
+		}
+		$data = ( new Aiwpb_Client() )->request( 'POST', '/plugins/' . rawurlencode( $slug ) . '/wporg/' . $sub, $body, 30 );
+		if ( is_wp_error( $data ) ) {
+			return $this->upstream_error( $data );
+		}
+		return rest_ensure_response( $data );
+	}
+
+	/**
 	 * POST /registry/:slug/publish — publish a version (default: current) to GitHub with the saved settings.
 	 *
 	 * @param WP_REST_Request $request Request.
@@ -1168,11 +1204,12 @@ class Aiwpb_Rest {
 		check_admin_referer( 'aiwpb_download_version' );
 		$slug = isset( $_GET['slug'] ) ? sanitize_key( wp_unslash( $_GET['slug'] ) ) : '';
 		$ver  = isset( $_GET['version'] ) ? absint( wp_unslash( $_GET['version'] ) ) : 0;
+		$what = ( isset( $_GET['file'] ) && 'assets' === $_GET['file'] ) ? 'assets' : 'zip';
 		if ( '' === $slug || 0 === $ver ) {
 			wp_die( esc_html__( 'Missing plugin or version.', 'ai-plugin-builder' ) );
 		}
 		$client = new Aiwpb_Client();
-		$bytes  = $client->raw( '/plugins/' . rawurlencode( $slug ) . '/versions/' . $ver . '/zip' );
+		$bytes  = $client->raw( '/plugins/' . rawurlencode( $slug ) . '/versions/' . $ver . '/' . $what );
 		if ( is_wp_error( $bytes ) ) {
 			wp_die( esc_html( $bytes->get_error_message() ) );
 		}
@@ -1181,7 +1218,7 @@ class Aiwpb_Rest {
 		if ( ! is_wp_error( $data ) && isset( $data['plugin']['versions'] ) && is_array( $data['plugin']['versions'] ) ) {
 			foreach ( $data['plugin']['versions'] as $v ) {
 				if ( isset( $v['id'], $v['version'] ) && (int) $v['id'] === $ver ) {
-					$name = sanitize_file_name( $slug . '.' . $v['version'] . '.zip' );
+					$name = sanitize_file_name( $slug . '.' . $v['version'] . ( 'assets' === $what ? '-wordpress-org-assets' : '' ) . '.zip' );
 				}
 			}
 		}

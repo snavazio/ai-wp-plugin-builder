@@ -3,7 +3,7 @@ Contributors: snavazio
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.3.1
+Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,6 +28,10 @@ All generation and verification happens on the service, not inside WordPress.
 4. Open AI Plugin Builder, type a spec, choose an engine, and click Generate.
 
 == Changelog ==
+
+= 1.4.0 =
+* WordPress.org publishing from My Plugins: "Prepare for WordPress.org" makes a new version whose readme meets the directory's rules, re-runs every check plus Plugin Check at directory strictness, takes real screenshots and generates banners and icons. Download the zip + assets, submit on wordpress.org, then "Check approval" and "Push to WordPress.org" (SVN) for updates.
+* Settings: WordPress.org username.
 
 = 1.3.1 =
 * Settings: the model drop-down and the Test results show each model's price (Claude list prices, live OpenRouter prices, and "free" for models on your own hardware).

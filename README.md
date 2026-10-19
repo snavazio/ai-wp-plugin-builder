@@ -146,6 +146,22 @@ WordPress site (AI Plugin Builder plugin)  ──HTTP──►  builder service 
 3. **Configure it:** AI Plugin Builder → Settings → enter the service URL + the same API key + default engine.
 4. **Use it:** AI Plugin Builder → type a spec → Generate → Download or Install.
 
+### My Plugins, GitHub and WordPress.org (in the admin plugin)
+
+- **My Plugins** (AI Plugin Builder → My Plugins): every plugin built or imported through the service, with client,
+  status, live URL, notes, a do-not-publish flag and full version history (download, report, make current, install
+  here with a backup). **Fix / Change / Refactor / Update** edit a plugin through a short chat; every edit is re-checked
+  against all gates and saved as a new version. Records live on the service machine in `.builder-data/` (git-ignored).
+- **Publish to GitHub**: creates a private repo named after the slug (first time), re-runs every check, pushes the
+  full source to `main`, tags the version and attaches the installable zip to a release. Token: Settings → GitHub.
+- **WordPress.org**: *Prepare for WordPress.org* makes a new version whose readme meets the directory's rules
+  (Contributors = your WordPress.org username, Tested up to = current WordPress), re-runs every check plus Plugin Check
+  at directory strictness, and generates screenshots (taken in the sandbox), banners and icons. Submit the zip on
+  wordpress.org yourself (there is no API for the first submission); after approval *Push to WordPress.org* releases
+  updates through SVN, never moving trunk backwards.
+  - SVN: `svn` on the service's PATH, or `AIWPB_SVN_BIN` (on thing1 it is in the conda env `aiwpb-svn`).
+  - Credentials: start the service with `AIWPB_WPORG_SVN_USER` and `AIWPB_WPORG_SVN_PASSWORD` (never stored in WordPress).
+
 The API key stays server-side (the plugin proxies the service in PHP; it never reaches the browser). The
 admin plugin itself passes all 8 of this tool's gates (it's dogfooded).
 
