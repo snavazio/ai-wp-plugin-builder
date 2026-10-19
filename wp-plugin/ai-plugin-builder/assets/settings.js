@@ -34,9 +34,11 @@
 				if ( r.ms ) {
 					html += '<br><small>' + escapeHtml( r.ms + ' ms' ) + '</small>';
 				}
-				if ( ! r.ok && r.models && r.models.length ) {
-					html += '<details class="aiwpb-models"><summary>' + escapeHtml( cfg.models ) + '</summary><code>' +
-						r.models.map( escapeHtml ).join( '</code> <code>' ) + '</code></details>';
+				// Show the platform's models after every test: collapsed when the test passed, open when it failed
+				// (so a wrong model name can be fixed by picking one from the list).
+				if ( r.models && r.models.length ) {
+					html += '<details class="aiwpb-models"' + ( r.ok ? '' : ' open' ) + '><summary>' + escapeHtml( cfg.models ) +
+						' (' + r.models.length + ')</summary><code>' + r.models.map( escapeHtml ).join( '</code> <code>' ) + '</code></details>';
 				}
 				cell.innerHTML = html;
 			} )

@@ -271,23 +271,32 @@ export async function testPlatform(p: Platform, timeoutMs = 15_000): Promise<Tes
         const key = anthropicKey(p);
         if (!key) return done(false, 'No API key saved, and ANTHROPIC_API_KEY is not set on the builder service.');
         const headers = { 'x-api-key': key, 'anthropic-version': '2023-06-01' };
-        const path = p.model ? `/v1/models/${encodeURIComponent(p.model)}` : '/v1/models';
-        const r = await getJson(`${b}${path}`, headers, timeoutMs);
-        if (r.status === 401 || r.status === 403) return done(false, `Key rejected (HTTP ${r.status}): ${errMessage(r.data, r.text)}`);
-        if (r.status === 404 && p.model) return done(false, `Key works, but model "${p.model}" was not found.`);
-        if (r.status !== 200) return done(false, `Anthropic answered HTTP ${r.status}: ${errMessage(r.data, r.text)}`);
         const via = p.apiKey ? 'saved key' : "the service's ANTHROPIC_API_KEY";
-        return done(true, p.model ? `Connected to Anthropic (${via}); model ${p.model} is available.` : `Connected to Anthropic (${via}). No model set.`);
+        // Always fetch the full list so the Settings screen can show every model this key can use.
+        const r = await getJson(`${b}/v1/models?limit=1000`, headers, timeoutMs);
+        if (r.status === 401 || r.status === 403) return done(false, `Key rejected (HTTP ${r.status}): ${errMessage(r.data, r.text)}`);
+        if (r.status !== 200) return done(false, `Anthropic answered HTTP ${r.status}: ${errMessage(r.data, r.text)}`);
+        const ids = ((r.data as { data?: Array<{ id: string }> })?.data ?? []).map((m) => m.id);
+        if (!p.model) return done(true, `Connected to Anthropic (${via}); ${ids.length} models available. No model set.`, ids);
+        if (ids.includes(p.model)) return done(true, `Connected to Anthropic (${via}); model ${p.model} is available.`, ids);
+        // Not in the list: it may be an alias, so ask for that model directly before failing.
+        const one = await getJson(`${b}/v1/models/${encodeURIComponent(p.model)}`, headers, timeoutMs);
+        if (one.status === 200) return done(true, `Connected to Anthropic (${via}); model ${p.model} is available.`, ids);
+        return done(false, `Key works, but model "${p.model}" was not found. Pick one from the list.`, ids);
       }
       case 'gemini': {
         if (!p.apiKey) return done(false, 'No API key saved for this Gemini platform.');
         const model = p.model.replace(/^models\//, '');
-        const path = model ? `/models/${encodeURIComponent(model)}` : '/models';
-        const r = await getJson(`${b}${path}`, { 'x-goog-api-key': p.apiKey }, timeoutMs);
+        const headers = { 'x-goog-api-key': p.apiKey };
+        const r = await getJson(`${b}/models?pageSize=1000`, headers, timeoutMs);
         if (r.status === 400 || r.status === 401 || r.status === 403) return done(false, `Key rejected (HTTP ${r.status}): ${errMessage(r.data, r.text)}`);
-        if (r.status === 404 && model) return done(false, `Key works, but model "${model}" was not found.`);
         if (r.status !== 200) return done(false, `Gemini answered HTTP ${r.status}: ${errMessage(r.data, r.text)}`);
-        return done(true, model ? `Connected to Gemini; model ${model} is available.` : 'Connected to Gemini. No model set.');
+        const ids = ((r.data as { models?: Array<{ name: string }> })?.models ?? []).map((m) => m.name.replace(/^models\//, ''));
+        if (!model) return done(true, `Connected to Gemini; ${ids.length} models available. No model set.`, ids);
+        if (ids.includes(model)) return done(true, `Connected to Gemini; model ${model} is available.`, ids);
+        const one = await getJson(`${b}/models/${encodeURIComponent(model)}`, headers, timeoutMs);
+        if (one.status === 200) return done(true, `Connected to Gemini; model ${model} is available.`, ids);
+        return done(false, `Key works, but model "${model}" was not found. Pick one from the list.`, ids);
       }
     }
   } catch (e) {
