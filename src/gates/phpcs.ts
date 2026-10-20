@@ -5,6 +5,8 @@
 import type { GateContext, GateDefinition, GateResult } from '../types.js';
 import { exec } from '../util/exec.js';
 import { join, relative } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { findPhpFiles } from '../util/exec.js';
 import { emptyResult, finalize } from './_util.js';
 
 interface PhpcsJson {
@@ -21,9 +23,18 @@ async function run(ctx: GateContext): Promise<GateResult> {
   const phpcs = join(ctx.harnessDir, 'vendor', 'bin', 'phpcs');
   const standard = join(ctx.harnessDir, 'phpcs.xml.dist');
 
+  // Judge version-dependent sniffs (e.g. the %i identifier placeholder, WP 6.2+) against the WordPress
+  // version the plugin itself requires, not the ruleset's default floor.
+  const runtime: string[] = [];
+  const requiresWp = await requiredWp(ctx.pluginDir);
+  if (requiresWp) {
+    runtime.push('--runtime-set', 'minimum_wp_version', requiresWp);
+    r.notes.push(`phpcs minimum_wp_version: ${requiresWp} (from the plugin header).`);
+  }
+
   const res = await exec(
     phpcs,
-    ['-q', '--standard=' + standard, '--report=json', ctx.pluginDir],
+    ['-q', '--standard=' + standard, '--report=json', ...runtime, ctx.pluginDir],
     { timeoutMs: 5 * 60_000 },
   );
 
@@ -55,6 +66,18 @@ async function run(ctx: GateContext): Promise<GateResult> {
   }
 
   return finalize(r, start);
+}
+
+/** "Requires at least" from the main plugin file header, if it is a plain version number. */
+async function requiredWp(pluginDir: string): Promise<string | null> {
+  for (const f of await findPhpFiles(pluginDir)) {
+    if (/\/tests\//.test(f)) continue;
+    const src = await readFile(f, 'utf8').catch(() => '');
+    if (!/^[ \t/*#@]*Plugin Name\s*:/im.test(src)) continue;
+    const v = src.match(/^[ \t/*#@]*Requires at least\s*:\s*([0-9]+\.[0-9]+(?:\.[0-9]+)?)\s*$/im)?.[1];
+    return v ?? null;
+  }
+  return null;
 }
 
 export const phpcsGate: GateDefinition = {

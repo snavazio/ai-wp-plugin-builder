@@ -31,6 +31,8 @@ import {
   nameIssues,
   strictPluginCheck,
   discoverScreens,
+  guidelineChecks,
+  guidelineTable,
 } from './wporg.js';
 
 interface Env {
@@ -163,6 +165,14 @@ export async function runPrepareWporg(args: string[], env: Env): Promise<number>
     await prepareReadme(pluginDir, readmeOpts);
     for (const i of await readmeIssues(pluginDir, { version: newVersion, username, testedUpTo })) blockers.push(`readme.txt: ${i}`);
 
+    // 6b. WordPress.org Detailed Plugin Guidelines, as far as code can check them.
+    const guidelines = await guidelineChecks(pluginDir, { name, slug });
+    const gFail = guidelines.filter((g) => g.status === 'fail');
+    const gReview = guidelines.filter((g) => g.status === 'review');
+    note(`▶ Plugin guidelines: ${guidelines.filter((g) => g.status === 'pass').length} pass, ${gFail.length} fail, ${gReview.length} to review by a person`);
+    for (const g of gFail) note(`    ✖ ${g.n}. ${g.title}: ${g.note}`);
+    blockers.push(...gFail.map((g) => `Guideline ${g.n} (${g.title}): ${g.note}`));
+
     // 7. Artwork.
     const tagline = (v.provides || '').split(' · ')[0]?.slice(0, 90) || '';
     const art = await exec('python3', [join(env.harnessDir, 'bin', 'wporg-assets.py'), assetsDir, slug, name, tagline], { timeoutMs: 60_000 });
@@ -197,10 +207,11 @@ export async function runPrepareWporg(args: string[], env: Env): Promise<number>
       '3. Wait for the review email (days to a few weeks). Reply to it from the same address if they ask for changes.',
       '4. In My Plugins, click **I submitted it**. When the plugin goes live, **Check approval** marks it approved, and **Push to WordPress.org** sends updates (and these assets) through SVN.',
       '',
-      '## What the tools could not check',
+      '## WordPress.org Detailed Plugin Guidelines',
       '',
-      '- The reviewers also judge things no tool checks: whether the plugin is useful and complete, ' +
-        'the quality of the description, external services disclosure, and uniqueness of the name.',
+      'Checked against https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines/ — ❌ blocks submission, 👀 needs a person to confirm.',
+      '',
+      guidelineTable(guidelines),
       '',
       '## Plugin Check warnings (not blocking)',
       '',

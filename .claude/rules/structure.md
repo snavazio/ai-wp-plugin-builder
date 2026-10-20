@@ -48,3 +48,17 @@ The main file (`<slug>.php`) MUST contain a header block with at least:
 ## readme.txt
 - Valid WordPress `readme.txt` with `Stable tag:` line equal to header `Version`.
 - Include `Requires at least`, `Tested up to`, `Requires PHP`.
+
+## WordPress.org readiness (checked by "Prepare for WordPress.org")
+- `readme.txt` is written for people: a short description of at most 150 characters, then a `== Description ==`
+  of at least a few sentences saying what the plugin does and how to use it, `== Installation ==`,
+  `== Frequently Asked Questions ==` (say where its screens are) and `== Changelog ==`. At most 5 tags.
+- If the plugin records anything about visitors (public write endpoints, `wp_ajax_nopriv_`, IP addresses, cookies,
+  browser storage): add a `= Privacy =` part to the Description saying exactly what is stored and why, and register
+  suggested policy text with `wp_add_privacy_policy_content()` on `admin_init`. Hash IPs with `wp_hash()`, never store
+  them raw. Never claim legal compliance ("GDPR compliant" etc.).
+- If it calls an external service: add `== External services ==` naming each service, what data is sent and when,
+  with links to its terms and privacy policy.
+- Never bundle libraries WordPress ships (jQuery, PHPMailer, SimplePie, etc.); never load JS/CSS from a CDN.
+- Names and slugs must not start with someone else's brand (WordPress, WooCommerce, Google, …).
+

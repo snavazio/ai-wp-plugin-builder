@@ -182,6 +182,16 @@ export async function prepareReadme(
   r = lines.join('\n');
 
   if (!section(r, 'Description')) r = setSection(r, 'Description', lines[i] || o.name);
+  // A one-line description reads as a stub to reviewers (guideline 12): add a Features list built from what the
+  // plugin actually registers and where it lives.
+  const descNow = section(r, 'Description') ?? '';
+  if (descNow.split(/\s+/).filter(Boolean).length < 40 && !/^=\s*Features\s*=/m.test(descNow)) {
+    const feats = [
+      ...(o.provides ? o.provides.split(' · ').map((f) => f.trim()).filter((f) => f && !/^No admin menu/i.test(f)) : []),
+      ...(o.locations ?? []).map((l) => `Where to find it: ${l}.`),
+    ];
+    r = setSection(r, 'Description', `${descNow}\n\n= Features =\n\n${[...new Set(feats)].map((f) => `* ${f}`).join('\n')}`);
+  }
   if (!section(r, 'Installation')) {
     r = setSection(r, 'Installation', '1. Upload the plugin folder to `/wp-content/plugins/`, or install it from Plugins → Add New.\n2. Activate it through the Plugins screen.');
   }
@@ -358,4 +368,148 @@ export async function discoverScreens(
     shots.push({ path: '/wp-admin/plugins.php?plugin_status=active', caption: 'The plugin active on the Plugins screen', admin: true, location: 'Plugins → Installed Plugins' });
   }
   return shots.slice(0, 4);
+}
+
+export interface GuidelineRow {
+  n: string;
+  title: string;
+  /** pass = checked and fine; fail = blocks submission; review = a person must judge it; na = does not apply */
+  status: 'pass' | 'fail' | 'review' | 'na';
+  note: string;
+}
+
+/** Brands the directory will not accept as the start of a slug/name (guideline 17). */
+const TRADEMARKS = ['wordpress', 'wp', 'woocommerce', 'woo', 'gutenberg', 'jetpack', 'google', 'gmail', 'youtube', 'facebook', 'instagram', 'whatsapp', 'meta', 'twitter', 'tiktok', 'amazon', 'paypal', 'stripe', 'apple', 'microsoft', 'openai', 'chatgpt', 'anthropic', 'claude', 'elementor', 'yoast', 'akismet', 'mailchimp', 'hubspot', 'shopify', 'zoom', 'slack'];
+
+/** Libraries WordPress ships; plugins must use those, not bundle their own (guideline 13). */
+const BUNDLED_LIB = /(^|\/)(jquery(\.min)?(-[\d.]+)?\.js|jquery-ui[\w.-]*\.js|class-phpmailer\.php|PHPMailer\.php|simplepie[\w.-]*\.(php|inc)|class-phpass\.php|PasswordHash\.php|backbone(\.min)?\.js|underscore(\.min)?\.js|moxie(\.min)?\.js|plupload[\w.-]*\.js|react(-dom)?(\.production)?(\.min)?\.js|lodash(\.min)?\.js|moment(\.min)?\.js)$/i;
+
+async function walkFiles(dir: string, rel = ''): Promise<string[]> {
+  const { readdir } = await import('node:fs/promises');
+  const out: string[] = [];
+  for (const e of await readdir(join(dir, rel), { withFileTypes: true })) {
+    if (['.git', 'node_modules', 'vendor', 'tests'].includes(e.name)) continue;
+    const r = rel ? `${rel}/${e.name}` : e.name;
+    if (e.isDirectory()) out.push(...(await walkFiles(dir, r)));
+    else out.push(r);
+  }
+  return out;
+}
+
+/**
+ * Check a plugin against the WordPress.org Detailed Plugin Guidelines as far as code can.
+ * `fail` rows block submission; `review` rows are listed for a person to judge.
+ */
+export async function guidelineChecks(pluginDir: string, o: { name: string; slug: string }): Promise<GuidelineRow[]> {
+  const files = await walkFiles(pluginDir);
+  const code: Record<string, string> = {};
+  for (const f of files) if (/\.(php|js|css|html?)$/i.test(f)) code[f] = await readFile(join(pluginDir, f), 'utf8').catch(() => '');
+  const all = Object.values(code).join('\n');
+  const php = Object.entries(code).filter(([f]) => f.endsWith('.php')).map(([, s]) => s).join('\n');
+  const readme = await readFile(join(pluginDir, 'readme.txt'), 'utf8').catch(() => '');
+  const main = (await mainFile(pluginDir)) ?? '';
+  const header = main ? await readFile(main, 'utf8') : '';
+  const rows: GuidelineRow[] = [];
+  const add = (n: string, title: string, status: GuidelineRow['status'], note: string) => rows.push({ n, title, status, note });
+  const hits = (re: RegExp) => Object.entries(code).filter(([, s]) => re.test(s)).map(([f]) => f);
+
+  // 1. GPL
+  const lic = headerField(header, 'License') + ' ' + headerField(readme, 'License');
+  add('1', 'GPL-compatible licence', /gpl/i.test(lic) ? 'pass' : 'fail', /gpl/i.test(lic) ? 'GPL licence in the header and readme.' : 'Header/readme licence must be GPLv2 or later.');
+
+  // 2. Third-party terms — flagged with 7/8 below.
+  add('2', 'Developer responsible for contents and third-party terms', 'review', 'Confirm the licence of any images or code you added by hand.');
+
+  // 3. Stable version only from the directory: no custom updater.
+  const updater = hits(/pre_set_site_transient_update_plugins|site_transient_update_plugins|plugins_api\s*['"]?\s*,|['"]update_plugins_/);
+  add('3', 'Updates only from WordPress.org', updater.length ? 'fail' : 'pass', updater.length ? `Custom update code in ${updater.join(', ')}.` : 'No custom update mechanism.');
+
+  // 4. Human-readable code.
+  const obfus: string[] = [];
+  for (const [f, s] of Object.entries(code)) {
+    if (/eval\s*\(\s*function\s*\(\s*p\s*,\s*a\s*,\s*c\s*,\s*k\s*,\s*e/.test(s) || /eval\s*\(\s*(base64_decode|gzinflate|str_rot13)\s*\(/.test(s)) obfus.push(`${f} (packed/encoded eval)`);
+    else if (!/\.css$/i.test(f) && s.split('\n').some((l) => l.length > 2000)) obfus.push(`${f} (minified)`);
+  }
+  add('4', 'Human-readable code', obfus.length ? 'fail' : 'pass', obfus.length ? `Not readable: ${obfus.join(', ')} — ship the unminified source or link to it in the readme.` : 'No packed, encoded or minified-only code.');
+
+  // 5. Trialware.
+  const trial = hits(/\b(free trial|trial (period|expired)|upgrade to (pro|premium)|license key|licence key|unlock (pro|premium))\b/i);
+  add('5', 'No trialware', trial.length ? 'review' : 'pass', trial.length ? `Upsell/licence wording in ${trial.join(', ')} — make sure nothing in the plugin is locked.` : 'Nothing locked or time-limited.');
+
+  // 6/7/8. External services, data collection, remote code.
+  const external = hits(/wp_remote_(get|post|request|head)\s*\(|wp_safe_remote_|curl_init\s*\(|file_get_contents\s*\(\s*['"]https?:|fetch\s*\(\s*['"]https?:\/\/|new\s+WebSocket\s*\(/);
+  const hasExtSection = /^==\s*External services\s*==/im.test(readme);
+  add('6', 'Software as a Service documented', external.length ? (hasExtSection ? 'review' : 'fail') : 'na',
+    external.length ? (hasExtSection ? 'Calls external services; readme has "External services" — check it names each service, what is sent, when, and links its terms/privacy.' : `Calls external services (${external.join(', ')}) but the readme has no "== External services ==" section naming each service, what data is sent and when, with links to its terms and privacy policy.`) : 'No external services.');
+  const collects = /wp_ajax_nopriv_|['"]permission_callback['"]\s*=>\s*['"]__return_true['"]|REMOTE_ADDR|setcookie\s*\(|document\.cookie|localStorage|sessionStorage|navigator\.sendBeacon/.test(all) || publicWriteRoute(php);
+  const privacyDoc = /^=+\s*Privacy\s*=+/im.test(readme) || /privacy/i.test(section(readme, 'Description') ?? '');
+  const policyText = /wp_add_privacy_policy_content\s*\(/.test(php);
+  if (external.length && !hasExtSection) add('7', 'No tracking without consent; data use documented', 'fail', 'Contacts external servers without readme documentation.');
+  else if (collects && (!privacyDoc || !policyText)) {
+    add('7', 'No tracking without consent; data use documented', 'fail',
+      `Collects visitor data (public endpoint, IP, cookies or storage) but ${!privacyDoc ? 'the readme does not explain what is collected and why' : ''}${!privacyDoc && !policyText ? ', and ' : ''}${!policyText ? 'no privacy-policy text is suggested (wp_add_privacy_policy_content)' : ''}.`);
+  } else add('7', 'No tracking without consent; data use documented', collects ? 'pass' : 'na', collects ? 'Visitor data documented in the readme and suggested for the privacy policy; no external contact.' : 'Collects no visitor data and contacts no external server.');
+  const cdn = hits(/(src|href)\s*=\s*['"]https?:\/\/(?!fonts\.googleapis\.com|fonts\.gstatic\.com)[^'"]+\.(js|css)|wp_enqueue_(script|style)\s*\([^)]*['"]https?:\/\/(?!fonts\.googleapis)/i);
+  const iframe = hits(/<iframe/i);
+  add('8', 'No executable code from third parties', cdn.length ? 'fail' : iframe.length ? 'review' : 'pass',
+    cdn.length ? `Loads JS/CSS from another server in ${cdn.join(', ')} — include it locally.` : iframe.length ? `Uses iframes in ${iframe.join(', ')} — not allowed for admin pages.` : 'All scripts and styles are local; no iframes.');
+
+  // 9. Dishonest claims, e.g. guaranteed legal compliance.
+  const claims = readme.match(/\b(GDPR|CCPA|HIPAA|ADA|WCAG|PCI)[- ]?(compliant|compliance guaranteed|certified)|\bguarantee[sd]? (legal )?compliance\b|\bmakes? (your site|you) (legally )?compliant\b/gi);
+  add('9', 'Nothing illegal, dishonest or offensive', claims ? 'fail' : 'review', claims ? `The readme claims legal compliance (${[...new Set(claims)].join(', ')}), which the directory forbids.` : 'No compliance claims found; the rest is a human judgement.');
+
+  // 10. Credits / external links on the public site.
+  const credits = hits(/powered by|designed by|developed by/i).filter((f) => !/readme/i.test(f));
+  add('10', 'No public credits or links without opt-in', credits.length ? 'review' : 'pass', credits.length ? `Credit text in ${credits.join(', ')} — must be off by default and opt-in.` : 'No credits or links added to the public site.');
+
+  // 11. Dashboard hijacking: global admin notices that cannot be dismissed.
+  const noticeFiles = hits(/add_action\s*\(\s*['"](admin_notices|all_admin_notices|network_admin_notices)['"]/);
+  const undismissible = noticeFiles.filter((f) => !/is-dismissible/.test(code[f]));
+  add('11', 'Does not hijack the dashboard', undismissible.length ? 'review' : 'pass', undismissible.length ? `Site-wide notices without dismiss in ${undismissible.join(', ')} — limit them to the plugin's page or make them dismissible.` : noticeFiles.length ? 'Site-wide notices are dismissible.' : 'No site-wide notices.');
+
+  // 12. Readme not spam.
+  const tags = headerField(readme, 'Tags').split(',').map((t) => t.trim().toLowerCase()).filter(Boolean);
+  const descWords = (section(readme, 'Description') ?? '').split(/\s+/).filter(Boolean).length;
+  const spam = tags.length > 5 ? `${tags.length} tags (max 5)` : descWords < 40 ? `the description is only ${descWords} words — explain what it does for a person reading it` : '';
+  add('12', 'Readme written for people, not spam', spam ? 'fail' : 'pass', spam ? `Fix: ${spam}.` : `${tags.length} tag(s); ${descWords}-word description.`);
+
+  // 13. Default libraries.
+  const libs = files.filter((f) => BUNDLED_LIB.test(f));
+  add('13', 'Uses WordPress\' bundled libraries', libs.length ? 'fail' : 'pass', libs.length ? `Bundles libraries WordPress already ships: ${libs.join(', ')} — enqueue the core copies instead.` : 'No bundled copies of core libraries.');
+
+  // 14/15/16.
+  add('14', 'No frequent trivial SVN commits', 'na', 'Release practice; the push makes one commit per version.');
+  add('15', 'Version incremented for each release', 'pass', 'Prepare and Push always use a new, higher version.');
+  add('16', 'Complete plugin at submission', 'review', 'Confirm the plugin does what its description says (the spec-coverage check covers registered features).');
+
+  // 17. Trademarks at the start of the slug or name.
+  const first = o.slug.split('-')[0].toLowerCase();
+  const nameFirst = o.name.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)[0] ?? '';
+  const tm = TRADEMARKS.find((t) => t === first || t === nameFirst);
+  add('17', 'Respects trademarks and project names', tm ? 'fail' : 'review', tm ? `The slug/name starts with "${tm}", a brand you don't own — use "<Your name> for ${tm}" instead.` : 'No known brand at the start of the name; check the name is not someone else\'s product.');
+  add('18', 'Directory may update guidelines / remove plugins', 'na', 'Nothing to check.');
+  return rows;
+}
+
+/**
+ * True when a REST route accepts writes from anyone: its permission callback is a named function whose body
+ * never checks current_user_can (e.g. a public event collector).
+ */
+function publicWriteRoute(php: string): boolean {
+  for (const m of php.matchAll(/register_rest_route\s*\(([\s\S]*?)\)\s*;/g)) {
+    const route = m[1];
+    if (!/['"]methods['"]\s*=>\s*(['"](POST|PUT|PATCH|DELETE)['"]|WP_REST_Server::(CREATABLE|EDITABLE|DELETABLE))/i.test(route)) continue;
+    const cb = route.match(/['"]permission_callback['"]\s*=>\s*['"]([A-Za-z0-9_]+)['"]/)?.[1];
+    if (!cb) continue;
+    if (cb === '__return_true') return true;
+    const body = php.match(new RegExp(`function\\s+${cb}\\s*\\([^)]*\\)[^{]*\\{([\\s\\S]*?)\\n\\}`))?.[1] ?? '';
+    if (body && !/current_user_can\s*\(/.test(body)) return true;
+  }
+  return false;
+}
+
+/** Markdown table for the report. */
+export function guidelineTable(rows: GuidelineRow[]): string {
+  const icon = { pass: '✅', fail: '❌', review: '👀', na: '—' } as const;
+  return ['| # | Guideline | Result | Detail |', '|---|---|---|---|', ...rows.map((r) => `| ${r.n} | ${r.title} | ${icon[r.status]} ${r.status} | ${r.note.replace(/\|/g, '\\|')} |`)].join('\n');
 }
